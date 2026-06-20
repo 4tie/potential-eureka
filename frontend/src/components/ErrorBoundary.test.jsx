@@ -1,3 +1,4 @@
+/* global describe, beforeEach, jest, afterEach, test, expect */
 import { render, screen } from '@testing-library/react';
 import ErrorBoundary from './ErrorBoundary';
 

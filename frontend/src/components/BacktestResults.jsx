@@ -86,6 +86,18 @@ function ExitReasonBar({ stat, total }) {
   );
 }
 
+function SortBtn({ k, label, sortKey, sortDir, toggleSort }) {
+  return (
+    <button
+      className="flex items-center gap-1 hover:text-primary transition-colors"
+      onClick={() => toggleSort(k)}
+    >
+      {label}
+      <span className="opacity-40">{sortKey === k ? (sortDir === 1 ? "▲" : "▼") : "↕"}</span>
+    </button>
+  );
+}
+
 function TradesTable({ trades }) {
   const [page, setPage] = useState(0);
   const [sortKey, setSortKey] = useState("close_date");
@@ -268,7 +280,7 @@ export default function BacktestResults({ results, runId }) {
   })();
   const days    = s.total_days ?? (() => {
     if (trStart && trEnd && trStart !== "—" && trEnd !== "—") {
-      try { return Math.round((new Date(trEnd) - new Date(trStart)) / 86400000); } catch {}
+      try { return Math.round((new Date(trEnd) - new Date(trStart)) / 86400000); } catch { /* ignore */ }
     }
     return null;
   })();

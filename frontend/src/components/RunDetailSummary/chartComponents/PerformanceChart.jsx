@@ -13,11 +13,10 @@ import {
   Legend,
 } from "recharts";
 
-const PerformanceChart = ({ run, timeRange = "all", chartType = "line" }) => {
+const PerformanceChart = ({ run, chartType = "line" }) => {
   // Generate sample data based on run metrics
   const report = run.report || {};
   const inSampleProfit = report.sanity_backtest?.profit_total_abs || 0;
-  const oosProfit = report.oos_validation?.profit_total || 0;
 
   // Generate realistic-looking performance data
   const generateData = () => {

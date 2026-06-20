@@ -10,7 +10,7 @@ function CommandViewer({ command }) {
       await navigator.clipboard.writeText(command);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (_) {}
+    } catch { /* ignore */ }
   };
 
   const renderTokens = (cmd) => {
@@ -154,8 +154,6 @@ const POLL_INTERVAL = 2000;
 export default function BacktestForm({
   strategies,
   strategiesLoading,
-  availablePairs,
-  searchPairs,
   sharedState,
   sharedLoading,
   syncSharedState,
@@ -282,7 +280,7 @@ export default function BacktestForm({
         const err = await r.json().catch(() => ({}));
         setRunError(err.detail || "Failed to load results.");
       }
-    } catch (_) {
+    } catch {
       setRunError("Failed to load results.");
     } finally {
       setResultsLoading(false);
@@ -322,7 +320,7 @@ export default function BacktestForm({
           stopPolling(); setRunning(false);
           setRunError(data.error || "Backtest failed.");
         }
-      } catch (_) {
+      } catch {
         stopPolling();
         setRunning(false);
         setRunError("Lost connection to the backend. Please check the server and try again.");
@@ -371,7 +369,7 @@ export default function BacktestForm({
       const sid = data.session_id;
       setSessionId(sid); setRunStatus("queued");
       startPolling(sid);
-    } catch (_) {
+    } catch {
       setRunError("Network error. Is the backend running?");
       setRunning(false);
     }
@@ -409,7 +407,7 @@ export default function BacktestForm({
         if (data.message) {
           setDownloadLogs((prev) => [...prev, data.message]);
         }
-      } catch (_) {}
+      } catch { /* ignore */ }
     };
     es.onerror = () => { closeDownloadEs(); };
 
@@ -453,14 +451,14 @@ export default function BacktestForm({
               setDownloadError(status.error || "Download failed. See log output above.");
             }
           }
-        } catch (_) {
+        } catch {
           stopDownloadPoll();
           setDownloading(false);
           closeDownloadEs();
           setDownloadError("Lost connection to backend. Please try again.");
         }
       }, POLL_INTERVAL);
-    } catch (_) {
+    } catch {
       setDownloadError("Network error. Is the backend running?");
       setDownloading(false);
       closeDownloadEs();

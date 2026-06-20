@@ -1,4 +1,4 @@
-/* global describe, expect, jest, test, beforeEach */
+/* global describe, expect, jest, test, beforeEach, global */
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import AutoQuantTab from "./AutoQuantTab";
 

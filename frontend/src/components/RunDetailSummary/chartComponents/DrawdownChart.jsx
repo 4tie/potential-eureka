@@ -9,7 +9,7 @@ import {
   Legend,
 } from "recharts";
 
-const DrawdownChart = ({ run, timeRange = "all" }) => {
+const DrawdownChart = ({ run }) => {
   const report = run.report || {};
   const risk = report.risk_assessment || {};
   const maxDD = risk.max_drawdown_pct || 0;

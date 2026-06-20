@@ -11,7 +11,6 @@ import {
 const MetricsRadarChart = ({ run }) => {
   const report = run.report || {};
   const risk = report.risk_assessment || {};
-  const thresholds = report.thresholds || {};
 
   // Normalize metrics to 0-100 scale for radar chart
   const normalizeMetric = (value, max, isHigherBetter = true) => {

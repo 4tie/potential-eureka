@@ -7,7 +7,7 @@ import {
   DocumentTextIcon
 } from "@heroicons/react/24/outline";
 
-const ExportButton = ({ activeTab, onExport }) => {
+const ExportButton = ({ onExport }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   const exportOptions = [

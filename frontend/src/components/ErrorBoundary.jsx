@@ -1,3 +1,4 @@
+/* global process */
 import { Component } from "react";
 import logger from "../utils/logger";
 
