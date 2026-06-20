@@ -1360,7 +1360,7 @@ Respond with JSON only."""
             if tried_combinations:
                 suggested_combo = (
                     suggestions["hyperopt_loss"],
-                    tuple(suggestions["hyperopt_spaces"]) if isinstance(suggestions["hyperopt_spaces"], list) else suggestions["hyperopt_spaces"],
+                    tuple(sorted(suggestions["hyperopt_spaces"])) if isinstance(suggestions["hyperopt_spaces"], list) else suggestions["hyperopt_spaces"],
                     suggestions["hyperopt_epochs"]
                 )
                 if suggested_combo in tried_combinations:
@@ -1382,9 +1382,9 @@ Respond with JSON only."""
                         logger.info(f"Ollama retry suggestion accepted: {retry_suggestions}")
                         return retry_suggestions
 
-                # If retry also failed or suggested tried combination, fall back to None
-                logger.warning("Ollama could not suggest a unique combination - using fallback logic")
-                return None
+                    # If retry also failed or suggested tried combination, fall back to None
+                    logger.warning("Ollama could not suggest a unique combination - using fallback logic")
+                    return None
 
             logger.info(f"Ollama WFA fix suggestions: {suggestions}")
             _ollama_circuit_breaker.record_success()

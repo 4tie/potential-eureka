@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -12,6 +15,9 @@ from backend.services.ai.ollama_client import build_headers
 from backend.services.ai.ollama_config import config_from_settings
 from backend.services.auto_quant.ollama_service import (
     OllamaClient,
+    _ollama_circuit_breaker,
+    ask_ollama_for_sensitivity_fix,
+    ask_ollama_for_wfa_fix,
     create_ollama_client_from_settings,
 )
 
@@ -51,6 +57,40 @@ def ollama_client():
 
 def _install_transport(client: OllamaClient, handler) -> None:
     client._client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+class FakeSuggestionClient:
+    def __init__(self, response: dict[str, object]) -> None:
+        self.response = response
+        self.closed = False
+
+    async def check_health(self) -> bool:
+        return True
+
+    async def generate(self, *args, **kwargs) -> str:
+        return json.dumps(self.response)
+
+    async def close(self) -> None:
+        self.closed = True
+
+
+def _suggestion_state(tmp_path: Path, *, retry_history: list[dict] | None = None):
+    return SimpleNamespace(
+        ai_metrics={},
+        ai_interactions=[],
+        exchange="binance",
+        hyperopt_epochs=100,
+        hyperopt_loss="ProfitLockinHyperOptLoss",
+        hyperopt_spaces=["buy", "stoploss"],
+        in_sample_range="20230101-20240101",
+        retry_history=retry_history or [],
+        strategy="AdaptiveStrategy",
+        timeframe="5m",
+        user_data_dir=str(tmp_path / "user_data"),
+        wfo_is_months=3,
+        wfo_oos_months=1,
+        wfo_recency_weight=1.0,
+    )
 
 
 @pytest.mark.asyncio
@@ -298,3 +338,88 @@ async def test_cloud_api_key_headers_are_only_sent_for_cloud_provider():
     assert build_headers(cloud_config.base_url, api_key=cloud_config.auth_api_key)["Authorization"] == "Bearer secret-token"
     assert "Authorization" not in build_headers(local_config.base_url, api_key=local_config.auth_api_key)
 
+
+@pytest.mark.asyncio
+async def test_sensitivity_fix_accepts_valid_ollama_suggestions(tmp_path: Path):
+    """Sensitivity suggestions are parsed, validated, tracked, and closed."""
+    _ollama_circuit_breaker.record_success()
+    client = FakeSuggestionClient(
+        {
+            "hyperopt_loss": "SharpeHyperOptLoss",
+            "hyperopt_spaces": ["buy", "stoploss", "roi"],
+            "hyperopt_epochs": 125,
+            "param_overrides": {"use_ema_cross": True, "use_atr": True},
+            "reasoning": "Use more stable trend and volatility filters.",
+        }
+    )
+    state = _suggestion_state(tmp_path)
+
+    with patch("backend.services.auto_quant.ollama_service.create_ollama_client_from_settings", return_value=client):
+        suggestions = await ask_ollama_for_sensitivity_fix(
+            {
+                "p_best": 0.04,
+                "p_minus": -0.01,
+                "p_plus": 0.01,
+                "param": "buy_rsi",
+                "failure_reason": "FAIL_SHARP_PEAK",
+            },
+            [],
+            state,
+        )
+
+    assert suggestions is not None
+    assert suggestions["hyperopt_loss"] == "SharpeHyperOptLoss"
+    assert suggestions["hyperopt_spaces"] == ["buy", "stoploss", "roi"]
+    assert suggestions["hyperopt_epochs"] == 125
+    assert state.ai_metrics["total_calls"] == 1
+    assert state.ai_metrics["json_parse_success"] == 1
+    assert state.ai_metrics["suggestion_applied_count"] == 1
+    assert state.ai_interactions[-1]["feature"] == "sensitivity_fix"
+    assert client.closed is True
+
+
+@pytest.mark.asyncio
+async def test_wfa_fix_accepts_new_combination_when_retry_history_exists(tmp_path: Path):
+    """WFA suggestions are not rejected merely because retry history exists."""
+    _ollama_circuit_breaker.record_success()
+    client = FakeSuggestionClient(
+        {
+            "hyperopt_loss": "ProfitDrawDownHyperOptLoss",
+            "hyperopt_spaces": ["roi", "buy"],
+            "hyperopt_epochs": 150,
+            "param_overrides": {"use_atr": True},
+            "reasoning": "Use a more drawdown-aware search across buy and ROI spaces.",
+        }
+    )
+    state = _suggestion_state(
+        tmp_path,
+        retry_history=[
+            {
+                "attempt": 1,
+                "loss": "SharpeHyperOptLoss",
+                "spaces": ["buy"],
+                "epochs": 100,
+                "profit": -0.02,
+                "reason": "wfa",
+            }
+        ],
+    )
+
+    with patch("backend.services.auto_quant.ollama_service.create_ollama_client_from_settings", return_value=client):
+        suggestions = await ask_ollama_for_wfa_fix(
+            [
+                {"window": 1, "is_range": "20230101-20230301", "oos_range": "20230301-20230401", "profit": -2.0, "status": "failed"},
+                {"window": 2, "is_range": "20230401-20230601", "oos_range": "20230601-20230701", "profit": 1.0, "status": "passed"},
+            ],
+            state,
+        )
+
+    assert suggestions is not None
+    assert suggestions["hyperopt_loss"] == "ProfitDrawDownHyperOptLoss"
+    assert suggestions["hyperopt_spaces"] == ["roi", "buy"]
+    assert suggestions["hyperopt_epochs"] == 150
+    assert state.ai_metrics["total_calls"] == 1
+    assert state.ai_metrics["json_parse_success"] == 1
+    assert state.ai_metrics["suggestion_applied_count"] == 1
+    assert state.ai_interactions[-1]["feature"] == "wfa_fix"
+    assert client.closed is True

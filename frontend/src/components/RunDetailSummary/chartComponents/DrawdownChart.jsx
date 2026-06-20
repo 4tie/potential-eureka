@@ -10,6 +10,19 @@ import {
 } from "recharts";
 import { useMemo } from "react";
 
+// Generate date strings at module level (runs once, not during render)
+const generateDateStrings = (count) => {
+  const referenceDate = new Date('2024-01-01').getTime();
+  const dates = [];
+  for (let i = 0; i < count; i++) {
+    const dateMs = referenceDate + (i * 24 * 60 * 60 * 1000);
+    dates.push(new Date(dateMs).toISOString().split('T')[0]);
+  }
+  return dates;
+};
+
+const DATE_STRINGS = generateDateStrings(50);
+
 const DrawdownChart = ({ run }) => {
   const report = run.report || {};
   const risk = report.risk_assessment || {};
@@ -43,13 +56,8 @@ const DrawdownChart = ({ run }) => {
         currentDD = Math.max(0, currentDD - rand2.value * 0.03);
       }
       
-      // Generate deterministic date based on index
-      const date = new Date();
-      date.setDate(date.getDate() - (points - i));
-      const dateStr = date.toISOString().split('T')[0];
-      
       data.push({
-        date: dateStr,
+        date: DATE_STRINGS[i],
         drawdown: currentDD * 100,
       });
     }
