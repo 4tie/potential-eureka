@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import AutoQuantStageStepper from "../../../components/autoquant/AutoQuantStageStepper";
 import AutoQuantLiveFitnessCurve from "../../../components/autoquant/AutoQuantLiveFitnessCurve";
 import AutoQuantLogTerminal from "../../../components/autoquant/AutoQuantLogTerminal";
@@ -16,11 +17,248 @@ function StatusDot({ flags }) {
       ? "bg-success"
       : flags.isFailed
         ? "bg-error"
+        : flags.isAwaitingApproval
+          ? "bg-warning animate-pulse"
         : flags.isInterrupted || flags.isCancelled
           ? "bg-warning"
           : "bg-base-content/30";
 
   return <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${cls}`} />;
+}
+
+function pairKey(pair) {
+  if (typeof pair === "string") return pair;
+  return pair?.key || pair?.pair || "";
+}
+
+function formatRatioPct(value) {
+  if (value == null || value === "") return "—";
+  const num = Number(value);
+  if (!Number.isFinite(num)) return "—";
+  return `${(num * 100).toFixed(2)}%`;
+}
+
+function formatMaybeNumber(value, digits = 2) {
+  if (value == null || value === "") return "—";
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(digits) : "—";
+}
+
+function firstNonEmptyArray(...values) {
+  return values.find((value) => Array.isArray(value) && value.length > 0) || [];
+}
+
+function getApprovalReview(pipelineState) {
+  if (pipelineState?.status !== "awaiting_user_approval") return null;
+
+  const stage =
+    (pipelineState.stages || []).find((item) => item.index === pipelineState.current_stage) ||
+    (pipelineState.stages || [])[0] ||
+    null;
+  const data = stage?.data || {};
+  const rows = firstNonEmptyArray(data.all_pairs, data.per_pair, pipelineState.selected_pairs);
+  const recommended = firstNonEmptyArray(
+    data.pre_selected,
+    data.passing_pairs,
+    data.current_pairs,
+    pipelineState.user_approved_pairs,
+    (pipelineState.selected_pairs || []).map(pairKey).filter(Boolean)
+  );
+  const isPortfolioReview =
+    pipelineState.current_stage === 2 ||
+    data.type === "portfolio_baseline_review" ||
+    data.portfolio_summary ||
+    data.portfolio_profit != null;
+
+  return {
+    stage,
+    data,
+    rows: rows.filter((row) => pairKey(row)),
+    recommended: recommended.map(pairKey).filter(Boolean),
+    isPortfolioReview,
+  };
+}
+
+function ApprovalReviewPanel({ pipelineState, onResume }) {
+  const review = useMemo(() => getApprovalReview(pipelineState), [pipelineState]);
+  const [selectedPairs, setSelectedPairs] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const selectionSeedRef = useRef("");
+
+  const recommendedKey = (review?.recommended || []).join("|");
+  const selectionSeed = `${review?.stage?.index || ""}|${recommendedKey}`;
+  useEffect(() => {
+    if (!review) return;
+    if (selectionSeedRef.current === selectionSeed) return;
+    selectionSeedRef.current = selectionSeed;
+    setSelectedPairs(review.recommended);
+    setError("");
+  }, [review, selectionSeed]);
+
+  if (!review) return null;
+
+  const { data, rows, recommended, isPortfolioReview } = review;
+  const selectedSet = new Set(selectedPairs);
+  const sortedRows = [...rows].sort((a, b) => {
+    const aRecommended = recommended.includes(pairKey(a)) ? 1 : 0;
+    const bRecommended = recommended.includes(pairKey(b)) ? 1 : 0;
+    if (aRecommended !== bRecommended) return bRecommended - aRecommended;
+    return Number(b.profit_factor || b.profit_total || 0) - Number(a.profit_factor || a.profit_total || 0);
+  });
+
+  const togglePair = (pair) => {
+    setSelectedPairs((prev) =>
+      prev.includes(pair) ? prev.filter((item) => item !== pair) : [...prev, pair]
+    );
+  };
+
+  const handleResume = async () => {
+    if (!selectedPairs.length || !onResume) return;
+    setBusy(true);
+    setError("");
+    try {
+      await onResume(selectedPairs);
+    } catch (err) {
+      setError(err.message || "Failed to resume pipeline.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card bg-warning/8 border border-warning/30">
+      <div className="card-body p-4 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-warning/20 text-warning flex items-center justify-center font-bold shrink-0">
+            !
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-bold text-warning">
+              {isPortfolioReview ? "Portfolio Review Required" : "Pair Selection Review Required"}
+            </h3>
+            <p className="text-xs text-base-content/60 mt-1">
+              AutoQuant paused after producing review data. Select the pairs to approve, then continue the run.
+            </p>
+          </div>
+          <span className="badge badge-warning badge-sm shrink-0">paused</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="rounded-lg bg-base-200/70 border border-base-300 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-base-content/45">Tested</div>
+            <div className="font-mono text-sm font-bold">{data.total_tested ?? rows.length}</div>
+          </div>
+          <div className="rounded-lg bg-base-200/70 border border-base-300 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-base-content/45">Recommended</div>
+            <div className="font-mono text-sm font-bold text-warning">{recommended.length}</div>
+          </div>
+          <div className="rounded-lg bg-base-200/70 border border-base-300 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-base-content/45">
+              {isPortfolioReview ? "Portfolio Profit" : "Total Profit"}
+            </div>
+            <div className="font-mono text-sm font-bold">
+              {isPortfolioReview
+                ? `${formatMaybeNumber(data.portfolio_profit, 2)} USDT`
+                : formatRatioPct(data.profit_total)}
+            </div>
+          </div>
+          <div className="rounded-lg bg-base-200/70 border border-base-300 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-base-content/45">
+              {isPortfolioReview ? "Portfolio Trades" : "Total Trades"}
+            </div>
+            <div className="font-mono text-sm font-bold">{data.portfolio_trades ?? data.total_trades ?? "—"}</div>
+          </div>
+        </div>
+
+        {data.validation_notes?.length > 0 && (
+          <div className="rounded-lg border border-warning/20 bg-warning/10 px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-warning/80 mb-1">Validation Notes</p>
+            <ul className="space-y-1">
+              {data.validation_notes.map((note, index) => (
+                <li key={index} className="text-xs text-base-content/70">{note}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button type="button" className="btn btn-xs btn-outline" onClick={() => setSelectedPairs(recommended)}>
+            Recommended
+          </button>
+          <button type="button" className="btn btn-xs btn-outline" onClick={() => setSelectedPairs(rows.map(pairKey).filter(Boolean))}>
+            All
+          </button>
+          <button type="button" className="btn btn-xs btn-ghost" onClick={() => setSelectedPairs([])}>
+            Clear
+          </button>
+          <span className="text-[10px] text-base-content/45 ml-auto">
+            {selectedPairs.length} selected
+          </span>
+        </div>
+
+        <div className="max-h-72 overflow-y-auto rounded-lg border border-base-300 bg-base-100">
+          <table className="table table-xs">
+            <thead>
+              <tr className="text-[10px] text-base-content/45 uppercase">
+                <th>Use</th>
+                <th>Pair</th>
+                <th className="text-right">Profit</th>
+                <th className="text-right">PF</th>
+                <th className="text-right">Trades</th>
+                <th className="text-right">Win</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedRows.map((row) => {
+                const key = pairKey(row);
+                const selected = selectedSet.has(key);
+                const isRecommended = recommended.includes(key);
+                return (
+                  <tr key={key} className={selected ? "bg-warning/5" : ""}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-xs checkbox-warning"
+                        checked={selected}
+                        onChange={() => togglePair(key)}
+                      />
+                    </td>
+                    <td className="font-mono">
+                      {key}
+                      {isRecommended && <span className="badge badge-xs badge-warning ml-2">suggested</span>}
+                    </td>
+                    <td className={`text-right font-mono ${Number(row.profit_total) >= 0 ? "text-success" : "text-error"}`}>
+                      {formatRatioPct(row.profit_total)}
+                    </td>
+                    <td className="text-right font-mono">{formatMaybeNumber(row.profit_factor, 2)}</td>
+                    <td className="text-right font-mono">{row.trades ?? row.trade_count ?? "—"}</td>
+                    <td className="text-right font-mono">
+                      {row.win_rate != null ? `${formatMaybeNumber(row.win_rate, 1)}%` : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {error && <div className="alert alert-error py-2 text-xs">{error}</div>}
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            className="btn btn-warning btn-sm"
+            disabled={busy || selectedPairs.length === 0}
+            onClick={handleResume}
+          >
+            {busy ? <span className="loading loading-spinner loading-xs" /> : null}
+            Approve {selectedPairs.length} Pair{selectedPairs.length === 1 ? "" : "s"} & Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function DataHealingPanel({ dataHealingStatus, pairStatusMap }) {
@@ -94,6 +332,7 @@ export default function AutoQuantRunDashboard({
   logFilter,
   setLogFilter,
   loadReport,
+  onResume,
   onCancel,
   onReset,
   onRetryRelaxed,
@@ -146,6 +385,8 @@ export default function AutoQuantRunDashboard({
                   ? "text-success"
                   : flags.isFailed
                     ? "text-error"
+                    : flags.isAwaitingApproval
+                      ? "text-warning"
                     : flags.isInterrupted || flags.isCancelled
                       ? "text-warning"
                       : "text-primary"
@@ -154,7 +395,7 @@ export default function AutoQuantRunDashboard({
               {progress}%
             </span>
             <div className="flex gap-2 shrink-0">
-              {flags.isRunning && (
+              {(flags.isRunning || flags.isAwaitingApproval) && (
                 <button className="btn btn-error btn-sm gap-1.5" onClick={onCancel}>
                   Stop
                 </button>
@@ -173,7 +414,7 @@ export default function AutoQuantRunDashboard({
                   ? "progress-success"
                   : flags.isFailed
                     ? "progress-error"
-                    : flags.isInterrupted || flags.isCancelled
+                    : flags.isAwaitingApproval || flags.isInterrupted || flags.isCancelled
                       ? "progress-warning"
                       : "progress-primary"
               }`}
@@ -183,6 +424,8 @@ export default function AutoQuantRunDashboard({
           </div>
         </div>
       </div>
+
+      <ApprovalReviewPanel pipelineState={pipelineState} onResume={onResume} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-1">
@@ -267,6 +510,7 @@ export default function AutoQuantRunDashboard({
             <h3 className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest flex items-center gap-2">
               Live Output
               {flags.isRunning && <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
+              {flags.isAwaitingApproval && <span className="badge badge-xs badge-warning">review paused</span>}
             </h3>
             <span className="text-[10px] text-base-content/30">{logLines.length} lines</span>
           </div>

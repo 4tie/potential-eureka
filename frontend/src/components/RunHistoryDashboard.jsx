@@ -10,6 +10,7 @@ function statusBadgeClass(status) {
     case "failed":      return "badge-error";
     case "cancelled":   return "badge-warning";
     case "interrupted": return "badge-warning";
+    case "awaiting_user_approval": return "badge-warning";
     case "running":     return "badge-primary";
     case "pending":     return "badge-ghost";
     default:            return "badge-ghost";
@@ -114,6 +115,7 @@ function RunCard({ run, onSelect }) {
   const isRunning = run.status === "running" || run.status === "pending";
   const isCompleted = run.status === "completed";
   const isInterrupted = run.status === "interrupted";
+  const isAwaitingApproval = run.status === "awaiting_user_approval";
 
   const report = run.report || {};
   const risk = report.risk || {};
@@ -179,7 +181,7 @@ function RunCard({ run, onSelect }) {
             className="btn btn-ghost btn-xs text-xs text-base-content/50 hover:text-primary"
             onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
           >
-            {isCompleted ? "View →" : isRunning ? "Reconnect →" : isInterrupted ? "Details →" : "View →"}
+            {isAwaitingApproval ? "Review →" : isCompleted ? "View →" : isRunning ? "Reconnect →" : isInterrupted ? "Details →" : "View →"}
           </button>
           <span className="text-base-content/30 text-xs select-none">
             {expanded ? "▲" : "▼"}
@@ -286,7 +288,7 @@ function RunCard({ run, onSelect }) {
   );
 }
 
-const RunHistoryDashboard = forwardRef(function RunHistoryDashboard(_, ref) {
+const RunHistoryDashboard = forwardRef(function RunHistoryDashboard({ onLoad } = {}, ref) {
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRun, setSelectedRun] = useState(null);
@@ -340,7 +342,7 @@ const RunHistoryDashboard = forwardRef(function RunHistoryDashboard(_, ref) {
           <RunCard
             key={run.run_id}
             run={run}
-            onSelect={setSelectedRun}
+            onSelect={onLoad || setSelectedRun}
           />
         ))}
       </div>

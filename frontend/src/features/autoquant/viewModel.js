@@ -8,6 +8,7 @@ export function formatElapsed(secs = 0) {
 
 export function getRunStatusFlags(status) {
   const isRunning = status === "running" || status === "pending";
+  const isAwaitingApproval = status === "awaiting_user_approval";
   const isCompleted = status === "completed";
   const isFailed = status === "failed";
   const isCancelled = status === "cancelled";
@@ -19,12 +20,15 @@ export function getRunStatusFlags(status) {
     isFailed,
     isCancelled,
     isInterrupted,
+    isAwaitingApproval,
     isDone: isCompleted || isFailed || isCancelled || isInterrupted,
   };
 }
 
 export function getProgressPercent(pipelineState) {
   if (pipelineState?.status === "completed") return 100;
+  if (pipelineState?.progress_percent != null) return pipelineState.progress_percent;
+  if (pipelineState?.progress != null) return pipelineState.progress;
   return pipelineState?.current_stage > 0
     ? Math.round((pipelineState.current_stage / STAGE_NAMES.length) * 100)
     : 0;
@@ -77,6 +81,11 @@ export function getWfoWindowSummary(form) {
 }
 
 export function getRunStatusLabel(pipelineState, flags) {
+  if (flags.isAwaitingApproval) {
+    return `Review required - Stage ${pipelineState.current_stage}/${STAGE_NAMES.length} - ${
+      STAGE_NAMES[pipelineState.current_stage - 1] || "Approval"
+    }`;
+  }
   if (flags.isRunning) {
     return `Stage ${pipelineState.current_stage}/${STAGE_NAMES.length} - ${
       STAGE_NAMES[pipelineState.current_stage - 1] || "Starting..."

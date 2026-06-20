@@ -131,6 +131,25 @@ describe("AutoQuant API Integration Tests", () => {
     );
   });
 
+  test("resumeRun calls correct endpoint with approved pairs", async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ status: "running" }),
+    });
+
+    const runId = "test-run-1";
+    const approvedPairs = ["BTC/USDT", "ETH/USDT"];
+    await api.autoquant.resumeRun(runId, approvedPairs);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/api/auto-quant/resume/${runId}`),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ approved_pairs: approvedPairs }),
+      })
+    );
+  });
+
   test("getStatus calls correct endpoint", async () => {
     fetch.mockResolvedValueOnce({
       ok: true,

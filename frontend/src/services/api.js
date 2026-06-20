@@ -106,6 +106,21 @@ export const api = {
     },
 
     /**
+     * Resume a paused pipeline after review
+     * @param {string} runId
+     * @param {string[]} approvedPairs
+     * @returns {Promise<object>}
+     */
+    async resumeRun(runId, approvedPairs) {
+      const res = await fetch(`${this.baseURL}/resume/${runId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approved_pairs: approvedPairs }),
+      });
+      return parseJsonResponse(res, "Failed to resume pipeline.");
+    },
+
+    /**
      * Get pipeline run status
      * @param {string} runId
      * @returns {Promise<PipelineRun>}

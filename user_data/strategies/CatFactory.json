@@ -1,0 +1,19 @@
+{
+  "strategy_name": "CatFactory",
+  "params": {
+    "buy": {},
+    "sell": {},
+    "roi": {
+      "0": 0.1,
+      "30": 0.05,
+      "60": 0.02,
+      "120": 0.0
+    },
+    "stoploss": {
+      "stoploss": -0.05
+    },
+    "trailing": {
+      "trailing_stop": false
+    }
+  }
+}

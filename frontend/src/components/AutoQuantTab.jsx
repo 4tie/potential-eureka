@@ -32,6 +32,7 @@ export default function AutoQuantTab({
     setRunStartedAtMs,
     setWfoWindows,
     startPipeline,
+    resumePipeline,
     cancelPipeline,
     loadReport,
     resetPipelineState,
@@ -127,6 +128,15 @@ export default function AutoQuantTab({
         generalization_failure: run.generalization_failure || null,
         sensitivity: run.sensitivity || null,
         thresholds: run.thresholds || null,
+        selected_pairs: run.selected_pairs || [],
+        winning_pairs: run.winning_pairs || [],
+        user_approved_pairs: run.user_approved_pairs || [],
+        portfolio_baseline_result: run.portfolio_baseline_result || {},
+        progress: run.progress ?? run.progress_percent ?? null,
+        progress_percent: run.progress_percent ?? run.progress ?? null,
+        eta_seconds: run.eta_seconds ?? null,
+        progress_counters: run.progress_counters || {},
+        validation_notes: run.validation_notes || [],
       });
 
       if (run.status === "completed" && !run.report) {
@@ -192,6 +202,7 @@ export default function AutoQuantTab({
           logFilter={uiState.logFilter}
           setLogFilter={uiState.setLogFilter}
           loadReport={loadReport}
+          onResume={resumePipeline}
           onCancel={handleCancel}
           onReset={handleReset}
           onRetryRelaxed={handleRetryRelaxed}

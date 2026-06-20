@@ -28,6 +28,10 @@ export function cancelRun(runId) {
   return api.autoquant.cancelRun(runId);
 }
 
+export function resumeRun(runId, approvedPairs) {
+  return api.autoquant.resumeRun(runId, approvedPairs);
+}
+
 export function getReport(runId) {
   return api.autoquant.getReport(runId);
 }

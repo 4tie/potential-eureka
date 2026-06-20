@@ -25,7 +25,9 @@ def get_pipeline_status(run_id: str) -> dict[str, Any]:
     state = _pipeline.get_state(run_id)
     if state is None:
         raise HTTPException(status_code=404, detail=f"Pipeline run '{run_id}' not found.")
-    return _pipeline._state_snapshot(state)
+    snapshot = _pipeline._state_snapshot(state)
+    snapshot["recent_events"] = _pipeline.get_event_history(run_id)
+    return snapshot
 
 
 def request_pipeline_cancel(run_id: str) -> dict[str, str]:
