@@ -406,7 +406,7 @@ export default function StrategyEditorTab({ onDirtyChange, onAgentContextChange 
     }
   }, []);
 
-  useEffect(() => { loadFileList(); }, [loadFileList]);
+  useEffect(() => { setTimeout(() => loadFileList(), 0); }, [loadFileList]);
 
   // ── load strategy ─────────────────────────────────────────────────────────
 
@@ -422,12 +422,14 @@ export default function StrategyEditorTab({ onDirtyChange, onAgentContextChange 
       const r = await fetch(`/api/strategies/files/${encodeURIComponent(strat.name)}`);
       if (!r.ok) throw new Error(await r.text());
       const data = await r.json();
-      setPyContent(data.python_content || "");
-      setSavedPy(data.python_content || "");
-      setJsonContent(data.json_content || "");
-      setSavedJson(data.json_content || "");
-      setSelected({ ...strat, py_file: data.python_path, json_file: data.json_path, has_json: data.json_exists });
-      setActiveFile("py");
+      setTimeout(() => {
+        setPyContent(data.python_content || "");
+        setSavedPy(data.python_content || "");
+        setJsonContent(data.json_content || "");
+        setSavedJson(data.json_content || "");
+        setSelected({ ...strat, py_file: data.python_path, json_file: data.json_path, has_json: data.json_exists });
+        setActiveFile("py");
+      }, 0);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -452,7 +454,7 @@ export default function StrategyEditorTab({ onDirtyChange, onAgentContextChange 
   }, []);
 
   useEffect(() => {
-    if (showHistory && selected) fetchSnapshots(selected.name);
+    if (showHistory && selected) setTimeout(() => fetchSnapshots(selected.name), 0);
   }, [showHistory, selected, fetchSnapshots]);
 
   // ── save ──────────────────────────────────────────────────────────────────

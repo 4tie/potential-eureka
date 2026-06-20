@@ -174,21 +174,22 @@ export default function StressTestTab({
 
   useEffect(() => {
     if (!sharedState || sharedLoading) return;
-    if (sharedState.strategy_name && !strategy) setStrategy(sharedState.strategy_name);
-    if (sharedState.timeframe      && !timeframe) setTimeframe(sharedState.timeframe);
-    if (sharedState.pairs?.length  && !pairs.length) setPairs(sharedState.pairs);
-    const s = sharedState.start_date || "";
-    const e = sharedState.end_date   || "";
-    if (s && e && !startDate && !endDate) {
-      setStartDate(s); setEndDate(e); setTimerange(toTimerange(s, e));
-    } else if (sharedState.timerange && !timerange) {
-      const { start, end } = fromTimerange(sharedState.timerange);
-      setTimerange(sharedState.timerange);
-      if (start) setStartDate(start);
-      if (end)   setEndDate(end);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sharedState, sharedLoading]);
+    setTimeout(() => {
+      if (sharedState.strategy_name && !strategy) setStrategy(sharedState.strategy_name);
+      if (sharedState.timeframe      && !timeframe) setTimeframe(sharedState.timeframe);
+      if (sharedState.pairs?.length  && !pairs.length) setPairs(sharedState.pairs);
+      const s = sharedState.start_date || "";
+      const e = sharedState.end_date   || "";
+      if (s && e && !startDate && !endDate) {
+        setStartDate(s); setEndDate(e); setTimerange(toTimerange(s, e));
+      } else if (sharedState.timerange && !timerange) {
+        const { start, end } = fromTimerange(sharedState.timerange);
+        setTimerange(sharedState.timerange);
+        if (start) setStartDate(start);
+        if (end)   setEndDate(end);
+      }
+    }, 0);
+  }, [sharedState, sharedLoading, strategy, timeframe, pairs, startDate, endDate, timerange]);
 
   const triggerSync = useCallback(() => {
     if (!hasChanged.current) return;

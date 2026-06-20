@@ -136,14 +136,6 @@ function dateToTimerange(start, end) {
   return `${s}-${e}`;
 }
 
-function timerangeToDates(tr) {
-  if (!tr || !tr.includes("-")) return { start: "", end: "" };
-  const [s, e] = tr.split("-");
-  const start = s.length === 8 ? `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}` : "";
-  const end   = e.length === 8 ? `${e.slice(0,4)}-${e.slice(4,6)}-${e.slice(6,8)}` : "";
-  return { start, end };
-}
-
 const POLL_INTERVAL = 2000;
 
 export default function BacktestForm({
@@ -194,29 +186,24 @@ export default function BacktestForm({
     if (sharedLoading || !sharedState || hydrated.current) return;
     hydrated.current = true;
 
-    if (sharedState.strategy_name && strategy !== sharedState.strategy_name) setStrategy(sharedState.strategy_name);
-    if (sharedState.timeframe && timeframe !== sharedState.timeframe) setTimeframe(sharedState.timeframe);
-    if (sharedState.dry_run_wallet != null && wallet !== String(sharedState.dry_run_wallet)) setWallet(String(sharedState.dry_run_wallet));
-    if (sharedState.max_open_trades != null && maxTrades !== String(sharedState.max_open_trades)) setMaxTrades(String(sharedState.max_open_trades));
-    if (sharedState.pairs?.length && JSON.stringify(pairs) !== JSON.stringify(sharedState.pairs)) setPairs(sharedState.pairs);
+    setTimeout(() => {
+      if (sharedState.strategy_name && strategy !== sharedState.strategy_name) setStrategy(sharedState.strategy_name);
+      if (sharedState.timeframe && timeframe !== sharedState.timeframe) setTimeframe(sharedState.timeframe);
+      if (sharedState.dry_run_wallet != null && wallet !== String(sharedState.dry_run_wallet)) setWallet(String(sharedState.dry_run_wallet));
+      if (sharedState.max_open_trades != null && maxTrades !== String(sharedState.max_open_trades)) setMaxTrades(String(sharedState.max_open_trades));
+      if (sharedState.pairs?.length && JSON.stringify(pairs) !== JSON.stringify(sharedState.pairs)) setPairs(sharedState.pairs);
 
-    const savedStart = sharedState.start_date || "";
-    const savedEnd   = sharedState.end_date   || "";
+      const savedStart = sharedState.start_date || "";
+      const savedEnd   = sharedState.end_date   || "";
 
-    if (savedStart && savedEnd) {
-      if (startDate !== savedStart) setStartDate(savedStart);
-      if (endDate !== savedEnd) setEndDate(savedEnd);
-      const newTimerange = dateToTimerange(savedStart, savedEnd);
-      if (timerange !== newTimerange) setTimerange(newTimerange);
-    } else if (sharedState.timerange) {
-      setTimerange(sharedState.timerange);
-      const { start, end } = timerangeToDates(sharedState.timerange);
-      if (start) setStartDate(start);
-      if (end)   setEndDate(end);
-    }
-
-    requestAnimationFrame(() => { initialized.current = true; });
-  }, [sharedState, sharedLoading]);
+      if (savedStart && savedEnd) {
+        if (startDate !== savedStart) setStartDate(savedStart);
+        if (endDate !== savedEnd) setEndDate(savedEnd);
+        const newTimerange = dateToTimerange(savedStart, savedEnd);
+        if (timerange !== newTimerange) setTimerange(newTimerange);
+      }
+    }, 0);
+  }, [sharedState, sharedLoading, strategy, timeframe, wallet, maxTrades, pairs, startDate, endDate, timerange]);
 
 
   // ── auto-sync to shared state after form values settle ────────────────────

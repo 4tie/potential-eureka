@@ -36,7 +36,7 @@ const useRealTimeUpdates = (run, enabled = true, interval = 5000) => {
       setError(err.message);
       console.error("Error fetching run data:", err);
     }
-  }, [run?.run_id]);
+  }, [run?.run_id, setLiveData, setLastUpdate, setError]);
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -59,9 +59,11 @@ const useRealTimeUpdates = (run, enabled = true, interval = 5000) => {
           
           // Only update if data has changed
           if (JSON.stringify(data) !== JSON.stringify(previousDataRef.current)) {
-            setLiveData(data);
-            setLastUpdate(new Date());
-            previousDataRef.current = data;
+            setTimeout(() => {
+              setLiveData(data);
+              setLastUpdate(new Date());
+              previousDataRef.current = data;
+            }, 0);
           }
         } catch (err) {
           console.error("Error parsing WebSocket message:", err);
@@ -79,8 +81,10 @@ const useRealTimeUpdates = (run, enabled = true, interval = 5000) => {
         console.log("WebSocket disconnected, falling back to polling");
         
         // Start polling as fallback
-        pollIntervalRef.current = setInterval(fetchRunData, interval);
-        setIsPolling(true);
+        setTimeout(() => {
+          pollIntervalRef.current = setInterval(fetchRunData, interval);
+          setIsPolling(true);
+        }, 0);
       };
     } catch (err) {
       console.error("Error creating WebSocket:", err);
@@ -124,7 +128,7 @@ const useRealTimeUpdates = (run, enabled = true, interval = 5000) => {
     } else {
       pollIntervalRef.current = setInterval(fetchRunData, interval);
     }
-  }, [run?.run_id, interval, fetchRunData]);
+  }, [run?.run_id, interval, fetchRunData, setIsPolling]);
 
   return {
     liveData: liveData || run,

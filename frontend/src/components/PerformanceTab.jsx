@@ -426,7 +426,7 @@ function InspectModal({ run, onClose, onApply, applying }) {
     setError(null);
     fetch(`/api/performance/runs/${run.run_id}`)
       .then(r => {
-        if (!cancelled) setLoading(true);
+        if (!cancelled) setTimeout(() => setLoading(true), 0);
         return r.ok ? r.json() : r.json().then(e => Promise.reject(e.detail || "Failed to load run detail"));
       })
       .then(d => { if (!cancelled) { setDetail(d); setLoading(false); } })

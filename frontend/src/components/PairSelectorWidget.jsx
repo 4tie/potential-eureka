@@ -55,10 +55,15 @@ export default function PairSelectorWidget({ onSelectionChange }) {
       const selectedStr = JSON.stringify(ps.selected);
       if (selectedStr !== lastSelectedRef.current) {
         lastSelectedRef.current = selectedStr;
-        onSelectionChange([...ps.selected]);
       }
     }
   }, [ps.selected, onSelectionChange]);
+
+  useEffect(() => {
+    if (onSelectionChange && lastSelectedRef.current) {
+      onSelectionChange([...ps.selected]);
+    }
+  }, [onSelectionChange, ps.selected]);
 
   const mutate = useCallback(async (key, fn) => {
     setBusy(b => new Set([...b, key]));
