@@ -4,6 +4,7 @@ import AutoQuantTab from "./AutoQuantTab";
 
 // Mock the API
 jest.mock("../services/api", () => ({
+  __esModule: true,
   default: {
     autoquant: {
       loadOptions: jest.fn(() => Promise.resolve({ timeframe: "1h" })),
@@ -14,7 +15,7 @@ jest.mock("../services/api", () => ({
       })),
       generateTemplate: jest.fn(() => Promise.resolve({ strategy_name: "TestStrategy_1h" })),
       screenPairs: jest.fn(() => Promise.resolve({ results: [] })),
-      startPipeline: jest.fn(() => Promise.resolve({ run_id: "test-run-1" })),
+      startRun: jest.fn(() => Promise.resolve({ run_id: "test-run-1" })),
       cancelRun: jest.fn(() => Promise.resolve()),
       getStatus: jest.fn(() => Promise.resolve({ status: "completed" })),
       getReport: jest.fn(() => Promise.resolve({ profit: 100 })),
@@ -54,11 +55,13 @@ describe("AutoQuantTab Integration Tests", () => {
     render(<AutoQuantTab />);
 
     // Check that main tabs are rendered
-    expect(screen.getByText(/AutoQuant/i)).toBeInTheDocument();
+    expect(screen.getByText(/Auto-Quant Factory/i)).toBeInTheDocument();
   });
 
   test("initializes form with default values", async () => {
     render(<AutoQuantTab />);
+
+    fireEvent.click(screen.getByRole("button", { name: /advanced settings/i }));
 
     await waitFor(() => {
       // Check that form elements are present
@@ -161,7 +164,8 @@ describe("AutoQuantTab Integration Tests", () => {
 
   test("pipeline start integrates with form and strategy selection", async () => {
     const api = (await import("../services/api")).default;
-    api.autoquant.startPipeline.mockResolvedValueOnce({ run_id: "test-run-1" });
+    api.autoquant.loadOptions.mockResolvedValueOnce({ timeframe: "1h", strategy: "TestStrategy" });
+    api.autoquant.startRun.mockResolvedValueOnce({ run_id: "test-run-1" });
 
     render(<AutoQuantTab />);
 
@@ -176,7 +180,7 @@ describe("AutoQuantTab Integration Tests", () => {
     }
 
     await waitFor(() => {
-      expect(api.autoquant.startPipeline).toHaveBeenCalled();
+      expect(api.autoquant.startRun).toHaveBeenCalled();
     });
   });
 
@@ -184,9 +188,8 @@ describe("AutoQuantTab Integration Tests", () => {
     render(<AutoQuantTab />);
 
     await waitFor(() => {
-      // Check that extracted components are present
-      const metricCards = screen.queryAllByTestId(/metric/i);
-      expect(metricCards.length).toBeGreaterThan(0);
+      expect(screen.getByText("Pipeline Configuration")).toBeInTheDocument();
+      expect(screen.getByText("Run History")).toBeInTheDocument();
     });
   });
 

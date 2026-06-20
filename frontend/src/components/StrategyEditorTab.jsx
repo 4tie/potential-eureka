@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { api } from "../services/api.js";
 
 // ── Syntax highlighting (no external deps) ────────────────────────────────────
 
@@ -419,9 +420,7 @@ export default function StrategyEditorTab({ onDirtyChange, onAgentContextChange 
       setSnapshots([]);
     }, 0);
     try {
-      const r = await fetch(`/api/strategies/files/${encodeURIComponent(strat.name)}`);
-      if (!r.ok) throw new Error(await r.text());
-      const data = await r.json();
+      const data = await api.strategies.getFiles(strat.name);
       setTimeout(() => {
         setPyContent(data.python_content || "");
         setSavedPy(data.python_content || "");
@@ -442,9 +441,7 @@ export default function StrategyEditorTab({ onDirtyChange, onAgentContextChange 
   const fetchSnapshots = useCallback(async (name) => {
     setLoadingSnaps(true);
     try {
-      const r = await fetch(`/api/strategies/${encodeURIComponent(name)}/snapshots`);
-      if (!r.ok) throw new Error(await r.text());
-      const data = await r.json();
+      const data = await api.strategies.getSnapshots(name);
       setSnapshots(data.snapshots || []);
     } catch {
       setSnapshots([]);

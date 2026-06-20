@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { api } from "../services/api.js";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -233,8 +234,7 @@ function ExplainModal({ strategyName, onClose }) {
   const [requested, setRequested]       = useState(false);
 
   useEffect(() => {
-    fetch("/api/settings")
-      .then(r => r.json())
+    api.settings.get()
       .then(d => {
         setConfigModel(d.settings?.ollama_model || "");
         setConfigLoading(false);
@@ -424,11 +424,7 @@ function InspectModal({ run, onClose, onApply, applying }) {
   useEffect(() => {
     let cancelled = false;
     setTimeout(() => setError(null), 0);
-    fetch(`/api/performance/runs/${run.run_id}`)
-      .then(r => {
-        if (!cancelled) setTimeout(() => setLoading(true), 0);
-        return r.ok ? r.json() : r.json().then(e => Promise.reject(e.detail || "Failed to load run detail"));
-      })
+    api.performance.getRun(run.run_id)
       .then(d => { if (!cancelled) { setDetail(d); setLoading(false); } })
       .catch(e => { if (!cancelled) { setError(String(e)); setLoading(false); } });
     return () => { cancelled = true; };
@@ -579,8 +575,7 @@ export default function PerformanceTab({ strategies = [], strategiesLoading = fa
     setRunsLoading(true);
     setRunsError(null);
     setRuns([]);
-    fetch(`/api/performance/runs?strategy=${encodeURIComponent(strategyName)}`)
-      .then(r => r.ok ? r.json() : r.json().then(e => Promise.reject(e.detail || "Failed to load runs")))
+    api.performance.getRuns(strategyName)
       .then(data => { setRuns(data.runs || []); setRunsLoading(false); })
       .catch(e => { setRunsError(String(e)); setRunsLoading(false); });
   }, []);
@@ -595,9 +590,7 @@ export default function PerformanceTab({ strategies = [], strategiesLoading = fa
   const handleApply = useCallback(async (run) => {
     setApplying(true);
     try {
-      const res = await fetch(`/api/performance/runs/${run.run_id}/apply`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Apply failed");
+      const data = await api.performance.applyRun(run.run_id);
       pushToast(data.message, "success", 8000);
       setInspecting(null);
     } catch (e) {

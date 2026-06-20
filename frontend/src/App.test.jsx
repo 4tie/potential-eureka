@@ -29,6 +29,7 @@ jest.mock('./components/NavPanel.jsx', () => ({ onChange }) => (
     <button onClick={() => onChange('backtest')}>Backtest nav</button>
     <button onClick={() => onChange('optimizer')}>Optimizer nav</button>
     <button onClick={() => onChange('auto-quant')}>AutoQuant nav</button>
+    <button onClick={() => onChange('strategy-editor')}>Editor nav</button>
   </nav>
 ));
 
@@ -37,7 +38,13 @@ jest.mock('./components/ResultsView.jsx', () => () => <div>Results mock</div>);
 jest.mock('./components/BacktestResults.jsx', () => () => <div>Backtest results mock</div>);
 jest.mock('./components/SettingsTab.jsx', () => () => <div>Settings mock</div>);
 jest.mock('./components/StressTestTab.jsx', () => () => <div>Stress mock</div>);
-jest.mock('./components/StrategyEditorTab.jsx', () => () => <div>Editor mock</div>);
+jest.mock('./components/StrategyEditorTab.jsx', () => ({ onDirtyChange }) => {
+  const { useEffect } = jest.requireActual('react');
+  useEffect(() => {
+    onDirtyChange?.(true);
+  }, [onDirtyChange]);
+  return <div>Editor mock</div>;
+});
 jest.mock('./components/PerformanceTab.jsx', () => () => <div>Performance mock</div>);
 jest.mock('./components/PairExplorerTab.jsx', () => () => <div>Pair explorer mock</div>);
 jest.mock('./components/AssistantTab.jsx', () => () => <div>Assistant tab mock</div>);
@@ -156,5 +163,28 @@ describe('App agent heartbeat', () => {
     expect(context.strategy_name).toBe('OptimizerStrategy');
     expect(context.optimizer_session_id).toBe('optimizer-session-1');
     expect(context.optimizer_trial_number).toBe(7);
+  });
+
+  test('blocks leaving the dirty strategy editor until confirmed', async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByText('Editor nav'));
+    await screen.findByText('Editor mock');
+    await act(async () => {});
+
+    fireEvent.click(screen.getByText('Optimizer nav'));
+    expect(screen.getByText(/unsaved changes/i)).toBeInTheDocument();
+
+    expect(screen.getByText('Editor mock')).toBeInTheDocument();
+    expect(screen.queryByText('Optimizer mock')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(screen.queryByText(/unsaved changes/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Editor mock')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Optimizer nav'));
+    fireEvent.click(screen.getByText('Leave Anyway'));
+
+    expect(screen.getByText('Optimizer mock')).toBeInTheDocument();
   });
 });

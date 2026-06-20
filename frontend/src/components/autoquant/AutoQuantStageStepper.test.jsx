@@ -23,9 +23,9 @@ describe("AutoQuantStageStepper", () => {
       <AutoQuantStageStepper stages={mockStages} nowMs={null} />
     );
 
-    expect(getByText("Pre-selection")).toBeInTheDocument();
-    expect(getByText("Pair Screening")).toBeInTheDocument();
-    expect(getByText("Optimization")).toBeInTheDocument();
+    expect(getByText(/Pre-selection/)).toBeInTheDocument();
+    expect(getByText(/Pair Screening/)).toBeInTheDocument();
+    expect(getByText(/Optimization/)).toBeInTheDocument();
   });
 
   test("renders running stage with spinner and live badge", () => {
@@ -168,9 +168,9 @@ describe("AutoQuantStageStepper", () => {
       <AutoQuantStageStepper stages={mixedStages} nowMs={Date.now()} />
     );
 
-    expect(container.querySelector(".bg-success")).toBeInTheDocument();
-    expect(container.querySelector(".bg-primary")).toBeInTheDocument();
-    expect(container.querySelector(".bg-error")).toBeInTheDocument();
+    expect(container.querySelector(".bg-success\\/15")).toBeInTheDocument();
+    expect(container.querySelector(".bg-primary\\/20")).toBeInTheDocument();
+    expect(container.querySelector(".bg-error\\/15")).toBeInTheDocument();
   });
 
   test("renders connector lines between stages", () => {

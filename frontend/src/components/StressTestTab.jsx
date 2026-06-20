@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { api } from "../services/api.js";
 
 const TIMEFRAMES = ["1m","5m","15m","30m","1h","2h","4h","6h","8h","12h","1d","3d","1w"];
 
@@ -218,10 +219,8 @@ export default function StressTestTab({
     stopPoll();
     pollRef.current = setInterval(async () => {
       try {
-        const r = await fetch(`/api/session/status/${sid}`);
-        if (r.status === 404) { stopPoll(); setRunning(false); setRunError("Session expired."); return; }
-        if (!r.ok) return;
-        const data = await r.json();
+        const data = await api.session.getStatus(sid);
+        if (!data) { stopPoll(); setRunning(false); setRunError("Session expired."); return; }
         const res = data.result || {};
 
         if (data.status === "running") {

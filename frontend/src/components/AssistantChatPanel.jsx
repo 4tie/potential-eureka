@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { api } from "../services/api.js";
 import {
   ExclamationTriangleIcon,
   PaperAirplaneIcon,
@@ -13,15 +14,6 @@ function compactId(value) {
   if (!value) return null;
   const text = String(value);
   return text.length > 10 ? `${text.slice(0, 8)}...` : text;
-}
-
-function queryFromContext(context) {
-  const params = new URLSearchParams();
-  Object.entries(context || {}).forEach(([key, value]) => {
-    if (value !== null && value !== undefined && value !== "") params.set(key, String(value));
-  });
-  const text = params.toString();
-  return text ? `?${text}` : "";
 }
 
 function summarizeContext(context) {
@@ -285,8 +277,7 @@ export default function AssistantChatPanel({
   }, [modelState.loading, checkOllamaHealth]);
 
   const refreshContext = useCallback(() => {
-    fetch(`/api/agent/context${queryFromContext(contextOverrides)}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r))
+    api.ai.getContext(contextOverrides)
       .then(data => setContextSummary(summarizeContext(data)))
       .catch(() => setContextSummary(summarizeContext({ active: contextOverrides, warnings: ["Context snapshot unavailable."] })));
   }, [contextOverrides]);

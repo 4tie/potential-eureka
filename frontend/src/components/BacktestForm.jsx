@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { api } from "../services/api.js";
 import BacktestResults from "./BacktestResults";
 import SmartPairSelector from "./SmartPairSelector";
 
@@ -256,15 +257,10 @@ export default function BacktestForm({
   const fetchResults = useCallback(async (rid) => {
     setResultsLoading(true);
     try {
-      const r = await fetch(`/api/backtest/results/${rid}`);
-      if (r.ok) {
-        setResults(await r.json());
-      } else {
-        const err = await r.json().catch(() => ({}));
-        setRunError(err.detail || "Failed to load results.");
-      }
-    } catch {
-      setRunError("Failed to load results.");
+      const data = await api.backtest.getResults(rid);
+      setResults(data);
+    } catch (e) {
+      setRunError(e.message || "Failed to load results.");
     } finally {
       setResultsLoading(false);
     }
@@ -272,25 +268,14 @@ export default function BacktestForm({
 
   const startPolling = useCallback((sid) => {
     stopPolling();
-    let errorCount = 0;
     pollRef.current = setInterval(async () => {
       try {
-        const r = await fetch(`/api/session/status/${sid}`);
-        if (r.status === 404) {
+        const data = await api.session.getStatus(sid);
+        if (!data) {
           stopPolling(); setRunning(false);
           setRunError("Session expired (server restarted). Please run again.");
           return;
         }
-        if (!r.ok) {
-          errorCount += 1;
-          if (errorCount >= 3) {
-            stopPolling(); setRunning(false);
-            setRunError("Lost connection to the backend. Please check the server and try again.");
-          }
-          return;
-        }
-        errorCount = 0;
-        const data = await r.json();
         const status = data.status;
         setRunStatus(status);
         const cmd = data.result?.command;
@@ -420,9 +405,7 @@ export default function BacktestForm({
       stopDownloadPoll();
       downloadPollRef.current = setInterval(async () => {
         try {
-          const r2 = await fetch(`/api/session/status/${sid}`);
-          if (!r2.ok) return;
-          const status = await r2.json();
+          const status = await api.session.getStatus(sid);
           setDownloadStatus(status.status);
           if (status.result?.command) setDownloadCommand(status.result.command);
           if (status.status === "completed" || status.status === "failed") {

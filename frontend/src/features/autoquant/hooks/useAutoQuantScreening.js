@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import api from "../../../services/api";
+import { screenPairs as screenPairsRequest } from "../api";
 
 export default function useAutoQuantScreening() {
   const [showScreener, setShowScreener] = useState(false);
@@ -27,7 +27,7 @@ export default function useAutoQuantScreening() {
       config_file: null,
     };
     try {
-      const data = await api.autoquant.screenPairs(payload);
+      const data = await screenPairsRequest(payload);
       setScreenResults(data.results || []);
       if (data.errors?.length > 0) {
         setScreenError(

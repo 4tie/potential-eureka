@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import api from "../../../services/api";
+import { generateTemplate } from "../api";
 import { normalizeStrategies } from "../utils";
 
 export default function useAutoQuantStrategyGen(strategies = []) {
@@ -32,7 +32,7 @@ export default function useAutoQuantStrategyGen(strategies = []) {
       timeframe: form.timeframe,
     };
     try {
-      const data = await api.autoquant.generateTemplate(payload);
+      const data = await generateTemplate(payload);
       const newEntry = { strategy_name: data.strategy_name };
       setGeneratedStrategies((prev) =>
         strategyList.some((s) => s.strategy_name === data.strategy_name)

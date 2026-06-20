@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { DEFAULT_AUTOQUANT_FORM } from "../constants";
-import api from "../../../services/api";
+import { loadAutoQuantOptions, loadTimeframeThresholds, saveAutoQuantOptions } from "../api";
 
 export default function useAutoQuantForm() {
   const [form, setForm] = useState(DEFAULT_AUTOQUANT_FORM);
@@ -12,7 +12,7 @@ export default function useAutoQuantForm() {
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const data = await api.autoquant.loadOptions();
+        const data = await loadAutoQuantOptions();
         setForm((prev) => ({
           ...prev,
           ...data,
@@ -31,7 +31,7 @@ export default function useAutoQuantForm() {
     if (!optionsLoaded) return undefined;
     const timeoutId = setTimeout(async () => {
       try {
-        await api.autoquant.saveOptions(form);
+        await saveAutoQuantOptions(form);
       } catch (err) {
         console.error("Failed to save options:", err);
       }
@@ -42,7 +42,7 @@ export default function useAutoQuantForm() {
 
   const applyTimeframeThresholds = useCallback(async (tf) => {
     try {
-      const data = await api.autoquant.loadTimeframeThresholds(tf);
+      const data = await loadTimeframeThresholds(tf);
       setTimeframeProfile(data);
       setForm((prev) => ({
         ...prev,

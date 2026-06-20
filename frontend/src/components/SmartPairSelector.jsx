@@ -9,11 +9,7 @@
  *   disabled            bool       – disables trigger and all interactions
  */
 import { useState, useEffect, useRef, useMemo } from "react";
-
-const API = {
-  state:        ()            => fetch("/api/pairs").then(r => r.json()),
-  search:       (q)           => fetch(`/api/pairs/search?q=${encodeURIComponent(q)}`).then(r => r.json()),
-};
+import { api } from "../services/api.js";
 
 export default function SmartPairSelector({ value, onChange, onMaxTradesChange, maxTrades, disabled }) {
   const [available, setAvailable] = useState([]);
@@ -36,7 +32,7 @@ export default function SmartPairSelector({ value, onChange, onMaxTradesChange, 
 
   // ── initial load from API (available pairs only) ──────────────────────────
   useEffect(() => {
-    API.state()
+    api.pairs.getAll()
       .then(data => {
         setAvailable(data.available_pairs || []);
         setFavorites(new Set(data.favorite_pairs || []));
@@ -73,7 +69,7 @@ export default function SmartPairSelector({ value, onChange, onMaxTradesChange, 
     setSearchLoading(true);
     searchTimer.current = setTimeout(async () => {
       try {
-        const data = await API.search(search);
+        const data = await api.pairs.search(search);
         setSearchResults(data.matches || []);
       } catch (err) {
         console.debug("Pair search failed:", err);

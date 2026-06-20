@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import api from "../../services/api";
+import api from "../../../services/api";
 
 export function useAutoQuantState() {
   const [runs, setRuns] = useState([]);
@@ -30,7 +30,7 @@ export function useAutoQuantState() {
   const loadRun = useCallback(async (runId) => {
     try {
       setError(null);
-      const data = await api.autoquant.getRun(runId);
+      const data = await api.autoquant.getStatus(runId);
       setCurrentRun(data);
       return data;
     } catch (err) {
@@ -44,7 +44,7 @@ export function useAutoQuantState() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.autoquant.startPipeline(strategy);
+      const data = await api.autoquant.startRun({ strategy });
       await loadRuns(); // Refresh list
       await loadRun(data.run_id); // Load new run
       return data.run_id;
@@ -86,7 +86,7 @@ export function useAutoQuantState() {
           setCurrentRun((prev) => ({
             ...prev,
             ...msg.data,
-            progress: msg.progress || prev?.progress || 0,
+            progress: msg.data.progress ?? msg.progress ?? prev?.progress ?? 0,
             current_stage: msg.stage || prev?.current_stage || "",
             status: msg.status || prev?.status || "",
           }));
@@ -120,6 +120,7 @@ export function useAutoQuantState() {
   return {
     runs,
     currentRun,
+    setCurrentRun,
     loading,
     error,
     loadRuns,

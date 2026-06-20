@@ -3,12 +3,13 @@ import { renderHook, act } from "@testing-library/react";
 import { useAutoQuantState } from "./useAutoQuantState";
 
 // Mock the API
-jest.mock("../../services/api", () => ({
+jest.mock("../../../services/api", () => ({
+  __esModule: true,
   default: {
     autoquant: {
       listRuns: jest.fn(() => Promise.resolve({ runs: [] })),
-      getRun: jest.fn(() => Promise.resolve({ run_id: "test-1", status: "completed" })),
-      startPipeline: jest.fn(() => Promise.resolve({ run_id: "new-1" })),
+      getStatus: jest.fn(() => Promise.resolve({ run_id: "test-1", status: "completed" })),
+      startRun: jest.fn(() => Promise.resolve({ run_id: "new-1" })),
       cancelRun: jest.fn(() => Promise.resolve()),
       connectWebSocket: jest.fn(() => ({
         onopen: null,
@@ -36,7 +37,7 @@ describe("useAutoQuantState", () => {
   });
 
   test("loadRuns fetches and sets runs", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     api.autoquant.listRuns.mockResolvedValueOnce({
       runs: [
         { run_id: "run-1", status: "completed" },
@@ -56,7 +57,7 @@ describe("useAutoQuantState", () => {
   });
 
   test("loadRuns handles errors", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     api.autoquant.listRuns.mockRejectedValueOnce(new Error("API error"));
 
     const { result } = renderHook(() => useAutoQuantState());
@@ -70,8 +71,8 @@ describe("useAutoQuantState", () => {
   });
 
   test("loadRun fetches and sets current run", async () => {
-    const api = (await import("../../services/api")).default;
-    api.autoquant.getRun.mockResolvedValueOnce({
+    const api = (await import("../../../services/api")).default;
+    api.autoquant.getStatus.mockResolvedValueOnce({
       run_id: "test-1",
       status: "completed",
       progress: 100,
@@ -92,8 +93,8 @@ describe("useAutoQuantState", () => {
   });
 
   test("loadRun handles errors", async () => {
-    const api = (await import("../../services/api")).default;
-    api.autoquant.getRun.mockRejectedValueOnce(new Error("Not found"));
+    const api = (await import("../../../services/api")).default;
+    api.autoquant.getStatus.mockRejectedValueOnce(new Error("Not found"));
 
     const { result } = renderHook(() => useAutoQuantState());
 
@@ -106,12 +107,12 @@ describe("useAutoQuantState", () => {
   });
 
   test("startPipeline creates new run and refreshes", async () => {
-    const api = (await import("../../services/api")).default;
-    api.autoquant.startPipeline.mockResolvedValueOnce({ run_id: "new-1" });
+    const api = (await import("../../../services/api")).default;
+    api.autoquant.startRun.mockResolvedValueOnce({ run_id: "new-1" });
     api.autoquant.listRuns.mockResolvedValueOnce({
       runs: [{ run_id: "new-1", status: "pending" }],
     });
-    api.autoquant.getRun.mockResolvedValueOnce({
+    api.autoquant.getStatus.mockResolvedValueOnce({
       run_id: "new-1",
       status: "pending",
     });
@@ -123,14 +124,14 @@ describe("useAutoQuantState", () => {
       expect(runId).toBe("new-1");
     });
 
-    expect(api.autoquant.startPipeline).toHaveBeenCalledWith("TestStrategy");
+    expect(api.autoquant.startRun).toHaveBeenCalledWith({ strategy: "TestStrategy" });
     expect(result.current.currentRun).toEqual({ run_id: "new-1", status: "pending" });
     expect(result.current.runs).toHaveLength(1);
   });
 
   test("startPipeline handles errors", async () => {
-    const api = (await import("../../services/api")).default;
-    api.autoquant.startPipeline.mockRejectedValueOnce(new Error("Start failed"));
+    const api = (await import("../../../services/api")).default;
+    api.autoquant.startRun.mockRejectedValueOnce(new Error("Start failed"));
 
     const { result } = renderHook(() => useAutoQuantState());
 
@@ -144,9 +145,9 @@ describe("useAutoQuantState", () => {
   });
 
   test("cancelRun cancels a running pipeline", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     api.autoquant.cancelRun.mockResolvedValueOnce();
-    api.autoquant.getRun.mockResolvedValueOnce({
+    api.autoquant.getStatus.mockResolvedValueOnce({
       run_id: "test-1",
       status: "cancelled",
     });
@@ -158,11 +159,11 @@ describe("useAutoQuantState", () => {
     });
 
     expect(api.autoquant.cancelRun).toHaveBeenCalledWith("test-1");
-    expect(api.autoquant.getRun).toHaveBeenCalledWith("test-1");
+    expect(api.autoquant.getStatus).toHaveBeenCalledWith("test-1");
   });
 
   test("cancelRun handles errors", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     api.autoquant.cancelRun.mockRejectedValueOnce(new Error("Cancel failed"));
 
     const { result } = renderHook(() => useAutoQuantState());
@@ -175,7 +176,7 @@ describe("useAutoQuantState", () => {
   });
 
   test("connectWebSocket establishes WebSocket connection", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     const mockWs = {
       onopen: null,
       onmessage: null,
@@ -199,7 +200,7 @@ describe("useAutoQuantState", () => {
   });
 
   test("connectWebSocket closes previous connection", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     const mockWs1 = {
       onopen: null,
       onmessage: null,
@@ -232,7 +233,7 @@ describe("useAutoQuantState", () => {
   });
 
   test("WebSocket onmessage updates currentRun", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     const mockWs = {
       onopen: null,
       onmessage: null,
@@ -268,7 +269,7 @@ describe("useAutoQuantState", () => {
   });
 
   test("WebSocket onerror sets error state", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     const mockWs = {
       onopen: null,
       onmessage: null,
@@ -294,7 +295,7 @@ describe("useAutoQuantState", () => {
   });
 
   test("cleanup closes WebSocket on unmount", async () => {
-    const api = (await import("../../services/api")).default;
+    const api = (await import("../../../services/api")).default;
     const mockWs = {
       onopen: null,
       onmessage: null,

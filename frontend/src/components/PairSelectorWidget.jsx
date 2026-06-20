@@ -1,15 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { api } from "../services/api.js";
 
-const API = {
-  state:         () => fetch("/api/pairs").then(r => r.json()),
-  search:        (q) => fetch(`/api/pairs/search?q=${encodeURIComponent(q)}`).then(r => r.json()),
-  toggleFav:     (pair) => fetch("/api/pairs/toggle-favorite", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ pair }) }).then(r => r.json()),
-  toggleLock:    (pair) => fetch("/api/pairs/toggle-lock",    { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ pair }) }).then(r => r.json()),
-  toggleSelect:  (pair, selected) => fetch("/api/pairs/toggle-select", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ pair, selected }) }).then(r => r.json()),
-  randomize:     () => fetch("/api/pairs/randomize", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ preserve_locked: true }) }).then(r => r.json()),
-  updateMax:     (n) => fetch("/api/pairs/update-max-trades", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ max_open_trades: n }) }).then(r => r.json()),
-  clear:         () => fetch("/api/pairs/clear", { method:"POST" }).then(r => r.json()),
-};
 
 function applyState(data, setState) {
   if (!data) return;
@@ -37,7 +28,7 @@ export default function PairSelectorWidget({ onSelectionChange }) {
 
   const load = useCallback(async () => {
     try {
-      const data = await API.state();
+      const data = await api.pairs.getAll();
       applyState(data, setPs);
       setMaxInput(String(data.max_open_trades ?? 1));
       setError(null);
@@ -77,18 +68,18 @@ export default function PairSelectorWidget({ onSelectionChange }) {
     }
   }, []);
 
-  const handleToggleFav    = (pair) => mutate(`fav-${pair}`,    () => API.toggleFav(pair));
-  const handleToggleLock   = (pair) => mutate(`lock-${pair}`,   () => API.toggleLock(pair));
-  const handleToggleSelect = (pair) => mutate(`sel-${pair}`,    () => API.toggleSelect(pair, !ps.selected.has(pair)));
-  const handleRandomize    = ()     => mutate("randomize",      () => API.randomize());
-  const handleClear        = ()     => mutate("clear",          () => API.clear());
+  const handleToggleFav    = (pair) => mutate(`fav-${pair}`,    () => api.pairs.toggleFavorite(pair));
+  const handleToggleLock   = (pair) => mutate(`lock-${pair}`,   () => api.pairs.toggleLock(pair));
+  const handleToggleSelect = (pair) => mutate(`sel-${pair}`,    () => api.pairs.toggleSelect(pair, !ps.selected.has(pair)));
+  const handleRandomize    = ()     => mutate("randomize",      () => api.pairs.randomize());
+  const handleClear        = ()     => mutate("clear",          () => api.pairs.clear());
 
   const handleMaxChange = (raw) => {
     setMaxInput(raw);
     const n = parseInt(raw, 10);
     if (isNaN(n) || n < 1) return;
     if (maxTimer.current) clearTimeout(maxTimer.current);
-    maxTimer.current = setTimeout(() => mutate("max", () => API.updateMax(n)), 600);
+    maxTimer.current = setTimeout(() => mutate("max", () => api.pairs.updateMaxTrades(n)), 600);
   };
 
   const visiblePairs = (() => {

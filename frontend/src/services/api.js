@@ -346,6 +346,45 @@ export const api = {
       });
       return parseJsonResponse(res, "Failed to toggle selection.");
     },
+
+    /**
+     * Randomize pairs
+     * @param {boolean} preserveLocked
+     * @returns {Promise<object>}
+     */
+    async randomize(preserveLocked = true) {
+      const res = await fetch(`${API_BASE}/pairs/randomize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preserve_locked: preserveLocked }),
+      });
+      return parseJsonResponse(res, "Failed to randomize pairs.");
+    },
+
+    /**
+     * Update max trades
+     * @param {number} maxOpenTrades
+     * @returns {Promise<object>}
+     */
+    async updateMaxTrades(maxOpenTrades) {
+      const res = await fetch(`${API_BASE}/pairs/update-max-trades`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ max_open_trades: maxOpenTrades }),
+      });
+      return parseJsonResponse(res, "Failed to update max trades.");
+    },
+
+    /**
+     * Clear pairs
+     * @returns {Promise<object>}
+     */
+    async clear() {
+      const res = await fetch(`${API_BASE}/pairs/clear`, {
+        method: "POST",
+      });
+      return parseJsonResponse(res, "Failed to clear pairs.");
+    },
   },
 
   /**

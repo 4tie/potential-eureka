@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { api } from "../services/api.js";
 
 export default function ResultsView({ onLoadResult }) {
   const [results, setResults] = useState([]);
@@ -31,16 +32,10 @@ export default function ResultsView({ onLoadResult }) {
 
   async function handleView(runId) {
     try {
-      const r = await fetch(`/api/backtest/results/${runId}`);
-      if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        setError(err.detail || "Failed to load result details.");
-        return;
-      }
-      const data = await r.json();
+      const data = await api.backtest.getResults(runId);
       onLoadResult({ run_id: runId, results: data });
-    } catch {
-      setError("Network error loading result details.");
+    } catch (e) {
+      setError(e.message || "Network error loading result details.");
     }
   }
 
