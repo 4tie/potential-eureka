@@ -7,3 +7,4 @@ user_data/auto_quant/*/state.json
 user_data/data/binance/*.feather
 user_data/strategies/rendered/
 user_data/data_downloads/
+user_data/hyperopt_results/
