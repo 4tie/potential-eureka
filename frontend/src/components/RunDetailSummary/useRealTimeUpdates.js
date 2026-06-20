@@ -36,7 +36,7 @@ const useRealTimeUpdates = (run, enabled = true, interval = 5000) => {
       setError(err.message);
       console.error("Error fetching run data:", err);
     }
-  }, [run?.run_id, setLiveData, setLastUpdate, setError]);
+  }, [run]);
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -107,15 +107,15 @@ const useRealTimeUpdates = (run, enabled = true, interval = 5000) => {
         pollIntervalRef.current = null;
       }
     };
-  }, [enabled, run?.run_id, interval, fetchRunData, setIsPolling]);
+  }, [enabled, run, interval, fetchRunData, setIsPolling]);
 
   // Manual refresh function
-  const refresh = useCallback(() => {
+  const refresh = () => {
     fetchRunData();
-  }, [fetchRunData]);
+  };
 
   // Toggle updates
-  const toggleUpdates = useCallback(() => {
+  const toggleUpdates = () => {
     if (wsRef.current) {
       if (wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.close();
@@ -130,7 +130,7 @@ const useRealTimeUpdates = (run, enabled = true, interval = 5000) => {
     } else {
       pollIntervalRef.current = setInterval(fetchRunData, interval);
     }
-  }, [run?.run_id, interval, fetchRunData, setIsPolling]);
+  };
 
   return {
     liveData: liveData || run,

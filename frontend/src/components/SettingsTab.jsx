@@ -144,7 +144,7 @@ export default function SettingsTab() {
     } finally {
       setModelsLoading(false);
     }
-  }, [settings?.ollama_api_url, settings?.ollama_provider, settings?.network_mode]);
+  }, [settings]);
 
   if (loading) {
     return (

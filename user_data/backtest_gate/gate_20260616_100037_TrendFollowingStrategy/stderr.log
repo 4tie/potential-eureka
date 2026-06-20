@@ -1,3 +1,0 @@
-2026-06-16 13:00:37,722 - freqtrade - INFO - freqtrade 2026.5.1
-2026-06-16 13:00:39,074 - freqtrade.configuration.load_config - INFO - Using config: config.json ...
-2026-06-16 13:00:39,075 - freqtrade - ERROR - Config file "config.json" not found! Please create a config file or check whether it exists.

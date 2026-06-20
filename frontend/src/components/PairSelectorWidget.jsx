@@ -51,7 +51,7 @@ export default function PairSelectorWidget({ onSelectionChange }) {
   useEffect(() => {
     if (!onSelectionChange) return;
     setTimeout(() => load(), 0);
-  }, [load]);
+  }, [load, onSelectionChange]);
 
   useEffect(() => {
     if (onSelectionChange) {

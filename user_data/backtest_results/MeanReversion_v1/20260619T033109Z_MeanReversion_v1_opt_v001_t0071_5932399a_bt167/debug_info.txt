@@ -1,4 +1,0 @@
-Command: freqtrade backtesting --user-data-dir /home/mohs/Desktop/fictional-octo-guide/user_data --config /home/mohs/Desktop/fictional-octo-guide/user_data/config.json --strategy-path /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/MeanReversion_v1/20260619T033109Z_MeanReversion_v1_opt_v001_t0071_5932399a_bt167 --strategy MeanReversion_v1 --timerange 20250619-20260619 --timeframe 5m --dry-run-wallet 100.0 --max-open-trades 4 --export trades --export-filename /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/MeanReversion_v1/20260619T033109Z_MeanReversion_v1_opt_v001_t0071_5932399a_bt167/raw_result.json --pairs BNB/USDT LINK/USDT LTC/USDT XRP/USDT
-Pairs: ['BNB/USDT', 'LINK/USDT', 'LTC/USDT', 'XRP/USDT']
-Strategy: MeanReversion_v1
-Version ID: opt_v001_t0071_5932399a

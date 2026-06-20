@@ -1,4 +1,0 @@
-Command: freqtrade backtesting --user-data-dir /home/mohs/Desktop/fictional-octo-guide/user_data --config /home/mohs/Desktop/fictional-octo-guide/user_data/config.json --strategy-path /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260619T132852Z_AIStrategy_v001_bt004 --strategy AIStrategy --timerange 20260612-20260619 --timeframe 5m --dry-run-wallet 100.0 --max-open-trades 4 --export trades --export-filename /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260619T132852Z_AIStrategy_v001_bt004/raw_result.json --pairs SUI/USDT SNX/USDT LINK/USDT BTC/USDT
-Pairs: ['SUI/USDT', 'SNX/USDT', 'LINK/USDT', 'BTC/USDT']
-Strategy: AIStrategy
-Version ID: v001

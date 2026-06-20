@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { ArrowUpIcon, ArrowDownIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
 const DataTableTab = ({ run }) => {
@@ -14,7 +14,7 @@ const DataTableTab = ({ run }) => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Generate comprehensive metrics data
-  const generateMetricsData = () => {
+  const generateMetricsData = useCallback(() => {
     const baseMetrics = [
       {
         category: 'Performance',
@@ -105,9 +105,9 @@ const DataTableTab = ({ run }) => {
     }
 
     return baseMetrics;
-  };
+  }, [report]);
 
-  const allData = useMemo(() => generateMetricsData(), [run]);
+  const allData = useMemo(() => generateMetricsData(), [generateMetricsData]);
 
   // Sorting
   const sortedData = useMemo(() => {
