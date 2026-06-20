@@ -1,20 +1,18 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { ArrowUpIcon, ArrowDownIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
 const DataTableTab = ({ run }) => {
-  const report = run.report || {};
-  const risk = report.risk_assessment || {};
-  const stressTest = report.stress_test || {};
-  const perPair = stressTest.per_pair || [];
-
   // Table state
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [filters, setFilters] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Generate comprehensive metrics data
-  const generateMetricsData = useCallback(() => {
+  const allData = useMemo(() => {
+    const report = run.report || {};
+    const risk = report.risk_assessment || {};
+    const stressTest = report.stress_test || {};
+    const perPair = stressTest.per_pair || [];
     const baseMetrics = [
       {
         category: 'Performance',
@@ -105,9 +103,7 @@ const DataTableTab = ({ run }) => {
     }
 
     return baseMetrics;
-  }, [report]);
-
-  const allData = useMemo(() => generateMetricsData(), [generateMetricsData]);
+  }, [run.report]);
 
   // Sorting
   const sortedData = useMemo(() => {

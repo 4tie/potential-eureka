@@ -423,7 +423,7 @@ function InspectModal({ run, onClose, onApply, applying }) {
 
   useEffect(() => {
     let cancelled = false;
-    setError(null);
+    setTimeout(() => setError(null), 0);
     fetch(`/api/performance/runs/${run.run_id}`)
       .then(r => {
         if (!cancelled) setTimeout(() => setLoading(true), 0);
