@@ -150,13 +150,16 @@ export default function StressTestTab({
   }, []);
 
   const [filteredPairs, setFilteredPairs] = useState([]);
+  const prevFilteredPairsRef = useRef([]);
   useEffect(() => {
     const q = pairSearch.toUpperCase();
-    setFilteredPairs(
-      q
+    const newFilteredPairs = q
         ? (availablePairs || []).filter(p => p.includes(q)).slice(0, 20)
-        : (availablePairs || []).slice(0, 10)
-    );
+        : (availablePairs || []).slice(0, 10);
+    if (JSON.stringify(newFilteredPairs) !== JSON.stringify(prevFilteredPairsRef.current)) {
+      prevFilteredPairsRef.current = newFilteredPairs;
+      setFilteredPairs(newFilteredPairs);
+    }
   }, [pairSearch, availablePairs]);
 
   useEffect(() => {

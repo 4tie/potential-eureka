@@ -12,6 +12,21 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useMemo } from "react";
+
+// Pre-computed date strings (module level, runs once)
+const DATE_STRINGS = [
+  "2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05",
+  "2024-01-06", "2024-01-07", "2024-01-08", "2024-01-09", "2024-01-10",
+  "2024-01-11", "2024-01-12", "2024-01-13", "2024-01-14", "2024-01-15",
+  "2024-01-16", "2024-01-17", "2024-01-18", "2024-01-19", "2024-01-20",
+  "2024-01-21", "2024-01-22", "2024-01-23", "2024-01-24", "2024-01-25",
+  "2024-01-26", "2024-01-27", "2024-01-28", "2024-01-29", "2024-01-30",
+  "2024-01-31", "2024-02-01", "2024-02-02", "2024-02-03", "2024-02-04",
+  "2024-02-05", "2024-02-06", "2024-02-07", "2024-02-08", "2024-02-09",
+  "2024-02-10", "2024-02-11", "2024-02-12", "2024-02-13", "2024-02-14",
+  "2024-02-15", "2024-02-16", "2024-02-17", "2024-02-18", "2024-02-19",
+];
 
 const PerformanceChart = ({ run, chartType = "line" }) => {
   // Generate sample data based on run metrics
@@ -19,20 +34,21 @@ const PerformanceChart = ({ run, chartType = "line" }) => {
   const inSampleProfit = report.sanity_backtest?.profit_total_abs || 0;
 
   // Generate realistic-looking performance data
-  const generateData = () => {
+  const data = useMemo(() => {
     const data = [];
     const points = 50;
     let cumulativeProfit = 0;
     
+    // Deterministic algorithm (no Math.random)
     for (let i = 0; i < points; i++) {
-      const randomChange = (Math.random() - 0.45) * (inSampleProfit / points);
+      // Use sine wave pattern for deterministic variation
+      const phase = (i / points) * Math.PI * 4;
+      const variation = Math.sin(phase) * 0.5 + 0.5;
+      const randomChange = (variation - 0.45) * (inSampleProfit / points);
       cumulativeProfit += randomChange;
       
-      const date = new Date();
-      date.setDate(date.getDate() - (points - i));
-      
       data.push({
-        date: date.toISOString().split('T')[0],
+        date: DATE_STRINGS[i],
         profit: cumulativeProfit,
         inSample: i < points * 0.7 ? cumulativeProfit : null,
         oosSample: i >= points * 0.7 ? cumulativeProfit : null,
@@ -40,9 +56,7 @@ const PerformanceChart = ({ run, chartType = "line" }) => {
     }
     
     return data;
-  };
-
-  const data = generateData();
+  }, [inSampleProfit]);
 
   const renderChart = () => {
     const commonProps = {

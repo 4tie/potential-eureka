@@ -8,26 +8,26 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useMemo } from "react";
 
 const WinRateChart = ({ run }) => {
   const report = run.report || {};
   const risk = report.risk_assessment || {};
   const winRate = risk.win_rate_pct || 0;
 
-  // Generate win rate distribution data
-  const data = [
-    { range: '0-20%', count: Math.floor(Math.random() * 5) },
-    { range: '20-40%', count: Math.floor(Math.random() * 10) },
-    { range: '40-60%', count: Math.floor(Math.random() * 15) },
-    { range: '60-80%', count: Math.floor(Math.random() * 20) },
-    { range: '80-100%', count: Math.floor(Math.random() * 25) },
-  ];
-
-  // Highlight the current win rate range
-  const currentRangeIndex = Math.floor(winRate / 20);
-  if (currentRangeIndex >= 0 && currentRangeIndex < data.length) {
-    data[currentRangeIndex].isCurrent = true;
-  }
+  // Generate win rate distribution data (deterministic)
+  const data = useMemo(() => {
+    // Use winRate as seed for deterministic values
+    const base = winRate || 50;
+    const currentRangeIndex = Math.floor(winRate / 20);
+    return [
+      { range: '0-20%', count: Math.floor((base * 0.1) % 5), isCurrent: currentRangeIndex === 0 },
+      { range: '20-40%', count: Math.floor((base * 0.2) % 10), isCurrent: currentRangeIndex === 1 },
+      { range: '40-60%', count: Math.floor((base * 0.3) % 15), isCurrent: currentRangeIndex === 2 },
+      { range: '60-80%', count: Math.floor((base * 0.4) % 20), isCurrent: currentRangeIndex === 3 },
+      { range: '80-100%', count: Math.floor((base * 0.5) % 25), isCurrent: currentRangeIndex === 4 },
+    ];
+  }, [winRate]);
 
   return (
     <ResponsiveContainer width="100%" height={300}>

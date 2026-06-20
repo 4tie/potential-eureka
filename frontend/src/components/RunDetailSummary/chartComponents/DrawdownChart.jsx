@@ -10,18 +10,19 @@ import {
 } from "recharts";
 import { useMemo } from "react";
 
-// Generate date strings at module level (runs once, not during render)
-const generateDateStrings = (count) => {
-  const referenceDate = new Date('2024-01-01').getTime();
-  const dates = [];
-  for (let i = 0; i < count; i++) {
-    const dateMs = referenceDate + (i * 24 * 60 * 60 * 1000);
-    dates.push(new Date(dateMs).toISOString().split('T')[0]);
-  }
-  return dates;
-};
-
-const DATE_STRINGS = generateDateStrings(50);
+// Pre-computed date strings (module level, runs once)
+const DATE_STRINGS = [
+  "2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05",
+  "2024-01-06", "2024-01-07", "2024-01-08", "2024-01-09", "2024-01-10",
+  "2024-01-11", "2024-01-12", "2024-01-13", "2024-01-14", "2024-01-15",
+  "2024-01-16", "2024-01-17", "2024-01-18", "2024-01-19", "2024-01-20",
+  "2024-01-21", "2024-01-22", "2024-01-23", "2024-01-24", "2024-01-25",
+  "2024-01-26", "2024-01-27", "2024-01-28", "2024-01-29", "2024-01-30",
+  "2024-01-31", "2024-02-01", "2024-02-02", "2024-02-03", "2024-02-04",
+  "2024-02-05", "2024-02-06", "2024-02-07", "2024-02-08", "2024-02-09",
+  "2024-02-10", "2024-02-11", "2024-02-12", "2024-02-13", "2024-02-14",
+  "2024-02-15", "2024-02-16", "2024-02-17", "2024-02-18", "2024-02-19",
+];
 
 const DrawdownChart = ({ run }) => {
   const report = run.report || {};
@@ -34,26 +35,17 @@ const DrawdownChart = ({ run }) => {
     const points = 50;
     let currentDD = 0;
     
-    // Seeded random for deterministic rendering
-    const seededRandom = (seed) => {
-      const newSeed = (seed * 9301 + 49297) % 233280;
-      return { value: newSeed / 233280, nextSeed: newSeed };
-    };
-    
-    let seed = maxDD;
+    // Deterministic algorithm (no Math.random)
     for (let i = 0; i < points; i++) {
-      const rand1 = seededRandom(seed);
-      seed = rand1.nextSeed;
+      // Use sine wave pattern for deterministic variation
+      const phase = (i / points) * Math.PI * 4;
+      const variation = Math.sin(phase) * 0.5 + 0.5;
       
-      // Simulate drawdown periods
-      if (rand1.value > 0.7) {
-        const rand2 = seededRandom(seed);
-        seed = rand2.nextSeed;
-        currentDD = Math.min(maxDD * 1.2, currentDD + rand2.value * 0.05);
+      // Simulate drawdown periods based on pattern
+      if (variation > 0.7) {
+        currentDD = Math.min(maxDD * 1.2, currentDD + variation * 0.05);
       } else {
-        const rand2 = seededRandom(seed);
-        seed = rand2.nextSeed;
-        currentDD = Math.max(0, currentDD - rand2.value * 0.03);
+        currentDD = Math.max(0, currentDD - variation * 0.03);
       }
       
       data.push({

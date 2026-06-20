@@ -411,11 +411,13 @@ export default function StrategyEditorTab({ onDirtyChange, onAgentContextChange 
   // ── load strategy ─────────────────────────────────────────────────────────
 
   const loadStrategy = useCallback(async (strat) => {
-    setLoadingFile(true);
-    setError(null);
-    setValidateResult(null);
-    setSaveOk(false);
-    setSnapshots([]);
+    setTimeout(() => {
+      setLoadingFile(true);
+      setError(null);
+      setValidateResult(null);
+      setSaveOk(false);
+      setSnapshots([]);
+    }, 0);
     try {
       const r = await fetch(`/api/strategies/files/${encodeURIComponent(strat.name)}`);
       if (!r.ok) throw new Error(await r.text());
