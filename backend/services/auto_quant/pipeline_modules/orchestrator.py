@@ -16,6 +16,7 @@ from .helpers import _emit, _run_subprocess
 from .logging import _rlog, logger
 from .stages_assessment import _stage_delivery, _stage_joint_portfolio_backtest
 from .stages_optimization import _stage_hyperopt, _stage_patch
+from .stages_regime import _stage_regime_detection
 from .stages_validation import _stage_portfolio_baseline, _stage_robustness_feature_injection, _stage_pre_flight_filtering, _stage_pre_selection, _stage_sanity_backtest, _stage_stress_test
 from .helpers import _fail_stage, _pass_stage
 from .state import (
@@ -152,6 +153,17 @@ async def run_pipeline(run_id: str) -> None:
             _pass_stage(run_id, state, 1,
                         f"Pre-flight filtering complete — {len(state.selected_pairs)} pairs approved.",
                         s1_result)
+
+        # ── Stage 1.5: Regime Detection ─────────────────────────────────────
+        # Run regime detection if enabled
+        if state.regime_detection_enabled:
+            _rlog(run_id, 1, logging.INFO, "── ENTERING Stage 1.5: Regime Detection ──")
+            regime_result = await _stage_regime_detection(run_id, state, out_dir)
+            if regime_result:
+                _rlog(run_id, 1, logging.INFO,
+                      f"Regime Detection Complete | Regime={state.current_regime}")
+            else:
+                _rlog(run_id, 1, logging.WARNING, "Regime detection failed, using defaults")
 
         # ── Stage 2: Portfolio Baseline Backtest ───────────────────────────
         # Check if Stage 2 needs to run based on both current_stage and individual stage status

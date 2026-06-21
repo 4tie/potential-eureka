@@ -142,6 +142,12 @@ class PipelineState:
     # User approval workflow
     user_approved_pairs: list = field(default_factory=list)  # User-selected pairs after approval
     portfolio_baseline_result: dict = field(default_factory=dict)  # Portfolio baseline backtest results
+    # Regime Detection
+    regime_detection_enabled: bool = True  # Enable/disable regime detection
+    current_regime: str = None  # Current market regime
+    regime_probabilities: dict = field(default_factory=dict)  # Regime posterior probabilities
+    regime_history: list = field(default_factory=list)  # Historical regime classifications
+    regime_model_path: str = None  # Path to trained HMM model
 
 
 # ── Global in-memory registry ─────────────────────────────────────────────────
