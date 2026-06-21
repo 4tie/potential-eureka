@@ -68,7 +68,32 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             "load_runs_from_disk failed during startup — run history may be incomplete."
         )
 
+    # Start Ollama health monitor if enabled
+    try:
+        from ..services.ai.ollama_health_monitor import get_health_monitor
+        aq_settings = services.settings_store.load()
+        health_monitor = await get_health_monitor(
+            aq_settings.user_data_directory_path,
+            check_interval=aq_settings.ollama_health_check_interval if aq_settings.ollama_enable_health_check else 0,
+            enabled=aq_settings.ollama_enable_health_check,
+        )
+        await health_monitor.start()
+        app.state.ollama_health_monitor = health_monitor
+    except Exception:
+        import logging as _logging
+        _logging.getLogger("ollama_health_monitor").exception(
+            "Failed to start Ollama health monitor during startup"
+        )
+
     yield
+
+    # Cleanup health monitor during shutdown
+    try:
+        from ..services.ai.ollama_health_monitor import cleanup_health_monitor
+        await cleanup_health_monitor()
+    except Exception:
+        import logging as _logging
+        _logging.getLogger("ollama_health_monitor").exception("Health monitor cleanup failed during shutdown")
 
     # Cleanup AI service during shutdown
     try:

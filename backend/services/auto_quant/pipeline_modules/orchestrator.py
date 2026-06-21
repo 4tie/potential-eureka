@@ -18,6 +18,7 @@ from .stages_assessment import _stage_delivery, _stage_joint_portfolio_backtest
 from .stages_optimization import _stage_hyperopt, _stage_patch
 from .stages_genetic import _stage_genetic_evolution
 from .stages_regime import _stage_regime_detection
+from .stages_rl import _stage_rl_deployment, _stage_rl_training
 from .stages_validation import _stage_portfolio_baseline, _stage_robustness_feature_injection, _stage_pre_flight_filtering, _stage_pre_selection, _stage_sanity_backtest, _stage_stress_test
 from .helpers import _fail_stage, _pass_stage
 from .state import (
@@ -225,6 +226,17 @@ async def run_pipeline(run_id: str) -> None:
                       f"Genetic Evolution Complete | Best fitness: {ga_result.get('best_fitness', 0):.4f}")
             else:
                 _rlog(run_id, 2, logging.WARNING, "Genetic evolution failed, using default parameters")
+
+        # ── Stage 3.5: RL Training ─────────────────────────────────────────
+        # Run RL training if enabled
+        if state.rl_training_enabled:
+            _rlog(run_id, 3, logging.INFO, "── ENTERING Stage 3.5: RL Training ──")
+            rl_result = await _stage_rl_training(run_id, state, out_dir)
+            if rl_result:
+                _rlog(run_id, 3, logging.INFO,
+                      f"RL Training Complete | Final reward: {rl_result.get('final_reward', 0):.4f}")
+            else:
+                _rlog(run_id, 3, logging.WARNING, "RL training failed, using default strategy")
 
         # ── Stages 3-4: Self-healing retry loop (renumbered from 2-3) ───────
         oos_result: dict | None = None
@@ -540,6 +552,17 @@ async def run_pipeline(run_id: str) -> None:
             _rlog(run_id, 4, logging.INFO, "── RESUMING: Stage 4 already completed")
             # Load Stage 4 result from state if available
             stage4_result = state.stages[3].data if len(state.stages) > 3 else {}
+
+        # ── Stage 4.5: RL Deployment ───────────────────────────────────────
+        # Run RL deployment if enabled
+        if state.rl_deployment_enabled:
+            _rlog(run_id, 4, logging.INFO, "── ENTERING Stage 4.5: RL Deployment ──")
+            rl_deploy_result = await _stage_rl_deployment(run_id, state, out_dir)
+            if rl_deploy_result:
+                _rlog(run_id, 4, logging.INFO,
+                      f"RL Deployment Complete | Signals: {rl_deploy_result.get('trades_count', 0)}")
+            else:
+                _rlog(run_id, 4, logging.WARNING, "RL deployment failed, using default signals")
 
         # ── Stage 5: Portfolio Competition (Joint Portfolio Backtest) ──────────────────────
         _rlog(run_id, 5, logging.INFO, "── ENTERING Stage 5: Portfolio Competition ──")

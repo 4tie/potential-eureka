@@ -191,6 +191,34 @@ async def get_metrics(request: Request) -> dict:
         await client.close()
 
 
+@router.get(
+    "/health-monitor",
+    summary="Get Ollama health monitor state",
+    description=(
+        "Returns the current health monitor state including health status, "
+        "last check time, and consecutive failures/successes."
+    ),
+)
+async def get_health_monitor_state(request: Request) -> dict:
+    from ...services.ai.ollama_health_monitor import get_health_monitor
+
+    services = request.app.state.services
+    cfg = services.settings_store.load()
+    try:
+        monitor = await get_health_monitor(
+            cfg.user_data_directory_path,
+            check_interval=cfg.ollama_health_check_interval if cfg.ollama_enable_health_check else 0,
+            enabled=cfg.ollama_enable_health_check,
+        )
+        return monitor.get_health_state()
+    except Exception as exc:
+        return {
+            "error": str(exc),
+            "healthy": None,
+            "monitor_enabled": cfg.ollama_enable_health_check,
+        }
+
+
 class ChatRequest(BaseModel):
     message: str = Field(..., description="User message for the assistant.")
     session_id: str | None = Field(default=None, description="Existing assistant chat session id.")

@@ -43,6 +43,8 @@ export default function SettingsTab() {
   const [models, setModels]           = useState([]);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState(null);
+  const [healthMetrics, setHealthMetrics] = useState(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   const { push: pushToast } = useToast();
 
@@ -135,6 +137,19 @@ export default function SettingsTab() {
       setModelsLoading(false);
     }
   }, [settings]);
+
+  const fetchHealthMetrics = useCallback(async () => {
+    setHealthLoading(true);
+    try {
+      const response = await fetch("/api/ai/health-monitor");
+      const data = await response.json();
+      setHealthMetrics(data);
+    } catch (e) {
+      console.error("Failed to fetch health metrics:", e);
+    } finally {
+      setHealthLoading(false);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -613,6 +628,99 @@ export default function SettingsTab() {
                   max={300}
                 />
               )}
+            </div>
+
+            {/* ── Ollama Health Monitor ── */}
+            <SectionDivider label="OLLAMA HEALTH MONITOR" />
+
+            <div className="space-y-4">
+              <div className="bg-base-300/30 border border-base-300 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium">Real-time Health Status</span>
+                  <button
+                    className="btn btn-xs btn-ghost"
+                    onClick={() => fetchHealthMetrics()}
+                    disabled={healthLoading}
+                  >
+                    {healthLoading ? "Loading..." : "↻ Refresh"}
+                  </button>
+                </div>
+
+                {healthMetrics ? (
+                  <div className="space-y-3">
+                    {/* Health Status */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${healthMetrics.healthy ? "bg-success" : "bg-error"}`} />
+                      <span className="text-sm">
+                        {healthMetrics.healthy ? "Healthy" : "Unhealthy"}
+                      </span>
+                      {healthMetrics.last_check_time && (
+                        <span className="text-xs text-base-content/50 ml-auto">
+                          Last check: {new Date(healthMetrics.last_check_time).toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Circuit Breaker State */}
+                    {healthMetrics.metrics?.circuit_breaker && (
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-base-content/60">Circuit State:</span>
+                          <span className={`font-medium ${healthMetrics.metrics.circuit_breaker.state === "open" ? "text-error" : "text-success"}`}>
+                            {healthMetrics.metrics.circuit_breaker.state.toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-base-content/60">Failures:</span>
+                          <span>{healthMetrics.metrics.circuit_breaker.failure_count}/{healthMetrics.metrics.circuit_breaker.failure_threshold}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-base-content/60">Total Failures:</span>
+                          <span>{healthMetrics.metrics.circuit_breaker.total_failures}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-base-content/60">Total Successes:</span>
+                          <span>{healthMetrics.metrics.circuit_breaker.total_successes}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Request Metrics */}
+                    {healthMetrics.metrics?.client_metrics && (
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-base-content/60">Total Requests:</span>
+                          <span>{healthMetrics.metrics.client_metrics.total_requests}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-base-content/60">Success Rate:</span>
+                          <span>{(healthMetrics.metrics.success_rate * 100).toFixed(1)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-base-content/60">Avg Latency:</span>
+                          <span>{healthMetrics.metrics.average_latency_ms.toFixed(0)}ms</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Consecutive Failures/Successes */}
+                    {healthMetrics.consecutive_failures > 0 && (
+                      <div className="text-xs text-error/80">
+                        Consecutive failures: {healthMetrics.consecutive_failures}
+                      </div>
+                    )}
+                    {healthMetrics.consecutive_successes > 0 && (
+                      <div className="text-xs text-success/80">
+                        Consecutive successes: {healthMetrics.consecutive_successes}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-xs text-base-content/50">
+                    Click "↻ Refresh" to load health metrics
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* ── Danger Zone ── */}

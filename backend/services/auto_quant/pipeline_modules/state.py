@@ -155,6 +155,14 @@ class PipelineState:
     ga_generations: int = 20  # Number of GA generations
     ga_population_size: int = 50  # GA population size
     ga_converged: bool = False  # Whether GA converged
+    # Reinforcement Learning
+    rl_training_enabled: bool = False  # Enable/disable RL training
+    rl_deployment_enabled: bool = False  # Enable/disable RL deployment
+    rl_algorithm: str = "ppo"  # RL algorithm (ppo, sac, a2c)
+    rl_total_timesteps: int = 1000000  # Total RL training timesteps
+    rl_model_path: str = None  # Path to trained RL model
+    rl_performance: dict = field(default_factory=dict)  # RL performance metrics
+    rl_trades: list = field(default_factory=list)  # RL agent trades
 
 
 # ── Global in-memory registry ─────────────────────────────────────────────────
