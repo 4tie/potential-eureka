@@ -161,6 +161,10 @@ class ChatRequest(BaseModel):
     message: str = Field(..., description="User message for the assistant.")
     session_id: str | None = Field(default=None, description="Existing assistant chat session id.")
     model: str | None = Field(default=None, description="Optional Ollama model override.")
+    mode: str = Field(
+        default="auto",
+        description="Assistant mode: auto, chat, analysis, autoquant, strategylab, optimizer.",
+    )
     context_overrides: dict | None = Field(
         default=None,
         description="Optional active context ids: strategy_name, optimizer_session_id, backtest_run_id, etc.",
@@ -195,6 +199,7 @@ async def chat(body: ChatRequest, request: Request) -> dict:
             message=body.message,
             session_id=body.session_id,
             model=body.model,
+            mode=body.mode,
             context_overrides=body.context_overrides or {},
             include_strategy_source=body.include_strategy_source,
         )
@@ -216,6 +221,7 @@ async def chat_stream(body: ChatRequest, request: Request) -> StreamingResponse:
             message=body.message,
             session_id=body.session_id,
             model=body.model,
+            mode=body.mode,
             context_overrides=body.context_overrides or {},
             include_strategy_source=body.include_strategy_source,
         )

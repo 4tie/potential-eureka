@@ -1,3 +1,4 @@
+import { CheckCircleIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import { API_BASE } from "../../features/autoquant/constants";
 import AutoQuantMetricCard from "./AutoQuantMetricCard";
 import AutoQuantRiskChecks from "./AutoQuantRiskChecks";
@@ -52,7 +53,7 @@ export default function AutoQuantFinalReport({ report, runId }) {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center text-success text-lg">
-          ✓
+          <CheckCircleIcon className="h-5 w-5" />
         </div>
         <div>
           <h3 className="font-semibold text-sm">Pipeline Complete</h3>
@@ -66,10 +67,10 @@ export default function AutoQuantFinalReport({ report, runId }) {
       <div className="flex flex-wrap gap-1.5">
         <span className="text-[10px] text-base-content/50 uppercase tracking-wider font-medium self-center mr-1">Active thresholds:</span>
         <span className="badge badge-xs badge-outline">DD &lt; {maxDrawdownThreshold}%</span>
-        <span className="badge badge-xs badge-outline">Win ≥ {minWinRateThreshold}%</span>
-        <span className="badge badge-xs badge-outline">PF ≥ {minProfitFactorThreshold}</span>
-        <span className="badge badge-xs badge-outline">Sharpe ≥ {minSharpeThreshold}</span>
-        <span className="badge badge-xs badge-outline">OOS ≥ {minOosProfitThreshold}</span>
+        <span className="badge badge-xs badge-outline">Win &gt;= {minWinRateThreshold}%</span>
+        <span className="badge badge-xs badge-outline">PF &gt;= {minProfitFactorThreshold}</span>
+        <span className="badge badge-xs badge-outline">Sharpe &gt;= {minSharpeThreshold}</span>
+        <span className="badge badge-xs badge-outline">OOS &gt;= {minOosProfitThreshold}</span>
         <span className="badge badge-xs badge-outline">MC p95 &lt; {(mcThreshold * 100).toFixed(1)}%</span>
       </div>
 
@@ -84,7 +85,7 @@ export default function AutoQuantFinalReport({ report, runId }) {
           value={oos.profit_total != null ? (oos.profit_total * 100).toFixed(2) : null}
           unit="%"
           good={oos.profit_total != null ? oos.profit_total >= minOosProfitThreshold : null}
-          threshold={`≥ ${minOosProfitThreshold}%`}
+          threshold={`>= ${minOosProfitThreshold}%`}
         />
         <AutoQuantMetricCard
           label="Max Drawdown"
@@ -98,7 +99,7 @@ export default function AutoQuantFinalReport({ report, runId }) {
           value={risk.win_rate_pct != null ? risk.win_rate_pct.toFixed(1) : null}
           unit="%"
           good={risk.win_rate_pct != null ? risk.win_rate_pct >= minWinRateThreshold : null}
-          threshold={`≥ ${minWinRateThreshold}%`}
+          threshold={`>= ${minWinRateThreshold}%`}
         />
       </div>
 
@@ -160,7 +161,8 @@ export default function AutoQuantFinalReport({ report, runId }) {
               <div className="flex flex-wrap gap-1">
                 {(stressTest.winning_pairs || []).map((p) => (
                   <span key={p.key || p} className="badge badge-xs badge-success badge-outline gap-1">
-                    ✓ {p.key || p}
+                    <CheckCircleIcon className="h-3 w-3" />
+                    {p.key || p}
                   </span>
                 ))}
               </div>
@@ -268,7 +270,8 @@ export default function AutoQuantFinalReport({ report, runId }) {
             className="btn btn-primary btn-sm gap-2"
             onClick={() => downloadFile(files.optimized_strategy)}
           >
-            ⬇ Download Optimized Strategy (.py)
+            <DocumentArrowDownIcon className="h-4 w-4" />
+            Download Optimized Strategy (.py)
           </button>
         )}
         {files.config && (
@@ -276,14 +279,16 @@ export default function AutoQuantFinalReport({ report, runId }) {
             className="btn btn-outline btn-sm gap-2"
             onClick={() => downloadFile(files.config)}
           >
-            ⬇ Download Config (.json)
+            <DocumentArrowDownIcon className="h-4 w-4" />
+            Download Config (.json)
           </button>
         )}
         <button
           className="btn btn-outline btn-sm gap-2"
           onClick={downloadHtmlReport}
         >
-          ⬇ Download Report (.html)
+          <DocumentArrowDownIcon className="h-4 w-4" />
+          Download Report (.html)
         </button>
       </div>
     </div>

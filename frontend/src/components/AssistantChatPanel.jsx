@@ -210,8 +210,19 @@ function ContextChips({ summary }) {
   );
 }
 
+const MODE_OPTIONS = [
+  { value: "auto",       label: "🤖 Auto",       description: "Classifies automatically" },
+  { value: "chat",       label: "💬 Chat",        description: "Fast, casual conversation" },
+  { value: "analysis",   label: "🔬 Analyze",     description: "Full backend context" },
+  { value: "autoquant",  label: "⚡ AutoQuant",   description: "Strategy discovery pipeline" },
+  { value: "strategylab", label: "🧪 StrategyLab", description: "Strategy design & analysis" },
+  { value: "optimizer",  label: "🔧 Optimizer",   description: "Parameter tuning" },
+];
+
+const MODE_LABELS = Object.fromEntries(MODE_OPTIONS.map(o => [o.value, o.label]));
+
 export default function AssistantChatPanel({
-  mode = "page",
+  mode: panelMode = "page",
   initialContextOverrides = null,
   onClose = null,
 }) {
@@ -223,6 +234,7 @@ export default function AssistantChatPanel({
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState(null);
   const [actions, setActions] = useState([]);
+  const [mode, setMode] = useState("auto");
   const [includeStrategySource, setIncludeStrategySource] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -308,6 +320,7 @@ export default function AssistantChatPanel({
         message: messageText,
         session_id: sessionId,
         model: selectedModel || undefined,
+        mode: mode,
         context_overrides: contextOverrides,
         include_strategy_source: includeStrategySource,
       }),
@@ -344,6 +357,7 @@ export default function AssistantChatPanel({
         message: messageText,
         session_id: sessionId,
         model: selectedModel || undefined,
+        mode: mode,
         context_overrides: contextOverrides,
         include_strategy_source: includeStrategySource,
       }),
@@ -446,7 +460,7 @@ export default function AssistantChatPanel({
     }
   };
 
-  const containerClass = mode === "drawer"
+  const containerClass = panelMode === "drawer"
     ? "h-full flex flex-col bg-base-100"
     : "h-full min-h-[calc(100vh-3rem)] flex flex-col bg-base-100";
 
@@ -492,9 +506,22 @@ export default function AssistantChatPanel({
       
       {/* Capability Explanation Bar */}
       <div className="shrink-0 border-b border-base-300 bg-base-100/50 px-4 py-2">
-        <div className="text-[11px] text-base-content/60">
-          <span className="font-medium">AI Assistant can:</span> explain strategies, analyze runs, summarize logs, and suggest improvements. 
-          <span className="font-medium ml-1">Cannot:</span> modify files, start trading, or deploy changes without confirmation.
+        <div className="flex items-center justify-between text-[11px] text-base-content/60">
+          <span>
+            <span className="font-medium">AI Assistant can:</span> explain strategies, analyze runs, summarize logs, and suggest improvements. 
+            <span className="font-medium ml-1">Cannot:</span> modify files, start trading, or deploy changes without confirmation.
+          </span>
+          <span className={`ml-2 shrink-0 rounded border px-1.5 py-0.5 font-semibold ${
+            mode === "chat"
+              ? "border-info/30 bg-info/10 text-info"
+              : mode === "analysis"
+                ? "border-warning/30 bg-warning/10 text-warning"
+                : mode === "auto"
+                  ? "border-success/30 bg-success/10 text-success"
+                  : "border-accent/30 bg-accent/10 text-accent"
+          }`}>
+            {MODE_LABELS[mode] || mode}
+          </span>
         </div>
       </div>
 
@@ -602,12 +629,16 @@ export default function AssistantChatPanel({
               )}
               <select
                 className="select select-bordered select-xs w-36"
-                value="current"
-                onChange={() => {}}
-                title="Assistant context source"
+                value={mode}
+                onChange={e => setMode(e.target.value)}
+                title="Assistant mode"
                 disabled={loading}
               >
-                <option value="current">Current context</option>
+                {MODE_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value} title={opt.description}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
               <label className="inline-flex items-center gap-2 text-[11px] text-base-content/55">
                 <input

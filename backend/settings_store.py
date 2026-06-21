@@ -33,6 +33,10 @@ class SettingsStore(ISettingsStore):
             hyperopt_workers=2,
             ollama_self_healing_enabled=False,
             ollama_timeout=30,
+            ollama_model_chat="",
+            ollama_model_autoquant="",
+            ollama_model_strategylab="",
+            ollama_model_optimizer="",
         )
 
     def load(self) -> SettingsModel:

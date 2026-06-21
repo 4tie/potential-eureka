@@ -1,9 +1,9 @@
 {
-  "strategy": "CatFactory",
+  "strategy": "AIStrategy",
   "strategy_source": "existing",
   "trading_style": "scalping",
   "risk_profile": "aggressive",
-  "analysis_depth": "standard",
+  "analysis_depth": "deep",
   "uploaded_strategy_id": null,
   "advanced_overrides": {},
   "timeframe": "5m",

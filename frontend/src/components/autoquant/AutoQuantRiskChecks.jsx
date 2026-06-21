@@ -1,3 +1,5 @@
+import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+
 export default function AutoQuantRiskChecks({ checks }) {
   if (!checks) return null;
   return (
@@ -11,7 +13,11 @@ export default function AutoQuantRiskChecks({ checks }) {
               : "border-error/30 bg-error/10 text-error"
           }`}
         >
-          <span>{check.passed ? "✓" : "✗"}</span>
+          {check.passed ? (
+            <CheckCircleIcon className="h-4 w-4 shrink-0" aria-label="Passed" />
+          ) : (
+            <XCircleIcon className="h-4 w-4 shrink-0" aria-label="Failed" />
+          )}
           <span className="font-medium capitalize">{key.replace(/_/g, " ")}</span>
           <span className="ml-auto text-base-content/60">{check.value}</span>
         </div>

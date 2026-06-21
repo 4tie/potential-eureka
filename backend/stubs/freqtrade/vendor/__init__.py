@@ -1,1 +1,0 @@
-"""freqtrade vendor stub."""

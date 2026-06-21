@@ -4,7 +4,7 @@ import AutoQuantStageStepper from "./AutoQuantStageStepper";
 
 // Mock the constants and utils
 jest.mock("../../features/autoquant/constants", () => ({
-  STAGE_ICONS: ["①", "②", "③", "④", "⑤", "⑥", "⑦"],
+  STAGE_ICONS: ["01", "02", "03", "04", "05", "06", "07"],
 }));
 
 jest.mock("../../features/autoquant/utils", () => ({
@@ -42,33 +42,33 @@ describe("AutoQuantStageStepper", () => {
     expect(getByText("live")).toBeInTheDocument();
   });
 
-  test("renders passed stage with checkmark", () => {
+  test("renders passed stage with status icon", () => {
     const passedStages = [
       { index: 0, name: "Pre-selection", status: "passed", duration_s: 45 },
       { index: 1, name: "Pair Screening", status: "pending" },
       { index: 2, name: "Optimization", status: "pending" },
     ];
 
-    const { getByText } = render(
+    const { getByLabelText, getByText } = render(
       <AutoQuantStageStepper stages={passedStages} nowMs={null} />
     );
 
-    expect(getByText("✓")).toBeInTheDocument();
     expect(getByText("45s")).toBeInTheDocument();
+    expect(getByLabelText("Passed")).toBeInTheDocument();
   });
 
-  test("renders failed stage with X and error details", () => {
+  test("renders failed stage with status icon and error details", () => {
     const failedStages = [
       { index: 0, name: "Pre-selection", status: "failed", message: "Insufficient data" },
       { index: 1, name: "Pair Screening", status: "pending" },
       { index: 2, name: "Optimization", status: "pending" },
     ];
 
-    const { getByText } = render(
+    const { getByLabelText, getByText } = render(
       <AutoQuantStageStepper stages={failedStages} nowMs={null} />
     );
 
-    expect(getByText("✗")).toBeInTheDocument();
+    expect(getByLabelText("Failed")).toBeInTheDocument();
     expect(getByText("Error details")).toBeInTheDocument();
     expect(getByText("Insufficient data")).toBeInTheDocument();
   });

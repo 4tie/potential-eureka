@@ -1,4 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowPathIcon,
+  ChartBarIcon,
+  ClockIcon,
+  CommandLineIcon,
+  PauseCircleIcon,
+  PlayCircleIcon,
+  StopCircleIcon,
+} from "@heroicons/react/24/outline";
 import AutoQuantStageStepper from "../../../components/autoquant/AutoQuantStageStepper";
 import AutoQuantLiveFitnessCurve from "../../../components/autoquant/AutoQuantLiveFitnessCurve";
 import AutoQuantLogTerminal from "../../../components/autoquant/AutoQuantLogTerminal";
@@ -8,22 +17,55 @@ import AutoQuantWfoWindowsTable from "../../../components/autoquant/AutoQuantWfo
 import AutoQuantRobustnessBadge from "../../../components/autoquant/AutoQuantRobustnessBadge";
 import AutoQuantTradeDistributionChart from "../../../components/autoquant/AutoQuantTradeDistributionChart";
 import AutoQuantFinalReport from "../../../components/autoquant/AutoQuantFinalReport";
+import ProfessionalChartsTab from "../../../components/ProfessionalChartsTab";
 import { formatElapsed, getEstimatedTimeRemaining, getProgressPercent, getRunStatusFlags, getRunStatusLabel } from "../viewModel";
 
 function StatusDot({ flags }) {
   const cls = flags.isRunning
-    ? "bg-primary animate-pulse"
+    ? "bg-primary animate-pulse neon-glow"
     : flags.isCompleted
-      ? "bg-success"
+      ? "bg-success neon-glow-green"
       : flags.isFailed
-        ? "bg-error"
+        ? "bg-error neon-glow-red"
         : flags.isAwaitingApproval
-          ? "bg-warning animate-pulse"
+          ? "bg-warning animate-pulse neon-glow-orange"
         : flags.isInterrupted || flags.isCancelled
-          ? "bg-warning"
+          ? "bg-warning neon-glow-orange"
           : "bg-base-content/30";
 
   return <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${cls}`} />;
+}
+
+function PanelHeader({ title, eyebrow, icon: Icon, meta }) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        {Icon && <Icon className="h-4 w-4 shrink-0 text-primary/50" />}
+        <div className="min-w-0">
+          {eyebrow && (
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/40">{eyebrow}</p>
+          )}
+          <h3 className="truncate text-xs font-semibold uppercase tracking-widest text-primary">{title}</h3>
+        </div>
+      </div>
+      {meta}
+    </div>
+  );
+}
+
+function SummaryCell({ label, value, tone = "" }) {
+  const toneClass = tone === "success" ? "text-success neon-glow-green" :
+                     tone === "warning" ? "text-warning neon-glow-orange" :
+                     tone === "error" ? "text-error neon-glow-red" :
+                     tone === "primary" ? "text-primary neon-glow" :
+                     "text-base-content";
+  
+  return (
+    <div className="rounded-lg border border-primary/30 bg-base-200/50 px-3 py-2 transition-all duration-300 hover:scale-105 hover:border-primary/50">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-primary/50">{label}</div>
+      <div className={`mt-0.5 truncate font-mono text-sm font-bold tabular-nums ${toneClass}`}>{value}</div>
+    </div>
+  );
 }
 
 function pairKey(pair) {
@@ -32,20 +74,63 @@ function pairKey(pair) {
 }
 
 function formatRatioPct(value) {
-  if (value == null || value === "") return "—";
+  if (value == null || value === "") return "-";
   const num = Number(value);
-  if (!Number.isFinite(num)) return "—";
+  if (!Number.isFinite(num)) return "-";
   return `${(num * 100).toFixed(2)}%`;
 }
 
 function formatMaybeNumber(value, digits = 2) {
-  if (value == null || value === "") return "—";
+  if (value == null || value === "") return "-";
   const num = Number(value);
-  return Number.isFinite(num) ? num.toFixed(digits) : "—";
+  return Number.isFinite(num) ? num.toFixed(digits) : "-";
 }
 
 function firstNonEmptyArray(...values) {
   return values.find((value) => Array.isArray(value) && value.length > 0) || [];
+}
+
+function TopCandidates({ data }) {
+  const rows = useMemo(() => {
+    return [...(data || [])]
+      .filter((point) => point && Number.isFinite(Number(point.profit_usdt)))
+      .sort((a, b) => Number(b.profit_usdt) - Number(a.profit_usdt))
+      .slice(0, 5);
+  }, [data]);
+
+  if (!rows.length) return null;
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-primary/30 bg-base-200/50 neon-glow">
+      <table className="table table-xs w-full">
+        <thead>
+          <tr className="text-[10px] uppercase tracking-wider text-primary/50">
+            <th>Rank</th>
+            <th className="text-right">Epoch</th>
+            <th className="text-right">Profit</th>
+            <th className="text-right">Objective</th>
+            <th className="text-right">Trades</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((point, index) => (
+            <tr key={`${point.epoch}-${index}`} className="text-xs transition-all duration-300 hover:bg-primary/20">
+              <td className="font-mono text-primary/40">{index + 1}</td>
+              <td className="text-right font-mono text-primary">{point.epoch ?? "-"}</td>
+              <td className={`text-right font-mono font-bold ${point.profit_usdt >= 0 ? "text-success neon-glow-green" : "text-error neon-glow-red"}`}>
+                {point.profit_usdt >= 0 ? "+" : ""}
+                {Number(point.profit_usdt).toFixed(4)} USDT
+              </td>
+              <td className="text-right font-mono text-base-content/60">
+                {point.objective != null ? Number(point.objective).toFixed(4) : "-"}
+              </td>
+              <td className="text-right font-mono text-base-content/60">{point.trades ?? "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function getApprovalReview(pipelineState) {
@@ -167,7 +252,7 @@ function ApprovalReviewPanel({ pipelineState, onResume }) {
             <div className="text-[10px] uppercase tracking-wider text-base-content/45">
               {isPortfolioReview ? "Portfolio Trades" : "Total Trades"}
             </div>
-            <div className="font-mono text-sm font-bold">{data.portfolio_trades ?? data.total_trades ?? "—"}</div>
+            <div className="font-mono text-sm font-bold">{data.portfolio_trades ?? data.total_trades ?? "-"}</div>
           </div>
         </div>
 
@@ -232,9 +317,9 @@ function ApprovalReviewPanel({ pipelineState, onResume }) {
                       {formatRatioPct(row.profit_total)}
                     </td>
                     <td className="text-right font-mono">{formatMaybeNumber(row.profit_factor, 2)}</td>
-                    <td className="text-right font-mono">{row.trades ?? row.trade_count ?? "—"}</td>
+                    <td className="text-right font-mono">{row.trades ?? row.trade_count ?? "-"}</td>
                     <td className="text-right font-mono">
-                      {row.win_rate != null ? `${formatMaybeNumber(row.win_rate, 1)}%` : "—"}
+                      {row.win_rate != null ? `${formatMaybeNumber(row.win_rate, 1)}%` : "-"}
                     </td>
                   </tr>
                 );
@@ -265,13 +350,13 @@ function DataHealingPanel({ dataHealingStatus, pairStatusMap }) {
   if (!dataHealingStatus) return null;
 
   return (
-    <div className="mb-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+    <div className="mb-3 p-3 bg-primary/5 border border-primary/30 rounded-lg neon-glow scan-effect">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-wider flex items-center gap-1.5">
           Pre-Flight Filtering
           {dataHealingStatus.in_progress && <span className="loading loading-spinner loading-xs text-primary" />}
         </span>
-        <span className="text-[10px] text-base-content/50 font-mono">
+        <span className="text-[10px] text-primary/50 font-mono">
           {dataHealingStatus.surviving_pairs != null
             ? `${dataHealingStatus.surviving_pairs}/${dataHealingStatus.total_pairs} pairs`
             : `${dataHealingStatus.total_pairs} pairs`}
@@ -284,15 +369,15 @@ function DataHealingPanel({ dataHealingStatus, pairStatusMap }) {
             .slice(-10)
             .map(([pair, status]) => (
               <div key={pair} className="flex items-center justify-between text-[10px]">
-                <span className="font-mono text-base-content/70">{pair}</span>
+                <span className="font-mono text-primary/70">{pair}</span>
                 <span
                   className={`font-medium ${
                     status.status === "downloading"
-                      ? "text-primary animate-pulse"
+                      ? "text-primary animate-pulse neon-glow"
                       : status.status === "healed"
-                        ? "text-success"
+                        ? "text-success neon-glow-green"
                         : status.status === "evicted"
-                          ? "text-error"
+                          ? "text-error neon-glow-red"
                           : "text-base-content/50"
                   }`}
                 >
@@ -350,25 +435,26 @@ export default function AutoQuantRunDashboard({
 
   return (
     <div className="space-y-4">
-      <div className="card bg-base-200 border border-base-300">
+      <div className="card bg-base-200/50 border border-primary/30 neon-glow scan-effect">
         <div className="card-body p-4">
-          <div className="flex items-center gap-4">
-            <StatusDot flags={flags} />
-            <div className="flex-1 min-w-0">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <StatusDot flags={flags} />
+              <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-bold truncate">{pipelineState.strategy}</span>
-                {pipelineState.timeframe && <span className="badge badge-xs badge-ghost font-mono">{pipelineState.timeframe}</span>}
-                {pipelineState.exchange && <span className="badge badge-xs badge-ghost">{pipelineState.exchange}</span>}
+                <span className="text-sm font-bold truncate text-primary crt-flicker">{pipelineState.strategy}</span>
+                {pipelineState.timeframe && <span className="badge badge-xs badge-ghost font-mono border-primary/30 text-primary">{pipelineState.timeframe}</span>}
+                {pipelineState.exchange && <span className="badge badge-xs badge-ghost border-primary/30 text-primary">{pipelineState.exchange}</span>}
               </div>
               <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                 <span className="text-xs text-base-content/50">{getRunStatusLabel(pipelineState, flags)}</span>
                 {flags.isRunning && elapsedSeconds > 0 && (
-                  <span className="text-sm font-bold text-primary font-mono bg-primary/10 px-2 py-0.5 rounded">
+                  <span className="text-sm font-bold text-primary font-mono bg-primary/10 px-2 py-0.5 rounded neon-glow">
                     {formatElapsed(elapsedSeconds)}
                   </span>
                 )}
                 {flags.isRunning && estimatedTimeRemaining != null && estimatedTimeRemaining > 0 && (
-                  <span className="text-xs text-base-content/60 font-mono">
+                  <span className="text-xs text-primary/60 font-mono">
                     {formatElapsed(estimatedTimeRemaining)} remaining
                   </span>
                 )}
@@ -379,29 +465,26 @@ export default function AutoQuantRunDashboard({
                 )}
               </div>
             </div>
-            <span
-              className={`text-lg font-bold shrink-0 ${
-                flags.isCompleted
-                  ? "text-success"
-                  : flags.isFailed
-                    ? "text-error"
-                    : flags.isAwaitingApproval
-                      ? "text-warning"
-                    : flags.isInterrupted || flags.isCancelled
-                      ? "text-warning"
-                      : "text-primary"
-              }`}
-            >
-              {progress}%
-            </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 xl:w-[28rem]">
+              <SummaryCell label="Progress" value={`${progress}%`} tone={flags.isFailed ? "error" : flags.isCompleted ? "success" : "primary"} />
+              <SummaryCell label="Stage" value={`${pipelineState.current_stage || 0}/7`} />
+              <SummaryCell
+                label="Status"
+                value={pipelineState.status || "starting"}
+                tone={flags.isAwaitingApproval ? "warning" : flags.isFailed ? "error" : flags.isCompleted ? "success" : ""}
+              />
+            </div>
             <div className="flex gap-2 shrink-0">
               {(flags.isRunning || flags.isAwaitingApproval) && (
-                <button className="btn btn-error btn-sm gap-1.5" onClick={onCancel}>
+                <button className="btn btn-error btn-sm gap-1.5 neon-glow-red hover:shadow-lg hover:shadow-error/25 transition-all duration-300" onClick={onCancel}>
+                  <StopCircleIcon className="h-4 w-4" />
                   Stop
                 </button>
               )}
               {flags.isDone && (
-                <button className="btn btn-outline btn-sm gap-1.5" onClick={onReset}>
+                <button className="btn btn-outline btn-sm gap-1.5 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50 transition-all duration-300" onClick={onReset}>
+                  <ArrowPathIcon className="h-4 w-4" />
                   New Run
                 </button>
               )}
@@ -411,15 +494,15 @@ export default function AutoQuantRunDashboard({
             <progress
               className={`progress w-full h-1.5 ${
                 flags.isCompleted
-                  ? "progress-success"
+                  ? "progress-success neon-glow-green"
                   : flags.isFailed
-                    ? "progress-error"
+                    ? "progress-error neon-glow-red"
                     : flags.isAwaitingApproval || flags.isInterrupted || flags.isCancelled
-                      ? "progress-warning"
-                      : "progress-primary"
+                      ? "progress-warning neon-glow-orange"
+                      : "progress-primary neon-glow"
               }`}
               value={progress}
-              max={100}
+              max="100"
             />
           </div>
         </div>
@@ -429,12 +512,14 @@ export default function AutoQuantRunDashboard({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-1">
-          <div className="card bg-base-200 border border-base-300 h-full">
+          <div className="card bg-base-200/50 border border-primary/30 h-full neon-glow">
             <div className="card-body p-4">
-              <h3 className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span>Pipeline Stages</span>
-                {flags.isRunning && <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
-              </h3>
+              <PanelHeader
+                title="Pipeline Stages"
+                eyebrow="Validation path"
+                icon={flags.isAwaitingApproval ? PauseCircleIcon : flags.isRunning ? PlayCircleIcon : ClockIcon}
+                meta={flags.isRunning && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
+              />
               <DataHealingPanel dataHealingStatus={dataHealingStatus} pairStatusMap={pairStatusMap} />
               <AutoQuantStageStepper stages={pipelineState.stages || []} nowMs={stageNowMs} />
             </div>
@@ -442,18 +527,18 @@ export default function AutoQuantRunDashboard({
         </div>
 
         <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="card bg-base-200 border border-base-300">
+          <div className="card bg-base-200/50 border border-primary/30 neon-glow">
             <div className="card-body p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest flex items-center gap-2">
-                  Live Fitness Curve
-                  {fitnessCurve.length > 0 && (
-                    <span className="text-primary/60 normal-case tracking-normal font-normal">
-                      ({fitnessCurve.length} epochs)
-                    </span>
-                  )}
-                </h3>
-              </div>
+              <PanelHeader
+                title="Live Fitness Curve"
+                eyebrow="Hyperopt telemetry"
+                icon={ChartBarIcon}
+                meta={
+                  fitnessCurve.length > 0 && (
+                    <span className="text-[10px] text-primary/65">{fitnessCurve.length} epochs</span>
+                  )
+                }
+              />
               <AutoQuantLiveFitnessCurve data={fitnessCurve} hyperoptProgress={hyperoptProgress} />
             </div>
           </div>
@@ -472,10 +557,8 @@ export default function AutoQuantRunDashboard({
           {fitnessCurve.length > 0 && (
             <div className="card bg-base-200 border border-base-300">
               <div className="card-body p-4">
-                <h3 className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest mb-3">
-                  Top Candidates
-                </h3>
-                <div className="text-xs text-base-content/50 italic">CandidateLeaderboard component extracted to separate file</div>
+                <PanelHeader title="Top Candidates" eyebrow="Best live epochs" icon={ChartBarIcon} />
+                <TopCandidates data={fitnessCurve} />
               </div>
             </div>
           )}
@@ -501,19 +584,34 @@ export default function AutoQuantRunDashboard({
               </div>
             </div>
           )}
+
+          {flags.isCompleted && runId && (
+            <div className="card bg-base-200 border border-base-300">
+              <div className="card-body p-4">
+                <h3 className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest mb-3">
+                  Professional Charts
+                </h3>
+                <ProfessionalChartsTab runId={runId} runType="autoquant" />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="card bg-base-200 border border-base-300">
         <div className="card-body p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest flex items-center gap-2">
-              Live Output
-              {flags.isRunning && <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
-              {flags.isAwaitingApproval && <span className="badge badge-xs badge-warning">review paused</span>}
-            </h3>
-            <span className="text-[10px] text-base-content/30">{logLines.length} lines</span>
-          </div>
+          <PanelHeader
+            title="Live Output"
+            eyebrow="Event stream"
+            icon={CommandLineIcon}
+            meta={
+              <div className="flex items-center gap-2">
+                {flags.isRunning && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
+                {flags.isAwaitingApproval && <span className="badge badge-xs badge-warning">review paused</span>}
+                <span className="text-[10px] text-base-content/30">{logLines.length} lines</span>
+              </div>
+            }
+          />
           <input
             type="text"
             className="input input-xs input-bordered w-full font-mono text-[11px] bg-base-300 border-base-content/15 placeholder:text-base-content/25 mb-2"

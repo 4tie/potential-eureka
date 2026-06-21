@@ -411,8 +411,9 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
 
   useEffect(() => {
     if (!runId || pipelineState?.status !== "running") return undefined;
-    connectWs(runId);
+    const connectTimer = setTimeout(() => connectWs(runId), 0);
     return () => {
+      clearTimeout(connectTimer);
       clearReconnectTimeout();
       closeWebSocket();
     };
@@ -420,10 +421,13 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
 
   useEffect(() => {
     if (!runId || !ACTIVE_STATUSES.has(pipelineState?.status)) return undefined;
-    syncStatus(runId);
+    const initialSyncTimer = setTimeout(() => syncStatus(runId), 0);
     const delay = pipelineState?.status === "awaiting_user_approval" ? 5000 : 2000;
     const timer = setInterval(() => syncStatus(runId), delay);
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(initialSyncTimer);
+      clearInterval(timer);
+    };
   }, [runId, pipelineState?.status, syncStatus]);
 
   useEffect(() => {

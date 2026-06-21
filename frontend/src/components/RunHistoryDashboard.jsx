@@ -1,4 +1,9 @@
 import { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from "react";
+import {
+  ChevronDownIcon,
+  DocumentArrowDownIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import RunDetailPanel from "./RunDetailPanel";
 import api from "../services/api";
 
@@ -18,7 +23,7 @@ function statusBadgeClass(status) {
 }
 
 function formatDate(iso) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   try {
     return new Date(iso).toLocaleString(undefined, {
       month: "short", day: "numeric",
@@ -30,17 +35,17 @@ function formatDate(iso) {
 }
 
 function fmtPct(val) {
-  if (val == null) return "—";
+  if (val == null) return "-";
   return `${(val * 100).toFixed(2)}%`;
 }
 
 function fmtAbs(val) {
-  if (val == null) return "—";
+  if (val == null) return "-";
   return `${val.toFixed(2)} USDT`;
 }
 
 function fmtDD(val) {
-  if (val == null) return "—";
+  if (val == null) return "-";
   return `${val.toFixed(1)}%`;
 }
 
@@ -63,7 +68,7 @@ function MonteCarloBadge({ mc }) {
           <span className={`font-bold text-sm ${passed ? "text-success" : "text-error"}`}>
             p95 DD: {p95Pct}%
           </span>
-          <span className="text-base-content/50">·</span>
+          <span className="text-base-content/50">/</span>
           <span className="text-base-content/70">Median return: {medPct}%</span>
         </div>
       </div>
@@ -147,7 +152,7 @@ function RunCard({ run, onSelect }) {
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold truncate">{run.strategy || "—"}</span>
+            <span className="text-xs font-semibold truncate">{run.strategy || "-"}</span>
             <span className={`badge badge-xs ${statusBadgeClass(run.status)}`}>
               {run.status}
             </span>
@@ -170,8 +175,8 @@ function RunCard({ run, onSelect }) {
             )}
           </div>
           <div className="flex items-center gap-3 mt-0.5 text-[10px] text-base-content/50 flex-wrap">
-            <span className="font-mono">{run.run_id?.slice(0, 8) || "—"}</span>
-            <span>{run.timeframe} · {run.exchange}</span>
+            <span className="font-mono">{run.run_id?.slice(0, 8) || "-"}</span>
+            <span>{run.timeframe} / {run.exchange}</span>
             <span>{formatDate(run.created_at)}</span>
           </div>
         </div>
@@ -181,11 +186,9 @@ function RunCard({ run, onSelect }) {
             className="btn btn-ghost btn-xs text-xs text-base-content/50 hover:text-primary"
             onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
           >
-            {isAwaitingApproval ? "Review →" : isCompleted ? "View →" : isRunning ? "Reconnect →" : isInterrupted ? "Details →" : "View →"}
+            {isAwaitingApproval ? "Review" : isCompleted ? "View" : isRunning ? "Reconnect" : isInterrupted ? "Details" : "View"}
           </button>
-          <span className="text-base-content/30 text-xs select-none">
-            {expanded ? "▲" : "▼"}
-          </span>
+          <ChevronDownIcon className={`h-4 w-4 text-base-content/30 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </div>
       </div>
 
@@ -206,7 +209,7 @@ function RunCard({ run, onSelect }) {
               <div className="bg-base-200 rounded-lg p-2.5">
                 <p className="text-[10px] uppercase tracking-wider text-base-content/50 mb-1">IS Profit</p>
                 <p className="text-sm font-bold">
-                  {sanity.profit_total_abs != null ? fmtAbs(sanity.profit_total_abs) : "—"}
+                  {sanity.profit_total_abs != null ? fmtAbs(sanity.profit_total_abs) : "-"}
                 </p>
               </div>
               <div className="bg-base-200 rounded-lg p-2.5">
@@ -216,7 +219,7 @@ function RunCard({ run, onSelect }) {
                     ? oos.profit_total >= 0 ? "text-success" : "text-error"
                     : ""
                 }`}>
-                  {oos.profit_total != null ? fmtPct(oos.profit_total) : "—"}
+                  {oos.profit_total != null ? fmtPct(oos.profit_total) : "-"}
                 </p>
               </div>
               <div className="bg-base-200 rounded-lg p-2.5">
@@ -226,7 +229,7 @@ function RunCard({ run, onSelect }) {
                     ? risk.max_drawdown_pct < 30 ? "text-success" : "text-error"
                     : ""
                 }`}>
-                  {risk.max_drawdown_pct != null ? fmtDD(risk.max_drawdown_pct) : "—"}
+                  {risk.max_drawdown_pct != null ? fmtDD(risk.max_drawdown_pct) : "-"}
                 </p>
               </div>
             </div>
@@ -248,7 +251,8 @@ function RunCard({ run, onSelect }) {
           {isInterrupted && (
             <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2.5 space-y-1">
               <p className="text-xs font-semibold text-warning flex items-center gap-1.5">
-                ⚠ Pipeline was interrupted (backend restarted)
+                <ExclamationTriangleIcon className="h-4 w-4" />
+                Pipeline was interrupted (backend restarted)
               </p>
               {run.current_stage > 0 && (
                 <p className="text-[11px] text-warning/70">
@@ -269,7 +273,8 @@ function RunCard({ run, onSelect }) {
                   className="btn btn-primary btn-xs gap-1.5"
                   onClick={() => downloadFile(files.optimized_strategy)}
                 >
-                  ⬇ Strategy (.py)
+                  <DocumentArrowDownIcon className="h-3.5 w-3.5" />
+                  Strategy (.py)
                 </button>
               )}
               {files.config && (
@@ -277,7 +282,8 @@ function RunCard({ run, onSelect }) {
                   className="btn btn-outline btn-xs gap-1.5"
                   onClick={() => downloadFile(files.config)}
                 >
-                  ⬇ Config (.json)
+                  <DocumentArrowDownIcon className="h-3.5 w-3.5" />
+                  Config (.json)
                 </button>
               )}
             </div>

@@ -32,7 +32,7 @@ MAX_HISTORY_MESSAGES = 8
 MAX_RETRIES = 2
 RETRY_DELAY_BASE = 1.0  # seconds
 
-SYSTEM_PROMPT = """You are Strategy Lab's AI strategy analyst.
+ANALYSIS_SYSTEM_PROMPT = """You are Strategy Lab's AI strategy analyst.
 
 Your job is to help the user understand Freqtrade strategy code, optimizer
 sessions, backtest results, AutoQuant reports, parameters, and logs.
@@ -51,6 +51,45 @@ Rules:
   deleting files, accepting a candidate, or live/dry-run deployment are not
   available in this MVP.
 """
+
+# Alias for backward compatibility
+SYSTEM_PROMPT = ANALYSIS_SYSTEM_PROMPT
+
+CHAT_SYSTEM_PROMPT = """You are Fourty, an AI assistant embedded inside the AutoQuant / Strategy Lab app.
+
+Your job is to help the user build, debug, understand, and improve trading-strategy workflows, especially around Freqtrade, AutoQuant, Strategy Lab, Optimizer, pair selection, backtesting, hyperopt, WFO/OOS validation, and export.
+
+Core behavior:
+- Be practical, direct, and useful.
+- Prefer clear step-by-step answers when the topic is technical.
+- Keep answers concise by default.
+- Expand only when the user asks for depth using words like: "explain fully", "step by step", "deep", "think hard", "from beginning to end", or similar.
+- If the user asks for "prompt only", output only the prompt with no extra explanation.
+- If the user asks in Arabic, answer in Arabic unless they explicitly request English.
+- If the user asks for an English prompt, write the prompt in English.
+- Do not over-ask questions. If the missing detail is not blocking, make a reasonable assumption and continue.
+- If the request is ambiguous but still answerable, state the assumption briefly and proceed.
+- Do not pretend that you ran code, tests, backtests, or file edits unless the app actually executed them through a tool.
+- For trading strategy claims, never guarantee profit. Explain that all results must be validated by data, backtesting, OOS, WFO, multi-pair tests, and drawdown checks.
+
+AutoQuant principles:
+- AI suggests, backend validates, Freqtrade tests, AutoQuant decides.
+- The AI should not decide that a strategy is profitable by opinion.
+- A strategy is only promising if the numbers support it: positive expectancy, acceptable drawdown, enough trades, reasonable profit factor, and robustness across out-of-sample and multi-pair validation.
+- Prefer robust strategies over curve-fit strategies.
+- If a strategy fails, explain the failure reason clearly and suggest the next safest step.
+
+Response style:
+- Use simple language.
+- Avoid unnecessary theory unless requested.
+- Give the user the next action clearly.
+- When giving implementation instructions, separate them into small steps.
+- When giving code, make it clean, minimal, and ready to paste.
+- When giving prompts for another AI coding assistant, make them specific, testable, and not too long.
+"""
+
+# Modes that use Modelfile-baked system prompts (no system message sent)
+WORKFLOW_MODES = {"autoquant", "strategylab", "optimizer"}
 
 
 def _now() -> str:
@@ -251,14 +290,19 @@ class AssistantService:
             return session
         return self._new_session(model)
 
-    def _settings_and_model(self, requested_model: str | None) -> tuple[Any, str]:
+    def _settings_and_model(self, requested_model: str | None, mode: str = "analysis") -> tuple[Any, str]:
         settings = self.settings_store.load()
         model = requested_model or settings.ollama_model
         if not model:
-            raise BackendError(
-                "No AI model configured. Go to Settings -> AI Assistant, refresh models, select one, and save.",
-                status_code=422,
-            )
+            # Fall back to mode-specific model if default is empty
+            mode_key = f"ollama_model_{mode}" if mode != "analysis" else None
+            if mode_key:
+                model = getattr(settings, mode_key, "") or ""
+            if not model:
+                raise BackendError(
+                    "No AI model configured. Go to Settings -> AI Assistant, refresh models, select one, and save.",
+                    status_code=422,
+                )
         return settings, model
 
     def _build_context(
@@ -315,6 +359,66 @@ class AssistantService:
             "warnings": context.get("warnings", []),
         }
 
+    CHAT_KEYWORDS = frozenset({
+        "hi", "hello", "hey", "howdy", "good morning", "good evening",
+        "good afternoon", "what's up", "sup", "hi there", "hello there",
+        "thanks", "thank you", "ty", "thank you very much", "thanks a lot",
+        "bye", "goodbye", "see you", "see ya", "cya", "later",
+        "how", "how are you", "how's it going", "how are things",
+        "nice", "great", "cool", "awesome", "wonderful", "perfect",
+        "yes", "no", "maybe", "ok", "okay", "sure", "yeah", "yep", "nope",
+        "got it", "i see", "understood", "makes sense",
+    })
+
+    def _resolve_mode(self, mode: str, user_message: str) -> str:
+        if mode == "auto":
+            return self._classify_message_mode(user_message)
+        return mode
+
+    def _classify_message_mode(self, user_message: str) -> str:
+        msg = user_message.strip().lower()
+        words = msg.split()
+        if not words:
+            return "analysis"
+        first_word = words[0].rstrip("?,!. ")
+        # Single word or very short phrase matching a chat keyword
+        if len(words) <= 4 and first_word in self.CHAT_KEYWORDS:
+            return "chat"
+        if len(words) <= 2 and msg in self.CHAT_KEYWORDS:
+            return "chat"
+        # Multi-word greeting patterns
+        first_two = " ".join(words[:2]).rstrip("?,!. ")
+        if first_two in {"how are", "how's it", "what's up", "how do", "how you"}:
+            return "chat"
+        return "analysis"
+
+    def _resolve_model_for_mode(self, settings: Any, base_model: str, mode: str) -> str:
+        if mode == "chat":
+            override = getattr(settings, "ollama_model_chat", "") or ""
+            return override.strip() or base_model
+        if mode == "analysis":
+            return base_model
+        # Workflow modes
+        key = f"ollama_model_{mode}"
+        override = getattr(settings, key, "") or ""
+        return override.strip() or base_model
+
+    def _resolve_model_pair(self, settings: Any, requested_model: str | None, mode: str) -> tuple[str, str]:
+        """Resolve (base_model, final_model) from settings, request override, and mode."""
+        base_model = requested_model or settings.ollama_model or ""
+        if not base_model:
+            # Fall back to mode-specific model if default is empty
+            mode_key = f"ollama_model_{mode}" if mode != "analysis" else None
+            if mode_key:
+                base_model = getattr(settings, mode_key, "") or ""
+        if not base_model:
+            raise BackendError(
+                "No AI model configured. Go to Settings -> AI Assistant, refresh models, select one, and save.",
+                status_code=422,
+            )
+        final_model = self._resolve_model_for_mode(settings, base_model, mode)
+        return base_model, final_model
+
     def available_actions(self, context: dict[str, Any]) -> list[dict[str, Any]]:
         optimizer = context.get("optimizer") or {}
         session_id = optimizer.get("session_id")
@@ -344,12 +448,42 @@ class AssistantService:
         session: dict[str, Any],
         user_message: str,
         context: dict[str, Any],
+        mode: str = "analysis",
     ) -> list[dict[str, str]]:
         previous = [
             {"role": item.get("role", "user"), "content": str(item.get("content", ""))}
             for item in session.get("messages", [])[-MAX_HISTORY_MESSAGES:]
             if item.get("role") in {"user", "assistant"} and item.get("content")
         ]
+
+        if mode == "chat":
+            return [
+                {"role": "system", "content": CHAT_SYSTEM_PROMPT},
+                *previous,
+                {"role": "user", "content": user_message},
+            ]
+
+        if mode in WORKFLOW_MODES:
+            # No system prompt — Modelfile has the workflow baked in
+            summary = self.context_summary(context)
+            state_parts = []
+            if summary.get("active_tab"):
+                state_parts.append(f"Active tab: {summary['active_tab']}")
+            if summary.get("strategy_name"):
+                state_parts.append(f"Strategy: {summary['strategy_name']}")
+            if summary.get("optimizer_session_id"):
+                state_parts.append(f"Optimizer session: {summary['optimizer_session_id']}")
+            if summary.get("backtest_run_id"):
+                state_parts.append(f"Backtest run: {summary['backtest_run_id']}")
+            if summary.get("auto_quant_run_id"):
+                state_parts.append(f"AutoQuant run: {summary['auto_quant_run_id']}")
+            state_line = "; ".join(state_parts) if state_parts else "No active context"
+            return [
+                *previous,
+                {"role": "user", "content": f"{user_message}\n\nApp state: {state_line}"},
+            ]
+
+        # analysis mode (default)
         context_json = _json_for_prompt(context)
         current = {
             "role": "user",
@@ -360,7 +494,7 @@ class AssistantService:
                 "Answer as a strategy analyst. When suggesting next steps, make clear they are suggestions."
             ),
         }
-        return [{"role": "system", "content": SYSTEM_PROMPT}, *previous, current]
+        return [{"role": "system", "content": ANALYSIS_SYSTEM_PROMPT}, *previous, current]
 
     async def chat(
         self,
@@ -368,16 +502,19 @@ class AssistantService:
         message: str,
         session_id: str | None = None,
         model: str | None = None,
+        mode: str = "auto",
         context_overrides: dict[str, Any] | None = None,
         include_strategy_source: bool = False,
     ) -> dict[str, Any]:
         if not message.strip():
             raise BackendError("Message is required.", status_code=422)
-        settings, resolved_model = self._settings_and_model(model)
+        settings = self.settings_store.load()
+        resolved_mode = self._resolve_mode(mode, message)
+        base_model, resolved_model = self._resolve_model_pair(settings, model, resolved_mode)
         session = self._get_or_create_session(session_id, resolved_model)
         context = self._build_context(context_overrides, include_strategy_source=include_strategy_source)
         summary = self.context_summary(context)
-        messages = self._prompt_messages(session, message, context)
+        messages = self._prompt_messages(session, message, context, mode=resolved_mode)
         response_text = await self._call_ollama(settings, resolved_model, messages)
         user_record = self._message_record("user", message)
         assistant_record = self._message_record("assistant", response_text)
@@ -431,19 +568,23 @@ class AssistantService:
         message: str,
         session_id: str | None = None,
         model: str | None = None,
+        mode: str = "auto",
         context_overrides: dict[str, Any] | None = None,
         include_strategy_source: bool = False,
     ) -> AsyncIterator[str]:
-        settings, resolved_model = self._settings_and_model(model)
+        settings = self.settings_store.load()
+        resolved_mode = self._resolve_mode(mode, message)
+        base_model, resolved_model = self._resolve_model_pair(settings, model, resolved_mode)
         session = self._get_or_create_session(session_id, resolved_model)
         context = self._build_context(context_overrides, include_strategy_source=include_strategy_source)
         summary = self.context_summary(context)
-        messages = self._prompt_messages(session, message, context)
-        actions = self.available_actions(context)
+        messages = self._prompt_messages(session, message, context, mode=resolved_mode)
+        actions = self.available_actions(context) if resolved_mode == "analysis" else []
 
         yield self._sse("meta", {
             "session_id": session["session_id"],
             "model": resolved_model,
+            "mode": resolved_mode,
             "context_summary": summary,
             "available_actions": actions,
         })

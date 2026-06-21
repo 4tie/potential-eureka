@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @plugin "daisyui" {
-  themes: cold-black --default, neon-cyber, nordic-light;
+  themes: cold-black, neon-cyber --default, nordic-light;
 }
 
 @plugin "daisyui/theme" {
@@ -35,28 +35,28 @@
 
 @plugin "daisyui/theme" {
   name: "neon-cyber";
-  default: false;
+  default: true;
   color-scheme: dark;
-  --color-base-100: #09090b;
-  --color-base-200: #0d0d0d;
-  --color-base-300: #18181b;
-  --color-base-content: #fafafa;
-  --color-primary: #a3e635;
-  --color-primary-content: #1a2e00;
-  --color-secondary: #f0abfc;
-  --color-secondary-content: #3b0044;
-  --color-accent: #fb923c;
-  --color-accent-content: #1c0800;
-  --color-neutral: #27272a;
-  --color-neutral-content: #a1a1aa;
-  --color-info: #22d3ee;
-  --color-info-content: #003344;
-  --color-success: #a3e635;
-  --color-success-content: #1a2e00;
-  --color-warning: #fb923c;
-  --color-warning-content: #1c0800;
-  --color-error: #f472b6;
-  --color-error-content: #1c0011;
+  --color-base-100: #0a0a0f;
+  --color-base-200: #1a1a2e;
+  --color-base-300: #2d2d44;
+  --color-base-content: #e0e0e0;
+  --color-primary: #00f0ff;
+  --color-primary-content: #0a0a0f;
+  --color-secondary: #bf00ff;
+  --color-secondary-content: #0a0a0f;
+  --color-accent: #ff0099;
+  --color-accent-content: #0a0a0f;
+  --color-neutral: #2d2d44;
+  --color-neutral-content: #a0a0a0;
+  --color-info: #00f0ff;
+  --color-info-content: #0a0a0f;
+  --color-success: #00ff88;
+  --color-success-content: #0a0a0f;
+  --color-warning: #ff8800;
+  --color-warning-content: #0a0a0f;
+  --color-error: #ff0044;
+  --color-error-content: #0a0a0f;
   --rounded-box: 0.25rem;
   --rounded-btn: 0.25rem;
   --border-btn: 1px;
@@ -96,8 +96,164 @@
   box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 55%, transparent);
 }
 
+[data-theme="neon-cyber"] .neon-glow-purple {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-secondary) 55%, transparent);
+}
+
+[data-theme="neon-cyber"] .neon-glow-pink {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 55%, transparent);
+}
+
+[data-theme="neon-cyber"] .neon-glow-green {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-success) 55%, transparent);
+}
+
+[data-theme="neon-cyber"] .neon-glow-orange {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-warning) 55%, transparent);
+}
+
+[data-theme="neon-cyber"] .neon-glow-red {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-error) 55%, transparent);
+}
+
 [data-theme="neon-cyber"] .border-base-300 {
   border-color: color-mix(in srgb, var(--color-primary) 18%, #27272a);
+}
+
+/* Cyberpunk grid background */
+[data-theme="neon-cyber"] .cyber-grid {
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Scanline effect */
+[data-theme="neon-cyber"] .scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+/* CRT flicker animation */
+@keyframes crt-flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.9; }
+  15% { opacity: 0.95; }
+  20% { opacity: 0.99; }
+  25% { opacity: 0.95; }
+  30% { opacity: 0.9; }
+  35% { opacity: 0.96; }
+  40% { opacity: 0.98; }
+  45% { opacity: 0.95; }
+  50% { opacity: 0.99; }
+  55% { opacity: 0.93; }
+  60% { opacity: 0.9; }
+  65% { opacity: 0.96; }
+  70% { opacity: 1; }
+  75% { opacity: 0.97; }
+  80% { opacity: 0.95; }
+  85% { opacity: 0.92; }
+  90% { opacity: 0.98; }
+  95% { opacity: 0.95; }
+  100% { opacity: 0.97; }
+}
+
+[data-theme="neon-cyber"] .crt-flicker {
+  animation: crt-flicker 0.15s infinite;
+}
+
+/* Pulse glow animation */
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px color-mix(in srgb, var(--color-primary) 30%, transparent),
+                0 0 10px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+  50% { 
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 50%, transparent),
+                0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+}
+
+[data-theme="neon-cyber"] .pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Scan animation */
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+[data-theme="neon-cyber"] .scan-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="neon-cyber"] .scan-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  animation: scan 3s linear infinite;
+}
+
+/* Glitch effect */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+[data-theme="neon-cyber"] .glitch {
+  animation: glitch 0.3s ease-in-out;
+}
+
+/* Data stream animation */
+@keyframes data-stream {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+[data-theme="neon-cyber"] .data-stream {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    color-mix(in srgb, var(--color-primary) 10%, transparent) 2px,
+    color-mix(in srgb, var(--color-primary) 10%, transparent) 4px
+  );
+  background-size: 100% 200%;
+  animation: data-stream 2s linear infinite;
+}
+
+/* Typing animation */
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+[data-theme="neon-cyber"] .typing {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--color-primary);
+  animation: typing 2s steps(40) forwards, blink 0.75s step-end infinite;
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
 }
 
 /* Cold-black: suppress all glow/ring effects; keep borders zinc-dark */

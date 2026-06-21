@@ -154,8 +154,10 @@ async def run_pipeline(run_id: str) -> None:
                         s1_result)
 
         # ── Stage 2: Portfolio Baseline Backtest ───────────────────────────
-        # Skip if already completed (current_stage > 2)
-        if state.current_stage < 2:
+        # Check if Stage 2 needs to run based on both current_stage and individual stage status
+        stage2_needs_run = (state.current_stage < 2) or (len(state.stages) > 1 and state.stages[1].status != "passed")
+        
+        if stage2_needs_run:
             _rlog(run_id, 2, logging.INFO, "── ENTERING Stage 2: Portfolio Baseline Backtest ──")
             s2_result = await _stage_portfolio_baseline(run_id, state, out_dir)
             if s2_result is None:
@@ -207,14 +209,17 @@ async def run_pipeline(run_id: str) -> None:
 
         while True:
             # ── Stage 3: WFA Hyperopt (renumbered from Stage 2) ───────────────
-            # Skip if already completed (check if current_stage >= 3)
-            if state.current_stage >= 3:
+            # Check if Stage 3 needs to run based on both current_stage and individual stage status
+            # Stage 3 corresponds to index 2 in the stages array
+            stage3_needs_run = (state.current_stage < 3) or (len(state.stages) > 2 and state.stages[2].status != "passed")
+            
+            if not stage3_needs_run:
                 _rlog(run_id, 3, logging.INFO, "── RESUMING: Stage 3 already completed")
                 # Load optimized_path from state if available (needed for subsequent stages)
                 if not optimized_path and state.stages and len(state.stages) >= 3:
                     stage3_data = state.stages[2].data if state.stages[2].data else {}
-                    if "optimized_strategy" in stage3_data:
-                        optimized_path = out_dir / stage3_data["optimized_strategy"]
+                    if "optimized_file" in stage3_data:
+                        optimized_path = Path(stage3_data["optimized_file"])
                         _rlog(run_id, 3, logging.INFO, f"Loaded optimized_path from state: {optimized_path}")
                 break  # Exit the retry loop and continue to Stage 4
             
@@ -483,15 +488,31 @@ async def run_pipeline(run_id: str) -> None:
             break  # Exit the while True loop
 
         # ── Stage 4: Robustness & Feature Injection (if not already completed) ──
-        # Check if Stage 4 was already completed in the while loop
-        if state.current_stage < 4:
+        # Check if Stage 4 needs to run based on both current_stage and individual stage status
+        # Stage 4 corresponds to index 3 in the stages array
+        stage4_needs_run = (state.current_stage < 4) or (len(state.stages) > 3 and state.stages[3].status != "passed")
+        
+        if stage4_needs_run:
             _rlog(run_id, 4, logging.INFO, "── ENTERING Stage 4: Robustness & Feature Injection ──")
             state.current_stage = 4
             _save_state_to_disk(state)
             
             # Ensure optimized_path is available
+            # If resuming after Stage 3 was completed, retrieve it from state
+            if not optimized_path and len(state.stages) > 2:
+                stage3_data = state.stages[2].data
+                if stage3_data and "optimized_file" in stage3_data:
+                    optimized_path = Path(stage3_data["optimized_file"])
+                    _rlog(run_id, 4, logging.INFO, f"Retrieved optimized_path from Stage 3: {optimized_path}")
+                else:
+                    _rlog(run_id, 4, logging.WARNING, "Stage 3 data missing or no optimized_file found")
+                    _rlog(run_id, 4, logging.DEBUG, f"Stage 3 status: {state.stages[2].status if len(state.stages) > 2 else 'N/A'}")
+                    _rlog(run_id, 4, logging.DEBUG, f"Stage 3 data keys: {list(stage3_data.keys()) if stage3_data else 'N/A'}")
+            
             if not optimized_path:
                 _rlog(run_id, 4, logging.ERROR, "Stage 4 cannot proceed: optimized_path is None")
+                _rlog(run_id, 4, logging.ERROR, "This indicates Stage 3 (Auto-Patching) was not properly completed.")
+                _rlog(run_id, 4, logging.ERROR, f"Current stage: {state.current_stage}, Stage 3 status: {state.stages[2].status if len(state.stages) > 2 else 'N/A'}")
                 _fail_stage(run_id, state, 4, "optimized_path is None - cannot run robustness & feature injection")
                 return
             
@@ -508,6 +529,19 @@ async def run_pipeline(run_id: str) -> None:
 
         # ── Stage 5: Portfolio Competition (Joint Portfolio Backtest) ──────────────────────
         _rlog(run_id, 5, logging.INFO, "── ENTERING Stage 5: Portfolio Competition ──")
+        
+        # Ensure optimized_path is available (may be None if resuming after Stage 3)
+        if not optimized_path and len(state.stages) > 2:
+            stage3_data = state.stages[2].data
+            if stage3_data and "optimized_file" in stage3_data:
+                optimized_path = Path(stage3_data["optimized_file"])
+                _rlog(run_id, 5, logging.INFO, f"Retrieved optimized_path from Stage 3: {optimized_path}")
+        
+        if not optimized_path:
+            _rlog(run_id, 5, logging.ERROR, "Stage 5 cannot proceed: optimized_path is None")
+            _fail_stage(run_id, state, 5, "optimized_path is None - cannot run portfolio competition")
+            return
+        
         # Run joint portfolio backtest with capital constraints
         portfolio_result = await _stage_joint_portfolio_backtest(run_id, state, out_dir, optimized_path)
         if portfolio_result is None:
@@ -516,6 +550,19 @@ async def run_pipeline(run_id: str) -> None:
 
         # ── Stage 6: Delivery ─────────────────────────────────────────────
         _rlog(run_id, 6, logging.INFO, "── ENTERING Stage 6: Delivery ──")
+        
+        # Ensure optimized_path is available (may be None if resuming after Stage 3)
+        if not optimized_path and len(state.stages) > 2:
+            stage3_data = state.stages[2].data
+            if stage3_data and "optimized_file" in stage3_data:
+                optimized_path = Path(stage3_data["optimized_file"])
+                _rlog(run_id, 6, logging.INFO, f"Retrieved optimized_path from Stage 3: {optimized_path}")
+        
+        if not optimized_path:
+            _rlog(run_id, 6, logging.ERROR, "Stage 6 cannot proceed: optimized_path is None")
+            _fail_stage(run_id, state, 6, "optimized_path is None - cannot run delivery")
+            return
+        
         await _stage_delivery(run_id, state, out_dir, optimized_path, best_params,
                               s1_result, stage4_result or {}, stage4_result or {}, portfolio_result)
 

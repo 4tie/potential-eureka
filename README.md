@@ -45,7 +45,18 @@ A comprehensive Freqtrade-based trading strategy discovery, validation, optimiza
 
 ### Backend Setup
 ```bash
-# Install dependencies
+# Install TA-Lib system dependencies (required before pip install)
+# Ubuntu/Debian
+sudo apt-get install -y build-essential wget
+wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+tar -xzf ta-lib-0.4.0-src.tar.gz
+cd ta-lib/
+./configure --prefix=/usr
+make
+sudo make install
+cd ..
+
+# Install Python dependencies
 pip install -r requirements.txt
 
 # Start backend server

@@ -19,3 +19,5 @@ requests
 scikit-optimize
 numba>=0.58.0
 vectorbt>=1.0.0,<2
+TA-Lib>=0.4.28
+mplfinance>=0.12.10

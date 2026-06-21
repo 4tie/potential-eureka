@@ -1,4 +1,5 @@
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
+import { BoltIcon } from "@heroicons/react/24/outline";
 
 function LiveFitnessTooltip({ active, payload, totalEpochs }) {
   if (!active || !payload?.length) return null;
@@ -20,9 +21,9 @@ export default function AutoQuantLiveFitnessCurve({ data, hyperoptProgress }) {
   if (!hasData) {
     return (
       <div className="flex flex-col items-center justify-center h-36 rounded-xl bg-base-300/30 border border-base-300/50 gap-2">
-        <div className="text-2xl opacity-30">⚡</div>
+        <BoltIcon className="h-6 w-6 text-base-content/25" />
         <span className="text-xs text-base-content/35 italic">
-          {hyperoptProgress ? `Running hyperopt...` : "Waiting for Stage 2 — Hyperopt..."}
+          {hyperoptProgress ? "Running hyperopt..." : "Waiting for Stage 2 - Hyperopt..."}
         </span>
       </div>
     );

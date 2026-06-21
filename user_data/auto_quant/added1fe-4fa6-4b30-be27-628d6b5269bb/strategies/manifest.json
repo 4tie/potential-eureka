@@ -1,0 +1,12 @@
+{
+  "original_strategy": "AIStrategy",
+  "original_strategy_hash": "dcf0b8aefd26a0974d3b9bd1d6969874a8050e74c3fd554bd39e3d53a000a7f3",
+  "variants": [
+    {
+      "role": "working",
+      "strategy_name": "AIStrategy",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/added1fe-4fa6-4b30-be27-628d6b5269bb/strategies/AIStrategy.py",
+      "source": "/home/mohs/Desktop/fictional-octo-guide/user_data/strategies/AIStrategy.py"
+    }
+  ]
+}

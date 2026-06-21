@@ -1,10 +1,36 @@
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import { STAGE_ICONS } from "../../features/autoquant/constants";
 import { fmtMmSs } from "../../features/autoquant/utils";
+
+function StageStatusIcon({ status, stageNumber }) {
+  if (status === "running") {
+    return <span className="loading loading-spinner loading-xs text-primary" aria-label="Running" />;
+  }
+  if (status === "passed") {
+    return <CheckCircleIcon className="h-4 w-4 text-success" aria-label="Passed" />;
+  }
+  if (status === "failed") {
+    return <XCircleIcon className="h-4 w-4 text-error" aria-label="Failed" />;
+  }
+  if (status === "warning") {
+    return <ExclamationTriangleIcon className="h-4 w-4 text-warning" aria-label="Warning" />;
+  }
+  return (
+    <span className="font-mono text-[10px] font-semibold text-base-content/40" aria-label={`Stage ${stageNumber}`}>
+      {stageNumber}
+    </span>
+  );
+}
 
 export default function AutoQuantStageStepper({ stages, nowMs }) {
   return (
     <div className="flex flex-col gap-1.5">
       {stages.map((stage, i) => {
+        const stageNumber = STAGE_ICONS[i] || String(stage.index ?? i + 1).padStart(2, "0");
         let stageElapsed = null;
         if (nowMs && stage.status === "running" && stage.started_at) {
           const secs = Math.floor((nowMs - new Date(stage.started_at).getTime()) / 1000);
@@ -31,15 +57,11 @@ export default function AutoQuantStageStepper({ stages, nowMs }) {
                     ? "bg-success/15"
                     : stage.status === "failed"
                     ? "bg-error/15"
+                    : stage.status === "warning"
+                    ? "bg-warning/15"
                     : "bg-base-300/50"
                 }`}>
-                  {stage.status === "running" ? (
-                    <span className="loading loading-spinner loading-xs text-primary" />
-                  ) : (
-                    <span className={stage.status === "passed" ? "text-success" : stage.status === "failed" ? "text-error" : "text-base-content/30"}>
-                      {stage.status === "passed" ? "✓" : stage.status === "failed" ? "✗" : STAGE_ICONS[i] || "○"}
-                    </span>
-                  )}
+                  <StageStatusIcon status={stage.status} stageNumber={stageNumber} />
                 </div>
                 {i < stages.length - 1 && (
                   <div className={`w-px h-2 mt-0.5 rounded-full transition-colors ${
@@ -53,9 +75,11 @@ export default function AutoQuantStageStepper({ stages, nowMs }) {
                     stage.status === "running" ? "text-primary" :
                     stage.status === "passed" ? "text-success/90" :
                     stage.status === "failed" ? "text-error" :
+                    stage.status === "warning" ? "text-warning" :
                     "text-base-content/40"
                   }`}>
-                    {STAGE_ICONS[i]} {stage.name}
+                    <span className="font-mono text-[10px] uppercase tracking-wider opacity-70">S{stageNumber}</span>{" "}
+                    {stage.name}
                   </span>
                   {stage.status === "running" && stageElapsed && (
                     <span className="text-[10px] font-mono text-primary/70 tabular-nums">{stageElapsed}</span>

@@ -1,0 +1,12 @@
+{
+  "original_strategy": "CatFactory",
+  "original_strategy_hash": "933d9ee1162fa30f16db061146852a0a73eede1e613f32469003e8507f478b71",
+  "variants": [
+    {
+      "role": "working",
+      "strategy_name": "CatFactory",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/5b536a23-436a-4f93-9da4-139eb08e1988/strategies/CatFactory.py",
+      "source": "/home/mohs/Desktop/fictional-octo-guide/user_data/strategies/CatFactory.py"
+    }
+  ]
+}

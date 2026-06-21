@@ -44,6 +44,12 @@ class SettingsModel(StrictModel):
     ollama_self_healing_enabled: bool = False
     ollama_timeout: int = 30
 
+    # Workflow-specific model overrides
+    ollama_model_chat: str = ""
+    ollama_model_autoquant: str = ""
+    ollama_model_strategylab: str = ""
+    ollama_model_optimizer: str = ""
+
 
 class RunRequest(StrictModel):
     """Backend data type for `RunRequest`."""
@@ -419,3 +425,40 @@ class ComparisonResult(StrictModel):
     suspicious_reasons: list[str]
     thresholds: dict[str, float]
     pair_list_changes: dict[str, list[str]]
+
+
+# Chart data models for mplfinance integration
+
+
+class CandlestickData(StrictModel):
+    """OHLC candlestick data for professional charting."""
+    timestamps: list[str]
+    open: list[float]
+    high: list[float]
+    low: list[float]
+    close: list[float]
+    volume: list[float]
+
+
+class IndicatorData(StrictModel):
+    """Technical indicator data."""
+    sma: dict[str, list[float]] = Field(default_factory=dict)
+    ema: dict[str, list[float]] = Field(default_factory=dict)
+    rsi: list[float] = Field(default_factory=list)
+    macd: dict[str, list[float]] = Field(default_factory=dict)
+    bollinger: dict[str, list[float]] = Field(default_factory=dict)
+
+
+class ChartDataResponse(StrictModel):
+    """Complete chart data response including candlestick and indicators."""
+    candlestick: CandlestickData
+    indicators: IndicatorData
+
+
+class ChartRequest(StrictModel):
+    """Request parameters for chart data generation."""
+    include_sma: bool = True
+    include_ema: bool = True
+    include_rsi: bool = True
+    include_macd: bool = True
+    include_bollinger: bool = True

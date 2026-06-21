@@ -1,15 +1,18 @@
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+
 export default function AutoQuantInterruptedReport({ state }) {
   const lastStage = state.stages?.filter((s) => s.status !== "pending").slice(-1)[0];
   const interruptedAt = state.completed_at || state.created_at;
   return (
     <div className="alert border border-warning/40 bg-warning/10 text-warning">
+      <ExclamationTriangleIcon className="h-5 w-5 shrink-0" />
       <div className="flex flex-col gap-1">
         <h4 className="font-bold text-sm flex items-center gap-2">
-          ⚠ Pipeline was interrupted (backend restarted)
+          Pipeline was interrupted (backend restarted)
         </h4>
         {lastStage && (
           <p className="text-xs opacity-80">
-            Last active stage: {lastStage.index} — {lastStage.name}
+            Last active stage: {lastStage.index} - {lastStage.name}
             {lastStage.message ? `: ${lastStage.message}` : ""}
           </p>
         )}

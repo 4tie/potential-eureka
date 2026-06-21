@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
+import { BellIcon, BellSlashIcon, CpuChipIcon } from "@heroicons/react/24/outline";
 import { STAGE_NAMES } from "../features/autoquant/constants";
 import { parsePairUniverse } from "../features/autoquant/utils";
+import { getProgressPercent, getRunStatusFlags } from "../features/autoquant/viewModel";
 import AutoQuantConfigPanel from "../features/autoquant/components/AutoQuantConfigPanel";
 import AutoQuantRunDashboard from "../features/autoquant/components/AutoQuantRunDashboard";
 import useAutoQuantForm from "../features/autoquant/hooks/useAutoQuantForm";
@@ -146,31 +148,85 @@ export default function AutoQuantTab({
     [loadReport, setPipelineState, setReport, setRunId, setRunStartedAtMs, setWfoWindows]
   );
 
+  const flags = getRunStatusFlags(pipelineState?.status);
+  const progress = pipelineState ? getProgressPercent(pipelineState) : 0;
+  const hasActiveRun = Boolean(pipelineState);
+
   return (
-    <div className="py-6 px-4 sm:px-6 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Auto-Quant Factory</h1>
-          <p className="text-sm text-base-content/60 mt-1">
-            Fully automated 7-stage strategy optimization - sanity check, hyperopt, parameter injection,
-            OOS validation, stress test, risk assessment, and delivery.
-          </p>
+    <div className="mx-auto w-full max-w-7xl space-y-5 px-4 py-5 sm:px-6 cyber-grid">
+      <div className="overflow-hidden rounded-lg border border-primary/30 bg-base-200/50 neon-glow scan-effect">
+        <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/50 bg-primary/10 text-primary pulse-glow">
+              <CpuChipIcon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-primary crt-flicker">Auto-Quant Factory</h1>
+                <span
+                  className={`badge badge-sm ${
+                    flags.isCompleted
+                      ? "badge-success neon-glow-green"
+                      : flags.isFailed
+                        ? "badge-error neon-glow-red"
+                        : flags.isAwaitingApproval
+                          ? "badge-warning neon-glow-orange"
+                          : flags.isRunning
+                            ? "badge-primary neon-glow"
+                            : hasActiveRun
+                              ? "badge-ghost"
+                              : "badge-outline"
+                  }`}
+                >
+                  {hasActiveRun ? pipelineState.status : "ready"}
+                </span>
+              </div>
+              <p className="mt-1 max-w-3xl text-sm leading-relaxed text-base-content/60">
+                Dense validation cockpit for seven-stage strategy optimization: sanity backtest,
+                hyperopt, parameter injection, OOS validation, stress test, risk assessment, and delivery.
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {hasActiveRun && (
+              <div className="hidden rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-right sm:block neon-glow">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">Run Progress</div>
+                <div className="font-mono text-sm font-bold text-primary tabular-nums">{progress}%</div>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={uiState.toggleNotif}
+              title={uiState.notifEnabled ? "Notifications on - click to disable" : "Enable run notifications"}
+              className={`btn btn-sm gap-2 transition-all ${
+                uiState.notifEnabled
+                  ? "btn-primary neon-glow shadow-sm shadow-primary/25"
+                  : "btn-outline text-base-content/65 hover:text-base-content border-primary/30 hover:border-primary/50"
+              }`}
+            >
+              {uiState.notifEnabled ? <BellIcon className="h-4 w-4" /> : <BellSlashIcon className="h-4 w-4" />}
+              <span className="hidden sm:inline">{uiState.notifEnabled ? "Alerts On" : "Alerts Off"}</span>
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={uiState.toggleNotif}
-          title={uiState.notifEnabled ? "Notifications on - click to disable" : "Enable run notifications"}
-          className={`btn btn-sm btn-circle shrink-0 mt-0.5 transition-all ${
-            uiState.notifEnabled
-              ? "btn-primary shadow-sm shadow-primary/30"
-              : "btn-ghost text-base-content/40 hover:text-base-content/70"
-          }`}
-        >
-          Bell
-        </button>
+        {hasActiveRun && (
+          <progress
+            className={`progress h-1 w-full rounded-none ${
+              flags.isCompleted
+                ? "progress-success neon-glow-green"
+                : flags.isFailed
+                  ? "progress-error neon-glow-red"
+                  : flags.isAwaitingApproval
+                    ? "progress-warning neon-glow-orange"
+                    : "progress-primary neon-glow"
+            }`}
+            value={progress}
+            max={100}
+          />
+        )}
       </div>
 
-      {!pipelineState && (
+      {!hasActiveRun && (
         <AutoQuantConfigPanel
           formState={formState}
           strategyGen={strategyGen}
@@ -184,7 +240,7 @@ export default function AutoQuantTab({
         />
       )}
 
-      {pipelineState && (
+      {hasActiveRun && (
         <AutoQuantRunDashboard
           form={form}
           pipelineState={pipelineState}

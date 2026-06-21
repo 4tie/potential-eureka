@@ -1,7 +1,7 @@
 {
   "strategy_name": "AIStrategy",
-  "timeframe": "5m",
-  "timerange": "20260322-20260620",
+  "timeframe": "1h",
+  "timerange": "20250621-20260621",
   "pairs": [
     "XTZ/USDT",
     "XLM/USDT",
@@ -57,8 +57,8 @@
     "SUSHI/USDT",
     "ETC/USDT"
   ],
-  "max_open_trades": 3,
-  "dry_run_wallet": 100.0,
-  "start_date": "2026-03-22",
-  "end_date": "2026-06-20"
+  "max_open_trades": 1,
+  "dry_run_wallet": 1000.0,
+  "start_date": "2025-06-21",
+  "end_date": "2026-06-21"
 }

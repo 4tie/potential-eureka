@@ -68,6 +68,13 @@ class StrategyGeneratorEngine:
                 timeframe="5m",
                 description="MACD momentum scalping with volume confirmation"
             ),
+            StrategyTemplate(
+                name="STOCH Scalper",
+                style=StrategyStyle.SCALPING,
+                indicators=["STOCH", "ATR", "EMA"],
+                timeframe="5m",
+                description="Stochastic oscillator scalping with ATR volatility filter"
+            ),
         ],
         StrategyStyle.INTRADAY: [
             StrategyTemplate(
@@ -83,6 +90,13 @@ class StrategyGeneratorEngine:
                 indicators=["Bollinger Bands", "RSI", "Volume"],
                 timeframe="30m",
                 description="Bollinger band breakout with RSI confirmation"
+            ),
+            StrategyTemplate(
+                name="CCI Reversal",
+                style=StrategyStyle.INTRADAY,
+                indicators=["CCI", "EMA", "ATR"],
+                timeframe="15m",
+                description="Commodity Channel Index reversal with EMA trend"
             ),
         ],
         StrategyStyle.SWING: [
@@ -100,6 +114,13 @@ class StrategyGeneratorEngine:
                 timeframe="4h",
                 description="MACD-based swing trading with ATR stops"
             ),
+            StrategyTemplate(
+                name="MFI Swing",
+                style=StrategyStyle.SWING,
+                indicators=["MFI", "EMA", "SAR"],
+                timeframe="1h",
+                description="Money Flow Index swing with Parabolic SAR"
+            ),
         ],
         StrategyStyle.POSITION: [
             StrategyTemplate(
@@ -108,6 +129,13 @@ class StrategyGeneratorEngine:
                 indicators=["EMA", "MACD", "RSI"],
                 timeframe="1d",
                 description="Long-term trend following with multiple indicators"
+            ),
+            StrategyTemplate(
+                name="KAMA Trend",
+                style=StrategyStyle.POSITION,
+                indicators=["KAMA", "ADX", "ATR"],
+                timeframe="1d",
+                description="Kaufman Adaptive Moving Average with ADX trend strength"
             ),
         ],
     }
@@ -238,6 +266,35 @@ class StrategyGeneratorEngine:
             elif indicator == "Bollinger Bands":
                 base_params["bb_period"] = int(20 * risk_multiplier)
                 base_params["bb_std"] = 2.0
+            elif indicator == "STOCH":
+                base_params["stoch_fastk_period"] = int(14 * risk_multiplier)
+                base_params["stoch_slowk_period"] = int(3 * risk_multiplier)
+                base_params["stoch_slowd_period"] = int(3 * risk_multiplier)
+            elif indicator == "CCI":
+                base_params["cci_period"] = int(20 * risk_multiplier)
+            elif indicator == "MFI":
+                base_params["mfi_period"] = int(14 * risk_multiplier)
+            elif indicator == "SAR":
+                base_params["sar_acceleration"] = 0.02
+                base_params["sar_maximum"] = 0.2
+            elif indicator == "ADX":
+                base_params["adx_period"] = int(14 * risk_multiplier)
+            elif indicator == "KAMA":
+                base_params["kama_period"] = int(10 * risk_multiplier)
+            elif indicator == "SMA":
+                base_params["sma_period"] = int(20 * risk_multiplier)
+            elif indicator == "WMA":
+                base_params["wma_period"] = int(20 * risk_multiplier)
+            elif indicator == "DEMA":
+                base_params["dema_period"] = int(20 * risk_multiplier)
+            elif indicator == "TEMA":
+                base_params["tema_period"] = int(20 * risk_multiplier)
+            elif indicator == "WILLR":
+                base_params["willr_period"] = int(14 * risk_multiplier)
+            elif indicator == "NATR":
+                base_params["natr_period"] = int(14 * risk_multiplier)
+            elif indicator == "ROC":
+                base_params["roc_period"] = int(10 * risk_multiplier)
         
         # Risk management parameters
         base_params["stop_loss"] = stop_loss
@@ -293,6 +350,75 @@ class {name.replace(' ', '')}(IStrategy):
             elif indicator == "ATR":
                 code += f"""
         dataframe['atr'] = ta.ATR(dataframe, timeperiod={parameters.get('atr_period', 14)})
+"""
+            elif indicator == "STOCH":
+                code += f"""
+        stoch = ta.STOCH(dataframe, fastk_period={parameters.get('stoch_fastk_period', 14)},
+                        slowk_period={parameters.get('stoch_slowk_period', 3)},
+                        slowd_period={parameters.get('stoch_slowd_period', 3)})
+        dataframe['stoch_slowk'] = stoch['slowk']
+        dataframe['stoch_slowd'] = stoch['slowd']
+"""
+            elif indicator == "CCI":
+                code += f"""
+        dataframe['cci'] = ta.CCI(dataframe, timeperiod={parameters.get('cci_period', 20)})
+"""
+            elif indicator == "MFI":
+                code += f"""
+        dataframe['mfi'] = ta.MFI(dataframe, timeperiod={parameters.get('mfi_period', 14)})
+"""
+            elif indicator == "SAR":
+                code += f"""
+        dataframe['sar'] = ta.SAR(dataframe, acceleration={parameters.get('sar_acceleration', 0.02)},
+                                 maximum={parameters.get('sar_maximum', 0.2)})
+"""
+            elif indicator == "ADX":
+                code += f"""
+        dataframe['adx'] = ta.ADX(dataframe, timeperiod={parameters.get('adx_period', 14)})
+"""
+            elif indicator == "KAMA":
+                code += f"""
+        dataframe['kama'] = ta.KAMA(dataframe, timeperiod={parameters.get('kama_period', 10)})
+"""
+            elif indicator == "SMA":
+                code += f"""
+        dataframe['sma'] = ta.SMA(dataframe, timeperiod={parameters.get('sma_period', 20)})
+"""
+            elif indicator == "WMA":
+                code += f"""
+        dataframe['wma'] = ta.WMA(dataframe, timeperiod={parameters.get('wma_period', 20)})
+"""
+            elif indicator == "DEMA":
+                code += f"""
+        dataframe['dema'] = ta.DEMA(dataframe, timeperiod={parameters.get('dema_period', 20)})
+"""
+            elif indicator == "TEMA":
+                code += f"""
+        dataframe['tema'] = ta.TEMA(dataframe, timeperiod={parameters.get('tema_period', 20)})
+"""
+            elif indicator == "WILLR":
+                code += f"""
+        dataframe['willr'] = ta.WILLR(dataframe, timeperiod={parameters.get('willr_period', 14)})
+"""
+            elif indicator == "NATR":
+                code += f"""
+        dataframe['natr'] = ta.NATR(dataframe, timeperiod={parameters.get('natr_period', 14)})
+"""
+            elif indicator == "ROC":
+                code += f"""
+        dataframe['roc'] = ta.ROC(dataframe, timeperiod={parameters.get('roc_period', 10)})
+"""
+            elif indicator == "OBV":
+                code += """
+        dataframe['obv'] = ta.OBV(dataframe)
+"""
+            elif indicator == "AD":
+                code += """
+        dataframe['ad'] = ta.AD(dataframe)
+"""
+            elif indicator == "Volume":
+                code += """
+        dataframe['volume'] = dataframe['volume']
 """
         
         code += """

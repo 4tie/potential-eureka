@@ -6,6 +6,7 @@ import RunDetailSummary from "./RunDetailSummary/index";
 import RunDetailParameters from "./RunDetailParameters";
 import RunDetailPairs from "./RunDetailPairs";
 import RunDetailStages from "./RunDetailStages";
+import ProfessionalChartsTab from "./ProfessionalChartsTab";
 
 /**
  * RunDetailPanel: Full-screen detail view for a completed run
@@ -22,6 +23,7 @@ const RunDetailPanel = ({ run, onClose, API_BASE }) => {
     { id: "parameters", label: "Parameters", icon: "⚙️" },
     { id: "pairs", label: "Pairs", icon: "💱" },
     { id: "stages", label: "Stages", icon: "📈" },
+    { id: "charts", label: "Professional Charts", icon: "📉" },
   ];
 
   return (
@@ -100,6 +102,9 @@ const RunDetailPanel = ({ run, onClose, API_BASE }) => {
           )}
           {activeTab === "stages" && (
             <RunDetailStages run={run} />
+          )}
+          {activeTab === "charts" && (
+            <ProfessionalChartsTab runId={run.run_id} runType="backtest" />
           )}
         </div>
       </div>

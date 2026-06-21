@@ -1,4 +1,12 @@
 import { useState, Fragment } from "react";
+import {
+  ArrowPathIcon,
+  BeakerIcon,
+  ChevronRightIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 
 function RetryHistoryTable({ history }) {
   const [expandedReasoning, setExpandedReasoning] = useState({});
@@ -38,15 +46,15 @@ function RetryHistoryTable({ history }) {
                   a.profit == null ? "text-base-content/30" :
                   a.profit >= 0 ? "text-success" : "text-error"
                 }`}>
-                  {a.profit == null ? "—" : `${a.profit >= 0 ? "+" : ""}${(a.profit * 100).toFixed(2)}%`}
+                  {a.profit == null ? "-" : `${a.profit >= 0 ? "+" : ""}${(a.profit * 100).toFixed(2)}%`}
                 </td>
                 <td className={`text-right font-mono ${
                   a.drawdown == null ? "text-base-content/30" :
                   a.drawdown > 20 ? "text-error" : a.drawdown > 10 ? "text-warning" : "text-base-content/60"
                 }`}>
-                  {a.drawdown == null ? "—" : `${a.drawdown.toFixed(1)}%`}
+                  {a.drawdown == null ? "-" : `${a.drawdown.toFixed(1)}%`}
                 </td>
-                <td className="text-right font-mono text-base-content/60">{a.trades ?? "—"}</td>
+                <td className="text-right font-mono text-base-content/60">{a.trades ?? "-"}</td>
                 <td className="text-center">
                   <span className={`badge badge-xs ${
                     a.reason === "sharp_peak" ? "badge-secondary" :
@@ -84,7 +92,7 @@ function RetryHistoryTable({ history }) {
                       )}
                     </div>
                   ) : (
-                    <span className="text-base-content/20">—</span>
+                    <span className="text-base-content/20">-</span>
                   )}
                 </td>
               </tr>
@@ -95,9 +103,9 @@ function RetryHistoryTable({ history }) {
                       <span className="font-semibold text-info">AI Reasoning:</span>
                       <p className="mt-1 italic">{a.ollama_suggestions.reasoning}</p>
                       {a.ollama_suggestions.hyperopt_loss && (
-                        <div className="mt-1 font-mono text-[9px] text-base-content/50">
-                          Suggested: loss={a.ollama_suggestions.hyperopt_loss}, spaces={a.ollama_suggestions.hyperopt_spaces?.join(",")}, epochs={a.ollama_suggestions.hyperopt_epochs}
-                        </div>
+                    <div className="mt-1 font-mono text-[9px] text-base-content/50">
+                      Suggested: loss={a.ollama_suggestions.hyperopt_loss}, spaces={a.ollama_suggestions.hyperopt_spaces?.join(",")}, epochs={a.ollama_suggestions.hyperopt_epochs}
+                    </div>
                       )}
                     </div>
                   </td>
@@ -121,9 +129,11 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
       {/* Structured diagnostics block */}
       <div className={`rounded-xl border p-4 space-y-3 ${gf.reason === "sharp_peak" ? "border-secondary/25 bg-secondary/5" : "border-error/25 bg-error/5"}`}>
         <div className="flex items-start gap-2">
-          <span className={gf.reason === "sharp_peak" ? "text-secondary text-base mt-0.5" : "text-error text-base mt-0.5"}>
-            {gf.reason === "sharp_peak" ? "🏔️" : "🔬"}
-          </span>
+          {gf.reason === "sharp_peak" ? (
+            <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
+          ) : (
+            <BeakerIcon className="mt-0.5 h-5 w-5 shrink-0 text-error" />
+          )}
             <div>
               <p className={`text-xs font-semibold ${gf.reason === "sharp_peak" ? "text-secondary" : "text-error"}`}>
                 {gf.reason === "sharp_peak" ? "Robustness Check Failure (Sharp Peak)" : "Generalization Failure Diagnostics"}
@@ -131,7 +141,7 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
               <p className="text-[10px] text-base-content/50 mt-0.5">
                 {gf.reason === "sharp_peak"
                   ? "Strategy params are too sensitive. Small variations cause massive performance drops."
-                  : `Active gates — OOS profit ≥ ${thresholds?.min_oos_profit ?? 0} · Max drawdown < ${thresholds?.max_drawdown_threshold ?? 30}%`
+                  : `Active gates - OOS profit >= ${thresholds?.min_oos_profit ?? 0} / Max drawdown < ${thresholds?.max_drawdown_threshold ?? 30}%`
                 }
               </p>
             </div>
@@ -168,7 +178,7 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
             className="flex items-center gap-1.5 text-[10px] text-error/70 hover:text-error cursor-pointer select-none transition-colors"
             onClick={() => setOpen((v) => !v)}
           >
-            <span className={`transition-transform duration-200 ${open ? "rotate-90" : ""}`}>▶</span>
+            <ChevronRightIcon className={`h-3 w-3 transition-transform duration-200 ${open ? "rotate-90" : ""}`} />
             {open ? "Hide" : "Show"} attempt history ({attempts?.length ?? 0} attempts)
           </button>
           {open && <RetryHistoryTable history={attempts} />}
@@ -177,7 +187,7 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
         {/* Best attempt artifact */}
         {best_attempt_file && (
           <div className="rounded-lg bg-base-300/50 border border-base-300 px-3 py-2 flex items-center gap-2">
-            <span className="text-warning">📄</span>
+            <DocumentTextIcon className="h-4 w-4 shrink-0 text-warning" />
             <span className="text-[10px] text-base-content/70">
               Best attempt saved as <span className="font-mono text-base-content/90">{best_attempt_file}</span>
               {best_attempt_strategy_name && (
@@ -194,7 +204,7 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
             <ul className="space-y-1">
               {suggestions.map((s, i) => (
                 <li key={i} className="flex items-start gap-2 text-[11px] text-base-content/70">
-                  <span className="text-warning shrink-0 mt-0.5">→</span>
+                  <ChevronRightIcon className="mt-0.5 h-3 w-3 shrink-0 text-warning" />
                   <span>{s}</span>
                 </li>
               ))}
@@ -203,7 +213,7 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
         )}
       </div>
 
-      {/* Retry with relaxed thresholds button — not applicable for Sharp Peak failures */}
+      {/* Retry with relaxed thresholds button is not applicable for Sharp Peak failures. */}
       {onRetryRelaxed && best_attempt && gf.reason !== "sharp_peak" && (() => {
         const relaxedProfit = best_attempt.profit != null
           ? parseFloat((best_attempt.profit - 0.01).toFixed(4))
@@ -215,11 +225,12 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
             className="btn btn-sm btn-outline btn-warning gap-2 w-full"
             onClick={() => onRetryRelaxed(best_attempt, thresholds, best_attempt_strategy_name)}
           >
-            🔄 Retry with Relaxed Thresholds
+            <ArrowPathIcon className="h-4 w-4" />
+            Retry with Relaxed Thresholds
             {relaxedProfit != null && (
               <span className="text-[10px] opacity-70 normal-case">
-                (OOS gate → {relaxedProfit.toFixed(4)}, DD → {relaxedDd}%
-                {best_attempt_strategy_name ? `, strategy → ${best_attempt_strategy_name}` : ""})
+                (OOS gate to {relaxedProfit.toFixed(4)}, DD to {relaxedDd}%
+                {best_attempt_strategy_name ? `, strategy to ${best_attempt_strategy_name}` : ""})
               </span>
             )}
           </button>
@@ -239,16 +250,18 @@ export default function AutoQuantFailureReport({ state, onRetryRelaxed }) {
   return (
     <div className={`rounded-xl border p-4 ${isGeneralizationFailure ? (gf.reason === "sharp_peak" ? "border-secondary/30 bg-secondary/5" : "border-error/30 bg-error/5") : "border-error/40 bg-error/10"}`}>
       <div className="flex items-start gap-2">
-        <span className={gf?.reason === "sharp_peak" ? "text-secondary text-lg shrink-0" : "text-error text-lg shrink-0"}>
-          {gf?.reason === "sharp_peak" ? "🏔️" : "✗"}
-        </span>
+        {gf?.reason === "sharp_peak" ? (
+          <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-secondary" />
+        ) : (
+          <XCircleIcon className="h-5 w-5 shrink-0 text-error" />
+        )}
         <div className="flex-1 min-w-0">
           <h4 className={`font-bold text-sm ${gf?.reason === "sharp_peak" ? "text-secondary" : "text-error"}`}>
             {gf?.reason === "sharp_peak" ? "Robustness Gate Failed" : "Pipeline Failed"}
           </h4>
           {failedStage && (
             <p className="text-xs mt-1 text-base-content/70">
-              Stage {failedStage.index} — {failedStage.name}
+              Stage {failedStage.index} - {failedStage.name}
               {isGeneralizationFailure ? "" : `: ${failedStage.message}`}
             </p>
           )}
