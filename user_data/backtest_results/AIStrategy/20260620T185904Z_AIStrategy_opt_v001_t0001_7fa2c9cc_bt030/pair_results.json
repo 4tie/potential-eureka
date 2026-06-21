@@ -1,0 +1,15 @@
+[
+  {
+    "pair": "BTC/USDT",
+    "net_profit_currency": 0.0,
+    "net_profit_pct": 0.0,
+    "total_trades": 0,
+    "win_count": 0,
+    "loss_count": 0,
+    "win_rate_pct": 0.0,
+    "avg_trade_result_pct": 0.0,
+    "avg_trade_duration_minutes": null,
+    "pair_classification": null,
+    "classification_rationale": null
+  }
+]

@@ -4544,5 +4544,43 @@
       "optimizer_session_id": "70ae44ea-8a5c-494a-83b6-b5e5843bb5fb"
     },
     "error": "Optimizer monitoring timed out after 3600 seconds"
+  },
+  {
+    "session_id": "30db8001-4682-4f70-8a8c-fa42ce97a886",
+    "operation": "optimizer",
+    "status": "completed",
+    "created_at": "2026-06-20T18:58:38.994525+00:00",
+    "started_at": "2026-06-20T18:58:39.000803+00:00",
+    "completed_at": "2026-06-20T18:59:11.054914+00:00",
+    "result": {
+      "optimizer_session_id": "8511bc42-b3e0-433b-9b90-f45f19e20e5a",
+      "phase": "completed",
+      "total_trials": 1,
+      "completed_trials": 1,
+      "failed_trials": 0,
+      "best_trial_number": 1,
+      "best_score": 0.0,
+      "stop_reason": null
+    },
+    "error": null
+  },
+  {
+    "session_id": "6dca852e-1679-4041-9f88-121dcf88f507",
+    "operation": "optimizer",
+    "status": "completed",
+    "created_at": "2026-06-20T23:00:20.927579+00:00",
+    "started_at": "2026-06-20T23:00:20.939648+00:00",
+    "completed_at": "2026-06-20T23:00:37.018363+00:00",
+    "result": {
+      "optimizer_session_id": "f1032ead-76e4-4bb3-beca-f5ba7f20b8a5",
+      "phase": "completed",
+      "total_trials": 1,
+      "completed_trials": 1,
+      "failed_trials": 0,
+      "best_trial_number": 1,
+      "best_score": 2.3244890758785126,
+      "stop_reason": null
+    },
+    "error": null
   }
 ]

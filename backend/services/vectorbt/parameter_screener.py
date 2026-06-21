@@ -477,8 +477,8 @@ class VectorBTParameterScreener:
             total_trades=metrics.total_trades,
         )
         if score_fn is not None:
-            return score_fn(summary, metric, weights)
-        return self._compute_score(summary, metric, weights)
+            return self._finite_or_none(score_fn(summary, metric, weights))
+        return self._finite_or_none(self._compute_score(summary, metric, weights))
 
     def _compute_score(
         self,
@@ -547,7 +547,7 @@ class VectorBTParameterScreener:
             return None
         value = attr() if callable(attr) else attr
         number = self._as_number(value, aggregate=aggregate)
-        return number * multiplier if number is not None else None
+        return self._finite_or_none(number * multiplier) if number is not None else None
 
     def _as_number(self, value: Any, *, aggregate: str = "mean") -> float | None:
         if value is None:
@@ -556,24 +556,31 @@ class VectorBTParameterScreener:
             series = value.select_dtypes(include="number").stack()
             if series.empty:
                 return None
-            return float(series.sum() if aggregate == "sum" else series.mean())
+            return self._finite_or_none(series.sum() if aggregate == "sum" else series.mean())
         if isinstance(value, pd.Series):
             numeric = pd.to_numeric(value, errors="coerce").dropna()
             if numeric.empty:
                 return None
-            return float(numeric.sum() if aggregate == "sum" else numeric.mean())
+            return self._finite_or_none(numeric.sum() if aggregate == "sum" else numeric.mean())
         if isinstance(value, (list, tuple)):
             numeric = pd.to_numeric(pd.Series(value), errors="coerce").dropna()
             if numeric.empty:
                 return None
-            return float(numeric.sum() if aggregate == "sum" else numeric.mean())
+            return self._finite_or_none(numeric.sum() if aggregate == "sum" else numeric.mean())
         try:
-            return float(value)
+            return self._finite_or_none(value)
         except (TypeError, ValueError):
             try:
-                return float(value.item())
+                return self._finite_or_none(value.item())
             except Exception:
                 return None
+
+    def _finite_or_none(self, value: Any) -> float | None:
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return None
+        return number if math.isfinite(number) else None
 
     def _candidate_stoploss(self, parameters: dict[str, Any]) -> float | None:
         value = parameters.get("stoploss__value")

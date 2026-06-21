@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 from datetime import UTC, datetime
 from typing import Any
 
@@ -70,6 +71,16 @@ def _raise_backend_error(exc: BackendError) -> None:
 
 def _raise_optimizer_error(exc: OptimizerError) -> None:
     raise HTTPException(status_code=_optimizer_error_status(exc), detail=exc.message)
+
+
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    return value
 
 
 @router.post(
@@ -271,7 +282,7 @@ async def get_optimizer_session(
     services = request.app.state.services
     session = _load_session_or_404(services, optimizer_session_id)
     return JSONResponse(
-        content=session.model_dump(mode="json"),
+        content=_json_safe(session.model_dump(mode="json")),
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
     )
 

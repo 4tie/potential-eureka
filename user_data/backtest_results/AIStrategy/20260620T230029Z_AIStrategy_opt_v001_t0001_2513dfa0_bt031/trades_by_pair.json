@@ -1,0 +1,105 @@
+{
+  "BTC/USDT": {
+    "pair": "BTC/USDT",
+    "trades": [
+      {
+        "pair": "BTC/USDT",
+        "open_date": "2024-01-04 14:00:00+00:00",
+        "close_date": "2024-01-04 15:25:00+00:00",
+        "open_timestamp": 1704376800000,
+        "close_timestamp": 1704381900000,
+        "stake_amount": 989.6044761,
+        "max_stake_amount": 989.6044761,
+        "amount": 0.02283,
+        "open_rate": 43346.67,
+        "close_rate": 44171.82,
+        "fee_open": 0.001,
+        "fee_close": 0.001,
+        "trade_duration": 85,
+        "profit_ratio": 0.01700002826607472,
+        "profit_abs": 16.84012737,
+        "exit_reason": "roi",
+        "enter_tag": "",
+        "initial_stop_loss_abs": 28782.19,
+        "initial_stop_loss_ratio": -0.336,
+        "stop_loss_abs": 28782.19,
+        "stop_loss_ratio": -0.336,
+        "min_rate": 43250.0,
+        "max_rate": 44199.99,
+        "leverage": 1.0,
+        "is_short": false,
+        "orders": [
+          {
+            "amount": 0.02283,
+            "safe_price": 43346.67,
+            "ft_order_side": "buy",
+            "order_filled_timestamp": 1704376800000,
+            "ft_is_entry": true,
+            "ft_order_tag": "",
+            "cost": 990.5940805760998
+          },
+          {
+            "amount": 0.02283,
+            "safe_price": 44171.82,
+            "ft_order_side": "sell",
+            "order_filled_timestamp": 1704381900000,
+            "ft_is_entry": false,
+            "ft_order_tag": "roi",
+            "cost": 1009.4510932505999
+          }
+        ],
+        "funding_fees": 0.0,
+        "weekday": 3
+      },
+      {
+        "pair": "BTC/USDT",
+        "open_date": "2024-01-04 15:30:00+00:00",
+        "close_date": "2024-01-04 18:45:00+00:00",
+        "open_timestamp": 1704382200000,
+        "close_timestamp": 1704393900000,
+        "stake_amount": 1006.2698879,
+        "max_stake_amount": 1006.2698879,
+        "amount": 0.02279,
+        "open_rate": 44154.01,
+        "close_rate": 44080.77,
+        "fee_open": 0.001,
+        "fee_close": 0.001,
+        "trade_duration": 195,
+        "profit_ratio": -0.0036534273263071635,
+        "profit_abs": -3.68001024,
+        "exit_reason": "exit_signal",
+        "enter_tag": "",
+        "initial_stop_loss_abs": 29318.27,
+        "initial_stop_loss_ratio": -0.336,
+        "stop_loss_abs": 29318.27,
+        "stop_loss_ratio": -0.336,
+        "min_rate": 43777.86,
+        "max_rate": 44329.99,
+        "leverage": 1.0,
+        "is_short": false,
+        "orders": [
+          {
+            "amount": 0.02279,
+            "safe_price": 44154.01,
+            "ft_order_side": "buy",
+            "order_filled_timestamp": 1704382200000,
+            "ft_is_entry": true,
+            "ft_order_tag": "",
+            "cost": 1007.2761577878999
+          },
+          {
+            "amount": 0.02279,
+            "safe_price": 44080.77,
+            "ft_order_side": "sell",
+            "order_filled_timestamp": 1704393900000,
+            "ft_is_entry": false,
+            "ft_order_tag": "exit_signal",
+            "cost": 1005.6053490482999
+          }
+        ],
+        "funding_fees": 0.0,
+        "weekday": 3
+      }
+    ]
+  }
+}

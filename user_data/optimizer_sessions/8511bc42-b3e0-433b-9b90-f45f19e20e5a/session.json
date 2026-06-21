@@ -1,0 +1,518 @@
+{
+  "session_id": "8511bc42-b3e0-433b-9b90-f45f19e20e5a",
+  "strategy_name": "AIStrategy",
+  "config": {
+    "strategy_name": "AIStrategy",
+    "timeframe": "5m",
+    "timerange": "20240101-20240107",
+    "pairs": [
+      "BTC/USDT"
+    ],
+    "config_file": "/home/mohs/Desktop/fictional-octo-guide/user_data/config.json",
+    "dry_run_wallet": 1000.0,
+    "max_open_trades": 1,
+    "fee_rate": 0.001,
+    "total_trials": 1,
+    "search_strategy": "random",
+    "parameter_mode": "auto_safe",
+    "score_metric": "composite",
+    "score_weights": {
+      "net_profit_pct": 0.35,
+      "net_profit_abs": 0.0,
+      "sharpe_ratio": 0.25,
+      "profit_factor": 0.2,
+      "win_rate_pct": 0.0,
+      "max_drawdown_pct": 0.2,
+      "total_trades": 0.0
+    },
+    "target_trades": null,
+    "target_profit_pct": null,
+    "max_drawdown_pct": null,
+    "target_romad": null,
+    "search_spaces": [
+      {
+        "name": "buy_ma_count",
+        "param_type": "int",
+        "space": "buy",
+        "default": 12,
+        "enabled": true,
+        "optimizable": true,
+        "min_value": 6.0,
+        "max_value": 18.0,
+        "step": 1.0,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "buy_ma_gap",
+        "param_type": "int",
+        "space": "buy",
+        "default": 68,
+        "enabled": true,
+        "optimizable": true,
+        "min_value": 34.0,
+        "max_value": 102.0,
+        "step": 1.0,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "sell_ma_count",
+        "param_type": "int",
+        "space": "sell",
+        "default": 12,
+        "enabled": true,
+        "optimizable": true,
+        "min_value": 6.0,
+        "max_value": 18.0,
+        "step": 1.0,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "sell_ma_gap",
+        "param_type": "int",
+        "space": "sell",
+        "default": 68,
+        "enabled": true,
+        "optimizable": true,
+        "min_value": 34.0,
+        "max_value": 102.0,
+        "step": 1.0,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "stoploss__value",
+        "param_type": "decimal",
+        "space": "stoploss",
+        "default": -0.336,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": -0.34,
+        "max_value": -0.16,
+        "step": 0.01,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "roi__0",
+        "param_type": "decimal",
+        "space": "roi",
+        "default": 0.192,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.3,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "roi__12",
+        "param_type": "decimal",
+        "space": "roi",
+        "default": 0.061,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.3,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "roi__33",
+        "param_type": "decimal",
+        "space": "roi",
+        "default": 0.017,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.3,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "roi__145",
+        "param_type": "decimal",
+        "space": "roi",
+        "default": 0.0,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.3,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "roi__1553",
+        "param_type": "decimal",
+        "space": "roi",
+        "default": 0.123,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.3,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "roi__2332",
+        "param_type": "decimal",
+        "space": "roi",
+        "default": 0.076,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.3,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "roi__3169",
+        "param_type": "decimal",
+        "space": "roi",
+        "default": 0.0,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.3,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "trailing__stop",
+        "param_type": "boolean",
+        "space": "trailing",
+        "default": false,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": null,
+        "max_value": null,
+        "step": null,
+        "choices": [
+          true,
+          false
+        ],
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "trailing__positive",
+        "param_type": "decimal",
+        "space": "trailing",
+        "default": 0.01,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.1,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      },
+      {
+        "name": "trailing__offset",
+        "param_type": "decimal",
+        "space": "trailing",
+        "default": 0.0,
+        "enabled": false,
+        "optimizable": true,
+        "min_value": 0.001,
+        "max_value": 0.05,
+        "step": 0.001,
+        "choices": null,
+        "depends_on": null,
+        "depends_on_value": null
+      }
+    ],
+    "enable_vectorbt_screening": true,
+    "vectorbt_candidate_count": 10,
+    "vectorbt_keep_ratio": 0.5,
+    "vectorbt_timeout_seconds": 60
+  },
+  "phase": "completed",
+  "created_at": "2026-06-20T18:58:38.999980Z",
+  "started_at": "2026-06-20T18:58:39.007658Z",
+  "completed_at": "2026-06-20T18:59:09.115704Z",
+  "total_trials": 1,
+  "completed_trials": 1,
+  "failed_trials": 0,
+  "elapsed_seconds": 30.106839,
+  "eta_seconds": null,
+  "best_trial_number": 1,
+  "best_metrics": {
+    "net_profit_pct": 0.0,
+    "net_profit_abs": 0.0,
+    "win_rate_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "max_drawdown_abs": 0.0,
+    "total_trades": 0,
+    "profit_factor": 0.0,
+    "sharpe_ratio": 0.0,
+    "score": 0.0
+  },
+  "trials": [
+    {
+      "trial_number": 1,
+      "status": "completed",
+      "parameters": {
+        "buy_ma_count": 17,
+        "buy_ma_gap": 39,
+        "sell_ma_count": 15,
+        "sell_ma_gap": 75
+      },
+      "metrics": {
+        "net_profit_pct": 0.0,
+        "net_profit_abs": 0.0,
+        "win_rate_pct": 0.0,
+        "max_drawdown_pct": 0.0,
+        "max_drawdown_abs": 0.0,
+        "total_trades": 0,
+        "profit_factor": 0.0,
+        "sharpe_ratio": 0.0,
+        "score": 0.0
+      },
+      "run_id": "20260620T185904Z_AIStrategy_opt_v001_t0001_7fa2c9cc_bt030",
+      "started_at": "2026-06-20T18:59:04.619726Z",
+      "completed_at": "2026-06-20T18:59:09.114441Z",
+      "error": null,
+      "is_best": true
+    }
+  ],
+  "auto_lock_events": [],
+  "vectorbt_screening": {
+    "status": "completed",
+    "started_at": "2026-06-20T18:58:39.009649Z",
+    "completed_at": "2026-06-20T18:59:04.618279Z",
+    "evaluated_count": 10,
+    "selected_count": 5,
+    "reduction_pct": 50.0,
+    "duration_seconds": 25.609,
+    "skipped_reason": null,
+    "error": null,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "parameters": {
+          "buy_ma_count": 17,
+          "buy_ma_gap": 39,
+          "sell_ma_count": 15,
+          "sell_ma_gap": 75
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      },
+      {
+        "rank": 2,
+        "parameters": {
+          "buy_ma_count": 15,
+          "buy_ma_gap": 80,
+          "sell_ma_count": 16,
+          "sell_ma_gap": 61
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      },
+      {
+        "rank": 3,
+        "parameters": {
+          "buy_ma_count": 6,
+          "buy_ma_gap": 62,
+          "sell_ma_count": 16,
+          "sell_ma_gap": 84
+        },
+        "metrics": {
+          "net_profit_pct": 0.27252245854984947,
+          "net_profit_abs": 2.725224585498495,
+          "win_rate_pct": 50.0,
+          "max_drawdown_pct": -1.2168496030458775,
+          "max_drawdown_abs": null,
+          "total_trades": 2,
+          "profit_factor": 1.2691160150501963,
+          "sharpe_ratio": 1.1246742452644918,
+          "score": 0.387004704209434
+        }
+      },
+      {
+        "rank": 4,
+        "parameters": {
+          "buy_ma_count": 9,
+          "buy_ma_gap": 98,
+          "sell_ma_count": 11,
+          "sell_ma_gap": 58
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      },
+      {
+        "rank": 5,
+        "parameters": {
+          "buy_ma_count": 16,
+          "buy_ma_gap": 54,
+          "sell_ma_count": 12,
+          "sell_ma_gap": 49
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      },
+      {
+        "rank": 6,
+        "parameters": {
+          "buy_ma_count": 14,
+          "buy_ma_gap": 64,
+          "sell_ma_count": 14,
+          "sell_ma_gap": 79
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      },
+      {
+        "rank": 7,
+        "parameters": {
+          "buy_ma_count": 16,
+          "buy_ma_gap": 60,
+          "sell_ma_count": 8,
+          "sell_ma_gap": 61
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      },
+      {
+        "rank": 8,
+        "parameters": {
+          "buy_ma_count": 9,
+          "buy_ma_gap": 47,
+          "sell_ma_count": 16,
+          "sell_ma_gap": 85
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      },
+      {
+        "rank": 9,
+        "parameters": {
+          "buy_ma_count": 16,
+          "buy_ma_gap": 42,
+          "sell_ma_count": 14,
+          "sell_ma_gap": 49
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      },
+      {
+        "rank": 10,
+        "parameters": {
+          "buy_ma_count": 15,
+          "buy_ma_gap": 57,
+          "sell_ma_count": 6,
+          "sell_ma_gap": 92
+        },
+        "metrics": {
+          "net_profit_pct": 0.0,
+          "net_profit_abs": 0.0,
+          "win_rate_pct": NaN,
+          "max_drawdown_pct": 0.0,
+          "max_drawdown_abs": null,
+          "total_trades": 0,
+          "profit_factor": NaN,
+          "sharpe_ratio": Infinity,
+          "score": NaN
+        }
+      }
+    ]
+  },
+  "grid_epoch": 1,
+  "grid_epoch_start_trial": 1,
+  "stop_reason": null
+}

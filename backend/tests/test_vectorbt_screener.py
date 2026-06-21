@@ -64,6 +64,33 @@ class FakePortfolioFactory:
         return FakePortfolio(close, entries, exits, **kwargs)
 
 
+class NonFiniteTrades:
+    def count(self):
+        return 0
+
+    def win_rate(self):
+        return float("nan")
+
+    def profit_factor(self):
+        return float("inf")
+
+
+class NonFinitePortfolio:
+    trades = NonFiniteTrades()
+
+    def total_return(self):
+        return float("nan")
+
+    def total_profit(self):
+        return 0.0
+
+    def max_drawdown(self):
+        return 0.0
+
+    def sharpe_ratio(self):
+        return float("inf")
+
+
 class Parameter:
     def __init__(self, value):
         self.value = value
@@ -285,3 +312,17 @@ def test_timeout_returns_partial_screening_without_blocking_trials(tmp_path, mon
     assert outcome.report.skipped_reason == "timeout"
     assert outcome.report.evaluated_count == 1
     assert outcome.selected_parameters == [{"threshold": 1}]
+
+
+def test_non_finite_portfolio_metrics_are_normalized_for_json(tmp_path):
+    screener = _screener(tmp_path, vectorbt_module=_fake_vectorbt())
+
+    metrics = screener._portfolio_metrics(NonFinitePortfolio())
+
+    assert metrics.net_profit_pct is None
+    assert metrics.net_profit_abs == 0.0
+    assert metrics.win_rate_pct is None
+    assert metrics.max_drawdown_pct == 0.0
+    assert metrics.total_trades == 0
+    assert metrics.profit_factor is None
+    assert metrics.sharpe_ratio is None

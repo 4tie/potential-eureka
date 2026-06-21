@@ -31,6 +31,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import backend.services.auto_quant.pipeline as pipeline
+from backend.services.auto_quant.pipeline_modules import orchestrator
 from backend.services.auto_quant.pipeline import (
     PipelineState,
     StageState,
@@ -218,6 +219,33 @@ _BEST_PARAMS: dict = {
 }
 
 MOD = "backend.services.auto_quant.pipeline"
+
+
+def test_stage4_missing_optimized_path_fails_without_unboundlocal(tmp_path):
+    """A Stage 3 resume without an optimized path should fail Stage 4 cleanly."""
+    user_data_dir, config_path = _setup_fs(tmp_path)
+    run_id = _register_run(user_data_dir, config_path)
+    state = _states[run_id]
+    state.current_stage = 3
+    state.stages[0].status = "passed"
+    state.stages[1].status = "passed"
+    state.stages[2].status = "passed"
+    state.stages[2].data = {}
+
+    fail_stage_mock = MagicMock()
+    policy = MagicMock()
+    policy.versions = {}
+
+    with (
+        patch.object(orchestrator, "load_policy", return_value=policy),
+        patch.object(orchestrator, "ensure_working_copy"),
+        patch.object(orchestrator, "_fail_stage", fail_stage_mock),
+    ):
+        _run(orchestrator.run_pipeline(run_id))
+
+    fail_stage_mock.assert_called_once()
+    assert fail_stage_mock.call_args.args[2] == 4
+    assert "optimized_path is None" in fail_stage_mock.call_args.args[3]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

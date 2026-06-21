@@ -359,7 +359,6 @@ async def run_pipeline(run_id: str) -> None:
                         "See retry history and suggestions below."
                     )
                     _rlog(run_id, 2, logging.ERROR, f"Sensitivity | {msg}")
-                    from .helpers import _fail_stage
                     _fail_stage(run_id, state, 2, msg, state.generalization_failure)
                     return
 

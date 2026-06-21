@@ -1,0 +1,118 @@
+[COMMAND]: freqtrade backtesting --user-data-dir /home/mohs/Desktop/fictional-octo-guide/user_data --config /home/mohs/Desktop/fictional-octo-guide/user_data/config.json --strategy-path /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260620T185904Z_AIStrategy_opt_v001_t0001_7fa2c9cc_bt030 --strategy AIStrategy --timerange 20240101-20240107 --timeframe 5m --dry-run-wallet 1000.0 --max-open-trades 1 --export trades --export-filename /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260620T185904Z_AIStrategy_opt_v001_t0001_7fa2c9cc_bt030/raw_result.json --pairs BTC/USDT
+stdout: [auto-download] Data already exists and covers the requested timerange. Skipping download.
+stderr: 2026-06-20 21:59:04,767 - freqtrade - INFO - freqtrade 2026.5.1
+stderr: 2026-06-20 21:59:06,832 - freqtrade.configuration.load_config - INFO - Using config: /home/mohs/Desktop/fictional-octo-guide/user_data/config.json ...
+stderr: 2026-06-20 21:59:06,836 - freqtrade.loggers - INFO - Enabling colorized output.
+stderr: 2026-06-20 21:59:06,836 - freqtrade.loggers - INFO - Logfile configured
+stderr: 2026-06-20 21:59:06,837 - freqtrade.loggers - INFO - Verbosity set to 0
+stderr: 2026-06-20 21:59:06,837 - freqtrade.configuration.configuration - INFO - Using additional Strategy lookup path: 
+stderr: /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260620T185904Z_AIStrategy_opt_v001_t0001_7fa2c9cc_bt030
+stderr: 2026-06-20 21:59:06,838 - freqtrade.configuration.configuration - INFO - Parameter -i/--timeframe detected ... Using timeframe: 5m ...
+stderr: 2026-06-20 21:59:06,838 - freqtrade.configuration.configuration - INFO - Parameter --max-open-trades detected, overriding max_open_trades to: 1 ...
+stderr: 2026-06-20 21:59:06,838 - freqtrade.configuration.configuration - INFO - Parameter --dry-run-wallet detected, overriding dry_run_wallet to: 1000.0 ...
+stderr: 2026-06-20 21:59:06,838 - freqtrade.configuration.configuration - INFO - Parameter --timerange detected: 20240101-20240107 ...
+stderr: 2026-06-20 21:59:06,839 - freqtrade.configuration.configuration - INFO - Using user-data directory: /home/mohs/Desktop/fictional-octo-guide/user_data ...
+stderr: 2026-06-20 21:59:06,839 - freqtrade.configuration.configuration - INFO - Using data directory: /home/mohs/Desktop/fictional-octo-guide/user_data/data/binance ...
+stderr: 2026-06-20 21:59:06,840 - freqtrade.configuration.configuration - INFO - Storing backtest results to 
+stderr: /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260620T185904Z_AIStrategy_opt_v001_t0001_7fa2c9cc_bt030/raw_result.json ...
+stderr: 2026-06-20 21:59:06,840 - freqtrade.configuration.configuration - WARNING - DEPRECATED: Using `--export-filename` has no impact when backtesting. Please use `--notes` to annotate backtest results and 
+stderr: `--backtest-directory` to specify the output directory. 
+stderr: 2026-06-20 21:59:06,841 - freqtrade.configuration.configuration - INFO - Parameter --export detected: trades ...
+stderr: 2026-06-20 21:59:06,841 - freqtrade.configuration.configuration - INFO - Parameter --cache=day detected ...
+stderr: 2026-06-20 21:59:06,841 - freqtrade.configuration.configuration - INFO - Using pairs ['BTC/USDT']
+stderr: 2026-06-20 21:59:06,841 - freqtrade.configuration.configuration - INFO - Filter trades by timerange: 20240101-20240107
+stderr: 2026-06-20 21:59:06,842 - freqtrade.exchange.check_exchange - INFO - Checking exchange...
+stderr: 2026-06-20 21:59:06,849 - freqtrade.exchange.check_exchange - INFO - Exchange "binance" is officially supported by the Freqtrade development team.
+stderr: 2026-06-20 21:59:06,849 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+stderr: 2026-06-20 21:59:06,851 - freqtrade.commands.optimize_commands - INFO - Starting freqtrade in Backtesting mode
+stderr: 2026-06-20 21:59:06,852 - freqtrade.exchange.exchange - INFO - Instance is running with dry_run enabled
+stderr: 2026-06-20 21:59:06,852 - freqtrade.exchange.exchange - INFO - Using CCXT 4.5.56
+stderr: 2026-06-20 21:59:06,865 - freqtrade.exchange.exchange - INFO - Using Exchange "Binance"
+stderr: 2026-06-20 21:59:08,098 - freqtrade.resolvers.exchange_resolver - INFO - Using resolved exchange 'Binance'...
+stderr: 2026-06-20 21:59:08,133 - freqtrade.resolvers.iresolver - INFO - Using resolved strategy AIStrategy from 
+stderr: '/home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260620T185904Z_AIStrategy_opt_v001_t0001_7fa2c9cc_bt030/strategy.py'...
+stderr: 2026-06-20 21:59:08,133 - freqtrade.strategy.hyper - INFO - Found no parameter file.
+stderr: 2026-06-20 21:59:08,134 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'timeframe' with value from the configuration: 5m.
+stderr: 2026-06-20 21:59:08,134 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_currency' with value from the configuration: USDT.
+stderr: 2026-06-20 21:59:08,135 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_amount' with value from the configuration: unlimited.
+stderr: 2026-06-20 21:59:08,135 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'unfilledtimeout' with value from the configuration: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 
+stderr: 'unit': 'minutes'}.
+stderr: 2026-06-20 21:59:08,136 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'max_open_trades' with value from the configuration: 1.
+stderr: 2026-06-20 21:59:08,136 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using minimal_roi: {'0': 0.192, '1553': 0.123, '2332': 0.076, '3169': 0.0, '12': 0.061, '33': 0.017, '145': 0.0}
+stderr: 2026-06-20 21:59:08,136 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using timeframe: 5m
+stderr: 2026-06-20 21:59:08,137 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stoploss: -0.336
+stderr: 2026-06-20 21:59:08,137 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop: False
+stderr: 2026-06-20 21:59:08,137 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop_positive_offset: 0.0
+stderr: 2026-06-20 21:59:08,138 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_only_offset_is_reached: False
+stderr: 2026-06-20 21:59:08,138 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_custom_stoploss: False
+stderr: 2026-06-20 21:59:08,139 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using process_only_new_candles: True
+stderr: 2026-06-20 21:59:08,139 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_types: {'entry': 'limit', 'exit': 'limit', 'stoploss': 'limit', 'stoploss_on_exchange': False, 
+stderr: 'stoploss_on_exchange_interval': 60}
+stderr: 2026-06-20 21:59:08,139 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_time_in_force: {'entry': 'GTC', 'exit': 'GTC'}
+stderr: 2026-06-20 21:59:08,140 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_currency: USDT
+stderr: 2026-06-20 21:59:08,140 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_amount: unlimited
+stderr: 2026-06-20 21:59:08,141 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using startup_candle_count: 0
+stderr: 2026-06-20 21:59:08,141 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using unfilledtimeout: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 'unit': 'minutes'}
+stderr: 2026-06-20 21:59:08,141 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_exit_signal: True
+stderr: 2026-06-20 21:59:08,142 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_only: False
+stderr: 2026-06-20 21:59:08,142 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_roi_if_entry_signal: False
+stderr: 2026-06-20 21:59:08,142 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_offset: 0.0
+stderr: 2026-06-20 21:59:08,143 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using disable_dataframe_checks: False
+stderr: 2026-06-20 21:59:08,143 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_buying_expired_candle_after: 0
+stderr: 2026-06-20 21:59:08,143 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using position_adjustment_enable: False
+stderr: 2026-06-20 21:59:08,144 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_entry_position_adjustment: -1
+stderr: 2026-06-20 21:59:08,144 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_open_trades: 1
+stderr: 2026-06-20 21:59:08,145 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+stderr: 2026-06-20 21:59:08,150 - freqtrade.resolvers.iresolver - INFO - Using resolved pairlist StaticPairList from 
+stderr: '/home/mohs/.local/lib/python3.12/site-packages/freqtrade/plugins/pairlist/StaticPairList.py'...
+stderr: 2026-06-20 21:59:08,158 - freqtrade.optimize.backtesting - INFO - Using fee 0.1000% - worst case fee from exchange (lowest tier).
+stderr: 2026-06-20 21:59:08,288 - freqtrade.optimize.backtesting - INFO - Loading data from 2024-01-01 00:00:00 up to 2024-01-07 00:00:00 (6 days).
+stderr: 2026-06-20 21:59:08,311 - freqtrade.optimize.backtesting - INFO - Dataload complete. Calculating indicators
+stderr: 2026-06-20 21:59:08,314 - freqtrade.optimize.backtesting - INFO - Running backtesting for Strategy AIStrategy
+stderr: 2026-06-20 21:59:08,315 - freqtrade.strategy.hyper - INFO - Strategy Parameter: buy_ma_count = 17
+stderr: 2026-06-20 21:59:08,315 - freqtrade.strategy.hyper - INFO - Strategy Parameter: buy_ma_gap = 39
+stderr: 2026-06-20 21:59:08,316 - freqtrade.strategy.hyper - INFO - Strategy Parameter: sell_ma_count = 15
+stderr: 2026-06-20 21:59:08,316 - freqtrade.strategy.hyper - INFO - Strategy Parameter: sell_ma_gap = 75
+stderr: 2026-06-20 21:59:08,322 - freqtrade.optimize.backtesting - INFO - Backtesting with data from 2024-01-01 00:00:00 up to 2024-01-07 00:00:00 (6 days).
+stderr: 2026-06-20 21:59:08,388 - freqtrade.misc - INFO - dumping json to "/home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/backtest-result-2026-06-20_21-59-08.meta.json"
+stdout:   BTC/USDT	Result for strategy AIStrategy
+stdout:                                              BACKTESTING REPORT                                              
+stdout: ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+stdout: ┃     Pair ┃ Trades ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃ Avg Duration ┃  Win  Draw  Loss  Win% ┃
+stdout: ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+stdout: │ BTC/USDT │      0 │          0.0 │           0.000 │          0.0 │         0:00 │    0     0     0     0 │
+stdout: │    TOTAL │      0 │          0.0 │           0.000 │          0.0 │         0:00 │    0     0     0     0 │
+stdout: └──────────┴────────┴──────────────┴─────────────────┴──────────────┴──────────────┴────────────────────────┘
+stdout:                                          LEFT OPEN TRADES REPORT                                          
+stdout: ┏━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+stdout: ┃  Pair ┃ Trades ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃ Avg Duration ┃  Win  Draw  Loss  Win% ┃
+stdout: ┡━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+stdout: │ TOTAL │      0 │          0.0 │           0.000 │          0.0 │         0:00 │    0     0     0     0 │
+stdout: └───────┴────────┴──────────────┴─────────────────┴──────────────┴──────────────┴────────────────────────┘
+stdout:                                                 ENTER TAG STATS                                                
+stdout: ┏━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+stdout: ┃ Enter Tag ┃ Entries ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃ Avg Duration ┃  Win  Draw  Loss  Win% ┃
+stdout: ┡━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+stdout: │     TOTAL │       0 │          0.0 │           0.000 │          0.0 │         0:00 │    0     0     0     0 │
+stdout: └───────────┴─────────┴──────────────┴─────────────────┴──────────────┴──────────────┴────────────────────────┘
+stdout:                                                EXIT REASON STATS                                               
+stdout: ┏━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+stdout: ┃ Exit Reason ┃ Exits ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃ Avg Duration ┃  Win  Draw  Loss  Win% ┃
+stdout: ┡━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+stdout: │       TOTAL │     0 │          0.0 │           0.000 │          0.0 │         0:00 │    0     0     0     0 │
+stdout: └─────────────┴───────┴──────────────┴─────────────────┴──────────────┴──────────────┴────────────────────────┘
+stdout:                                                       MIXED TAG STATS                                                       
+stdout: ┏━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+stdout: ┃ Enter Tag ┃ Exit Reason ┃ Trades ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃ Avg Duration ┃  Win  Draw  Loss  Win% ┃
+stdout: ┡━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+stdout: │     TOTAL │             │      0 │          0.0 │           0.000 │          0.0 │         0:00 │    0     0     0     0 │
+stdout: └───────────┴─────────────┴────────┴──────────────┴─────────────────┴──────────────┴──────────────┴────────────────────────┘
+stdout: No trades made. Your starting balance was 1000 USDT, and your stake was unlimited.
+stdout: 
+stdout: Backtested 2024-01-01 00:00:00 -> 2024-01-07 00:00:00 | Max open trades : 1
+stdout:                                                        STRATEGY SUMMARY                                                        
+stdout: ┏━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+stdout: ┃   Strategy ┃ Trades ┃ Avg Profit % ┃ Tot Profit USDT ┃ Tot Profit % ┃ Avg Duration ┃  Win  Draw  Loss  Win% ┃      Drawdown ┃
+stdout: ┡━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+stdout: │ AIStrategy │      0 │         0.00 │           0.000 │          0.0 │         0:00 │    0     0     0     0 │ 0 USDT  0.00% │
+stdout: └────────────┴────────┴──────────────┴─────────────────┴──────────────┴──────────────┴────────────────────────┴───────────────┘

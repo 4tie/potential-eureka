@@ -286,6 +286,24 @@ def test_session_fetch_returns_saved_session():
     services.optimizer_store.load_session.assert_called_with("opt-1")
 
 
+def test_session_response_sanitizer_replaces_non_finite_numbers():
+    payload = {
+        "score": float("nan"),
+        "top_candidates": [
+            {"metrics": {"profit_factor": float("inf"), "sharpe_ratio": float("-inf")}},
+            {"metrics": {"score": 1.25}},
+        ],
+    }
+
+    assert optimizer_router._json_safe(payload) == {
+        "score": None,
+        "top_candidates": [
+            {"metrics": {"profit_factor": None, "sharpe_ratio": None}},
+            {"metrics": {"score": 1.25}},
+        ],
+    }
+
+
 def test_best_trial_params_routes_unprefixed_values_by_search_space():
     request = _request()
 

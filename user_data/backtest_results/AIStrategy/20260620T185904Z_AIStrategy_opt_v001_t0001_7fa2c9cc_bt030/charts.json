@@ -1,0 +1,8 @@
+{
+  "equity_curve": [],
+  "drawdown_curve": [],
+  "profit_ratio_histogram": [],
+  "duration_minutes_histogram": [],
+  "weekday_winrate": {},
+  "exit_reason_counts": {}
+}

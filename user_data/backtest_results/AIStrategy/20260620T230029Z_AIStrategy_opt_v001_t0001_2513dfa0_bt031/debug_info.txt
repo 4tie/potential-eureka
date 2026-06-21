@@ -1,0 +1,4 @@
+Command: freqtrade backtesting --user-data-dir /home/mohs/Desktop/fictional-octo-guide/user_data --config /home/mohs/Desktop/fictional-octo-guide/user_data/config.json --strategy-path /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260620T230029Z_AIStrategy_opt_v001_t0001_2513dfa0_bt031 --strategy AIStrategy --timerange 20240101-20240107 --timeframe 5m --dry-run-wallet 1000.0 --max-open-trades 1 --export trades --export-filename /home/mohs/Desktop/fictional-octo-guide/user_data/backtest_results/AIStrategy/20260620T230029Z_AIStrategy_opt_v001_t0001_2513dfa0_bt031/raw_result.json --pairs BTC/USDT
+Pairs: ['BTC/USDT']
+Strategy: AIStrategy
+Version ID: opt_v001_t0001_2513dfa0

@@ -10,14 +10,14 @@
   "config_file": "/home/mohs/Desktop/fictional-octo-guide/user_data/config.json",
   "freqtrade_path": "freqtrade",
   "user_data_dir": "/home/mohs/Desktop/fictional-octo-guide/user_data",
-  "status": "awaiting_user_approval",
-  "current_stage": 1,
+  "status": "failed",
+  "current_stage": 4,
   "stages": [
     {
       "index": 1,
       "name": "Pre-Flight Filtering",
-      "status": "running",
-      "message": "",
+      "status": "passed",
+      "message": "Pre-flight filtering complete \u2014 4 pairs approved.",
       "data": {
         "profit_total": -0.8029592957999999,
         "profit_total_abs": -80.29592957999999,
@@ -672,13 +672,13 @@
         ]
       },
       "started_at": "2026-06-20T15:39:05.967738+00:00",
-      "duration_s": null
+      "duration_s": 37487.9
     },
     {
       "index": 2,
       "name": "WFA Hyperopt",
-      "status": "pending",
-      "message": "",
+      "status": "passed",
+      "message": "Portfolio baseline complete \u2014 4 pairs confirmed.",
       "data": {},
       "started_at": null,
       "duration_s": null
@@ -711,9 +711,9 @@
       "duration_s": null
     }
   ],
-  "error": null,
+  "error": "cannot access local variable '_fail_stage' where it is not associated with a value",
   "created_at": "2026-06-20T15:38:09.207262+00:00",
-  "completed_at": null,
+  "completed_at": "2026-06-21T02:03:53.852348+00:00",
   "report": null,
   "max_drawdown_threshold": 0.4,
   "min_win_rate": 0.45,
@@ -784,7 +784,20 @@
     "SUI/USDT"
   ],
   "winning_pairs": [],
-  "selected_pairs": [],
+  "selected_pairs": [
+    {
+      "key": "ETH/USDT"
+    },
+    {
+      "key": "FIL/USDT"
+    },
+    {
+      "key": "PEPE/USDT"
+    },
+    {
+      "key": "PENDLE/USDT"
+    }
+  ],
   "excluded_time_windows": {},
   "ai_enabled": true,
   "ai_suggestions": {},
@@ -1010,7 +1023,7 @@
   "validation_status": "Candidate",
   "readiness_label": "Candidate",
   "score_explanation": [],
-  "progress_percent": 0,
+  "progress_percent": 40,
   "eta_seconds": null,
   "progress_counters": {
     "strategies_generated": 0,
@@ -1035,6 +1048,11 @@
     "state_latest": "state_latest.json",
     "state": "state.json"
   },
-  "user_approved_pairs": [],
+  "user_approved_pairs": [
+    "ETH/USDT",
+    "FIL/USDT",
+    "PEPE/USDT",
+    "PENDLE/USDT"
+  ],
   "portfolio_baseline_result": {}
 }
