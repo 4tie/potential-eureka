@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useLiveEvents } from "../hooks/useLiveEvents.js";
+import RadarDisplay from "./agent-monitoring/RadarDisplay";
+import CurrentDirective from "./agent-monitoring/CurrentDirective";
+import ContextWindow from "./agent-monitoring/ContextWindow";
+import SystemStatus from "./agent-monitoring/SystemStatus";
+import OpsConsoleFooter from "./agent-monitoring/OpsConsoleFooter";
 
 const AGENT_COLORS = {
   Orchestrator: "#A78BFA",
@@ -21,204 +26,6 @@ function Eyebrow() {
   );
 }
 
-function RadarDisplay({ agents }) {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const centerX = 70;
-    const centerY = 70;
-    const maxRadius = 62;
-
-    let rotation = 0;
-
-    const draw = () => {
-      ctx.clearRect(0, 0, 140, 140);
-
-      // Draw concentric circles
-      [62, 46, 30, 14].forEach(radius => {
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.stroke();
-      });
-
-      // Draw crosshairs
-      ctx.beginPath();
-      ctx.moveTo(0, centerY);
-      ctx.lineTo(140, centerY);
-      ctx.moveTo(centerX, 0);
-      ctx.lineTo(centerX, 140);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.stroke();
-
-      // Draw sweep line
-      rotation += 0.02;
-      const sweepX = centerX + Math.cos(rotation) * maxRadius;
-      const sweepY = centerY + Math.sin(rotation) * maxRadius;
-
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(sweepX, sweepY);
-      ctx.strokeStyle = '#7DD3FC';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Draw sweep dot
-      ctx.beginPath();
-      ctx.arc(sweepX, sweepY, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#7DD3FC';
-      ctx.fill();
-
-      // Draw agent dots
-      const totalResponses = agents.reduce((sum, agent) => sum + agent.responses, 0);
-      agents.forEach((agent, index) => {
-        const angle = (index / agents.length) * Math.PI * 2 - Math.PI / 2;
-        const distance = (agent.responses / totalResponses) * maxRadius * 0.8;
-        const x = centerX + Math.cos(angle) * distance;
-        const y = centerY + Math.sin(angle) * distance;
-
-        ctx.beginPath();
-        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
-        ctx.fillStyle = AGENT_COLORS[agent.name] || '#A78BFA';
-        ctx.fill();
-
-        // Glow effect
-        ctx.shadowColor = AGENT_COLORS[agent.name] || '#A78BFA';
-        ctx.shadowBlur = 10;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      });
-
-      requestAnimationFrame(draw);
-    };
-
-    draw();
-  }, [agents]);
-
-  return (
-    <svg viewBox="0 0 140 140" className="w-[180px] h-[180px]">
-      <foreignObject x="0" y="0" width="140" height="140">
-        <canvas ref={canvasRef} width={140} height={140} />
-      </foreignObject>
-    </svg>
-  );
-}
-
-function CurrentDirective({ events }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    if (events.length === 0) return;
-
-    const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setCurrentIndex(prev => (prev + 1) % events.length);
-        setVisible(true);
-      }, 300);
-    }, 2600);
-
-    return () => clearInterval(interval);
-  }, [events.length]);
-
-  const currentEvent = events[currentIndex];
-
-  return (
-    <div className="min-h-[60px]">
-      <div className="font-mono text-[10px] text-muted mb-2">CURRENT DIRECTIVE</div>
-      <div className={`font-mono text-[15px] text-cyan transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-        {currentEvent ? `${currentEvent.agent} · ${currentEvent.task}` : 'Initializing...'}
-      </div>
-    </div>
-  );
-}
-
-function ContextWindow({ agents }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (agents.length === 0) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % agents.length);
-    }, 2400);
-
-    return () => clearInterval(interval);
-  }, [agents.length]);
-
-  const currentAgent = agents[currentIndex];
-  
-  if (!currentAgent) {
-    return (
-      <div>
-        <div className="font-mono text-[10px] text-muted mb-3">CONTEXT WINDOW</div>
-        <div className="text-muted text-sm">Loading agents...</div>
-      </div>
-    );
-  }
-
-  const totalResponses = agents.reduce((sum, agent) => sum + (agent.responses || 0), 0);
-  const share = totalResponses > 0 ? (currentAgent.responses || 0) / totalResponses : 0;
-  const filledSegments = Math.round(share * 16);
-
-  return (
-    <div>
-      <div className="font-mono text-[10px] text-muted mb-3">CONTEXT WINDOW</div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-mono text-sm font-medium" style={{ color: AGENT_COLORS[currentAgent.name] || '#A78BFA' }}>
-          {currentAgent.name ? currentAgent.name.toUpperCase() : 'UNKNOWN'}
-        </span>
-        <span className="font-mono text-xs text-muted">{currentAgent.responses || 0} tasks</span>
-      </div>
-      <div className="flex gap-1 mb-2">
-        {Array.from({ length: 16 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-[5px] flex-1 rounded-sm transition-all duration-300"
-            style={{
-              backgroundColor: i < filledSegments ? (AGENT_COLORS[currentAgent.name] || '#A78BFA') : 'rgba(255,255,255,0.05)',
-              animation: i < filledSegments ? `pulse 1.5s ease-in-out ${i * 0.1}s infinite` : 'none',
-            }}
-          />
-        ))}
-      </div>
-      <div className="font-mono text-[10px] text-muted">{currentAgent.status || 'Unknown'}</div>
-    </div>
-  );
-}
-
-function OpsConsoleFooter({ stats }) {
-  return (
-    <div className="grid grid-cols-5 gap-2 mt-4">
-      <div className="glass-card p-3 text-center">
-        <div className="font-mono text-[10px] text-muted">QUEUE</div>
-        <div className="font-mono text-lg">{stats.queue}</div>
-      </div>
-      <div className="glass-card p-3 text-center">
-        <div className="font-mono text-[10px] text-muted">SESSIONS</div>
-        <div className="font-mono text-lg">{stats.sessions}</div>
-      </div>
-      <div className="glass-card p-3 text-center">
-        <div className="font-mono text-[10px] text-muted">ERRORS</div>
-        <div className={`font-mono text-lg ${stats.errors > 0 ? 'text-red' : ''}`}>{stats.errors}</div>
-      </div>
-      <div className="glass-card p-3 text-center">
-        <div className="font-mono text-[10px] text-muted">TODAY</div>
-        <div className="font-mono text-lg">{stats.today}</div>
-      </div>
-      <div className="glass-card p-3 text-center">
-        <div className="font-mono text-[10px] text-muted">UPTIME</div>
-        <div className="font-mono text-lg">{stats.uptime}</div>
-      </div>
-    </div>
-  );
-}
-
 function LiveOpsConsole({ agents, events, stats }) {
   return (
     <div className="glass-card p-6">
@@ -228,21 +35,7 @@ function LiveOpsConsole({ agents, events, stats }) {
           <CurrentDirective events={events} />
           <ContextWindow agents={agents} />
         </div>
-        <div className="flex flex-col justify-center">
-          <div className="font-mono text-[10px] text-muted mb-2">SYSTEM STATUS</div>
-          <div className="space-y-2">
-            {agents.map(agent => (
-              <div key={agent.name} className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: AGENT_COLORS[agent.name] }}
-                />
-                <span className="font-mono text-xs">{agent.name}</span>
-                <span className="font-mono text-[10px] text-muted ml-auto">{agent.status}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <SystemStatus agents={agents} />
       </div>
       <OpsConsoleFooter stats={stats} />
     </div>

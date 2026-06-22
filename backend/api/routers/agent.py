@@ -139,39 +139,83 @@ async def get_agent_strategy_files(strategy_name: str, request: Request) -> dict
     "/status",
     summary="Get agent status for the Overview tab",
 )
-async def get_agent_status() -> dict[str, Any]:
-    """Get agent status for the Overview tab."""
+async def get_agent_status(request: Request) -> dict[str, Any]:
+    """Get agent status for the Overview tab with pipeline context."""
+    # Get pipeline state from app state if available
+    pipeline_state = None
+    try:
+        services = request.app.state.services
+        if hasattr(services, 'run_repository'):
+            # Get most recent run to determine pipeline stage
+            runs = services.run_repository.list_runs(limit=1)
+            if runs:
+                latest_run = runs[0]
+                pipeline_state = {
+                    "current_stage": latest_run.get("current_stage", 0),
+                    "status": latest_run.get("status", "idle"),
+                    "strategy": latest_run.get("strategy", None)
+                }
+    except Exception:
+        pass
+
+    # Agent to pipeline stage mapping
+    agent_stage_mapping = {
+        0: "Scout",      # Sanity Backtest
+        1: "Dev",        # Hyperopt Execution
+        2: "Dev",        # Auto-Patching
+        3: "Reach",      # Out-of-Sample Validation
+        4: "Scout",      # Multi-Pair Stress Test
+        5: "Orchestrator", # Risk Assessment
+        6: "Scribe",     # Delivery
+    }
+
+    # Determine active agent based on pipeline stage
+    active_agent = "Orchestrator"
+    if pipeline_state and pipeline_state.get("current_stage") is not None:
+        current_stage = pipeline_state["current_stage"]
+        active_agent = agent_stage_mapping.get(current_stage, "Orchestrator")
+
+    # Update agent statuses based on pipeline activity
+    agents = [
+        {
+            "name": "Orchestrator",
+            "status": "Active" if active_agent == "Orchestrator" else "Monitoring",
+            "responses": 342,
+            "tasks_completed": 156,
+            "current_task": "Coordinating pipeline" if active_agent == "Orchestrator" else "Monitoring system"
+        },
+        {
+            "name": "Scout",
+            "status": "Scanning" if active_agent == "Scout" else "Idle",
+            "responses": 289,
+            "tasks_completed": 134,
+            "current_task": "Market analysis" if active_agent == "Scout" else "Waiting for tasks"
+        },
+        {
+            "name": "Dev",
+            "status": "Processing" if active_agent == "Dev" else "Idle",
+            "responses": 445,
+            "tasks_completed": 201,
+            "current_task": "Optimizing parameters" if active_agent == "Dev" else "Waiting for tasks"
+        },
+        {
+            "name": "Scribe",
+            "status": "Logging" if active_agent == "Scribe" else "Idle",
+            "responses": 198,
+            "tasks_completed": 89,
+            "current_task": "Recording results" if active_agent == "Scribe" else "Waiting for tasks"
+        },
+        {
+            "name": "Reach",
+            "status": "Analyzing" if active_agent == "Reach" else "Idle",
+            "responses": 156,
+            "tasks_completed": 72,
+            "current_task": "External analysis" if active_agent == "Reach" else "Waiting for tasks"
+        }
+    ]
+
     return {
-        "agents": [
-            {
-                "name": "Orchestrator",
-                "status": "Active",
-                "responses": 342,
-                "tasks_completed": 156
-            },
-            {
-                "name": "Scout",
-                "status": "Scanning",
-                "responses": 289,
-                "tasks_completed": 134
-            },
-            {
-                "name": "Dev",
-                "status": "Processing",
-                "responses": 445,
-                "tasks_completed": 201
-            },
-            {
-                "name": "Scribe",
-                "status": "Logging",
-                "responses": 198,
-                "tasks_completed": 89
-            },
-            {
-                "name": "Reach",
-                "status": "Idle",
-                "responses": 156,
-                "tasks_completed": 72
-            }
-        ]
+        "agents": agents,
+        "pipeline_state": pipeline_state,
+        "active_agent": active_agent
     }

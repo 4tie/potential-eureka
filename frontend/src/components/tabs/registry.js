@@ -11,7 +11,7 @@ import OptimizerTab from "../OptimizerTab.jsx";
 import StrategyEditorTab from "../StrategyEditorTab.jsx";
 import PerformanceTab from "../PerformanceTab.jsx";
 import PairExplorerTab from "../PairExplorerTab.jsx";
-import AutoQuantTab from "../AutoQuantTab.jsx";
+import AutoQuantControlCenter from "../AutoQuantControlCenter.jsx";
 import StrategyLabTab from "../StrategyLabTab.jsx";
 import AssistantTab from "../AssistantTab.jsx";
 import QuantTab from "../QuantTab.jsx";
@@ -154,8 +154,8 @@ export const TAB_REGISTRY = {
   },
   "auto-quant": {
     id: "auto-quant",
-    label: "Auto-Quant Factory",
-    component: AutoQuantTab,
+    label: "Auto-Quant Control Center",
+    component: AutoQuantControlCenter,
     requiresStrategies: true,
     requiresPairs: false,
     requiresSharedState: false,

@@ -1,0 +1,357 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { BellIcon, BellSlashIcon, CpuChipIcon } from "@heroicons/react/24/outline";
+import { STAGE_NAMES } from "../features/autoquant/constants";
+import { parsePairUniverse } from "../features/autoquant/utils";
+import { getProgressPercent, getRunStatusFlags } from "../features/autoquant/viewModel";
+import AutoQuantConfigPanel from "../features/autoquant/components/AutoQuantConfigPanel";
+import AutoQuantRunDashboard from "../features/autoquant/components/AutoQuantRunDashboard";
+import useAutoQuantForm from "../features/autoquant/hooks/useAutoQuantForm";
+import useAutoQuantPipeline from "../features/autoquant/hooks/useAutoQuantPipeline";
+import useAutoQuantScreening from "../features/autoquant/hooks/useAutoQuantScreening";
+import useAutoQuantStrategyGen from "../features/autoquant/hooks/useAutoQuantStrategyGen";
+import useAutoQuantUI from "../features/autoquant/hooks/useAutoQuantUI";
+import { useLiveEvents } from "../hooks/useLiveEvents.js";
+import RadarDisplay from "./agent-monitoring/RadarDisplay";
+import CurrentDirective from "./agent-monitoring/CurrentDirective";
+import ContextWindow from "./agent-monitoring/ContextWindow";
+import SystemStatus from "./agent-monitoring/SystemStatus";
+import OpsConsoleFooter from "./agent-monitoring/OpsConsoleFooter";
+
+// Agent to pipeline stage mapping
+const AGENT_STAGE_MAPPING = {
+  0: "Scout",      // Sanity Backtest
+  1: "Dev",        // Hyperopt Execution
+  2: "Dev",        // Auto-Patching
+  3: "Reach",      // Out-of-Sample Validation
+  4: "Scout",      // Multi-Pair Stress Test
+  5: "Orchestrator", // Risk Assessment
+  6: "Scribe",     // Delivery
+};
+
+export default function AutoQuantControlCenter({
+  strategies = [],
+  strategiesLoading = false,
+  onAgentContextChange = null,
+  pipelineState: initialPipelineState = null,
+}) {
+  const formState = useAutoQuantForm();
+  const pipeline = useAutoQuantPipeline(initialPipelineState);
+  const strategyGen = useAutoQuantStrategyGen(strategies);
+  const screening = useAutoQuantScreening();
+  const uiState = useAutoQuantUI();
+  const runHistoryRef = useRef(null);
+  const { events } = useLiveEvents();
+
+  // Agent and system state
+  const [agents, setAgents] = useState([]);
+  const [stats, setStats] = useState({
+    queue: 0,
+    sessions: 1,
+    errors: 0,
+    today: 42,
+    uptime: "2h 15m"
+  });
+
+  const { form, setForm } = formState;
+  const {
+    runId,
+    setRunId,
+    pipelineState,
+    setPipelineState,
+    setReport,
+    setRunStartedAtMs,
+    setWfoWindows,
+    startPipeline,
+    resumePipeline,
+    cancelPipeline,
+    loadReport,
+    resetPipelineState,
+  } = pipeline;
+
+  // Fetch agent status
+  useEffect(() => {
+    fetch('/api/agent/status')
+      .then(res => res.json())
+      .then(data => setAgents(data.agents || []))
+      .catch(err => console.error('Failed to fetch agent status:', err));
+  }, []);
+
+  // Fetch system stats
+  useEffect(() => {
+    fetch('/api/system/stats')
+      .then(res => res.json())
+      .then(data => setStats(data.stats || stats))
+      .catch(err => console.error('Failed to fetch system stats:', err));
+  }, [stats]);
+
+  useEffect(() => {
+    if (!onAgentContextChange) return;
+    onAgentContextChange({
+      active_panel: pipelineState?.current_stage ? `stage-${pipelineState.current_stage}` : null,
+      strategy_name: pipelineState?.strategy || form.strategy || null,
+      auto_quant_run_id: runId,
+      optimizer_session_id: null,
+      backtest_run_id: null,
+      api_session_id: null,
+    });
+  }, [form.strategy, onAgentContextChange, pipelineState?.current_stage, pipelineState?.strategy, runId]);
+
+  const handleStart = async () => {
+    if (!form.strategy) return;
+    try {
+      await startPipeline({
+        ...form,
+        pair_universe: parsePairUniverse(form.pair_universe),
+      });
+    } catch (err) {
+      console.error("Failed to start pipeline:", err);
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      await cancelPipeline();
+    } catch (err) {
+      console.error("Failed to cancel pipeline:", err);
+    }
+  };
+
+  const handleRetryRelaxed = (bestAttempt, thresholds, bestStrategyName) => {
+    const bestProfit = bestAttempt?.profit ?? null;
+    const bestDd = bestAttempt?.drawdown ?? thresholds?.max_drawdown_threshold ?? 30;
+    const relaxedProfit = bestProfit != null ? parseFloat((bestProfit - 0.01).toFixed(4)) : 0;
+    const relaxedDd = Math.min(35, parseFloat((bestDd + 5).toFixed(1)));
+    setForm((prev) => ({
+      ...prev,
+      min_oos_profit: relaxedProfit,
+      max_drawdown_threshold: relaxedDd,
+      ...(bestStrategyName ? { strategy: bestStrategyName } : {}),
+    }));
+    resetPipelineState();
+    setRunId(null);
+    setPipelineState(null);
+  };
+
+  const handleReset = () => {
+    resetPipelineState();
+    setRunId(null);
+    setPipelineState(null);
+  };
+
+  const handleLoadRun = useCallback(
+    (run) => {
+      setRunId(run.run_id);
+      if (run.created_at) {
+        const createdAtMs = new Date(run.created_at).getTime();
+        setRunStartedAtMs(Number.isNaN(createdAtMs) ? null : createdAtMs);
+      } else {
+        setRunStartedAtMs(null);
+      }
+      setReport(run.report || null);
+      setWfoWindows(run.wfo_windows || []);
+      setPipelineState({
+        run_id: run.run_id,
+        strategy: run.strategy,
+        timeframe: run.timeframe,
+        in_sample_range: run.in_sample_range,
+        out_sample_range: run.out_sample_range,
+        exchange: run.exchange,
+        status: run.status,
+        current_stage: run.current_stage || 0,
+        stages:
+          run.stages ||
+          STAGE_NAMES.map((name, i) => ({
+            index: i + 1,
+            name,
+            status: "pending",
+            message: "",
+            data: {},
+          })),
+        error: run.error || null,
+        created_at: run.created_at,
+        completed_at: run.completed_at,
+        retry_history: run.retry_history || [],
+        generalization_failure: run.generalization_failure || null,
+        sensitivity: run.sensitivity || null,
+        thresholds: run.thresholds || null,
+        selected_pairs: run.selected_pairs || [],
+        winning_pairs: run.winning_pairs || [],
+        user_approved_pairs: run.user_approved_pairs || [],
+        portfolio_baseline_result: run.portfolio_baseline_result || {},
+        progress: run.progress ?? run.progress_percent ?? null,
+        progress_percent: run.progress_percent ?? run.progress ?? null,
+        eta_seconds: run.eta_seconds ?? null,
+        progress_counters: run.progress_counters || {},
+        validation_notes: run.validation_notes || [],
+      });
+
+      if (run.status === "completed" && !run.report) {
+        loadReport(run.run_id).catch((err) => console.error("Failed to load report:", err));
+      }
+    },
+    [loadReport, setPipelineState, setReport, setRunId, setRunStartedAtMs, setWfoWindows]
+  );
+
+  const flags = getRunStatusFlags(pipelineState?.status);
+  const progress = pipelineState ? getProgressPercent(pipelineState) : 0;
+  const hasActiveRun = Boolean(pipelineState);
+  const currentPipelineStage = pipelineState?.current_stage ?? null;
+
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-5 px-4 py-5 sm:px-6 cyber-grid">
+      {/* Header */}
+      <div className="overflow-hidden rounded-lg border border-primary/30 bg-base-200/50 neon-glow scan-effect">
+        <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/50 bg-primary/10 text-primary pulse-glow">
+              <CpuChipIcon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-primary crt-flicker">AutoQuant Control Center</h1>
+                <span
+                  className={`badge badge-sm ${
+                    flags.isCompleted
+                      ? "badge-success neon-glow-green"
+                      : flags.isFailed
+                        ? "badge-error neon-glow-red"
+                        : flags.isAwaitingApproval
+                          ? "badge-warning neon-glow-orange"
+                          : flags.isRunning
+                            ? "badge-primary neon-glow"
+                            : hasActiveRun
+                              ? "badge-ghost"
+                              : "badge-outline"
+                  }`}
+                >
+                  {hasActiveRun ? pipelineState.status : "ready"}
+                </span>
+              </div>
+              <p className="mt-1 max-w-3xl text-sm leading-relaxed text-base-content/60">
+                Unified control center for strategy optimization with real-time agent monitoring.
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {hasActiveRun && (
+              <div className="hidden rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-right sm:block neon-glow">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-primary/70">Run Progress</div>
+                <div className="font-mono text-sm font-bold text-primary tabular-nums">{progress}%</div>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={uiState.toggleNotif}
+              title={uiState.notifEnabled ? "Notifications on - click to disable" : "Enable run notifications"}
+              className={`btn btn-sm gap-2 transition-all ${
+                uiState.notifEnabled
+                  ? "btn-primary neon-glow shadow-sm shadow-primary/25"
+                  : "btn-outline text-base-content/65 hover:text-base-content border-primary/30 hover:border-primary/50"
+              }`}
+            >
+              {uiState.notifEnabled ? <BellIcon className="h-4 w-4" /> : <BellSlashIcon className="h-4 w-4" />}
+              <span className="hidden sm:inline">{uiState.notifEnabled ? "Alerts On" : "Alerts Off"}</span>
+            </button>
+          </div>
+        </div>
+        {hasActiveRun && (
+          <progress
+            className={`progress h-1 w-full rounded-none ${
+              flags.isCompleted
+                ? "progress-success neon-glow-green"
+                : flags.isFailed
+                  ? "progress-error neon-glow-red"
+                  : flags.isAwaitingApproval
+                    ? "progress-warning neon-glow-orange"
+                    : "progress-primary neon-glow"
+            }`}
+            value={progress}
+            max={100}
+          />
+        )}
+      </div>
+
+      {/* Three-panel layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-6">
+        {/* Left Panel: Agent Monitoring */}
+        <div className="space-y-4">
+          <div className="glass-card p-6">
+            <RadarDisplay agents={agents} />
+            <div className="mt-4">
+              <CurrentDirective events={events} pipelineStage={currentPipelineStage} />
+              <ContextWindow agents={agents} pipelineStage={currentPipelineStage} />
+            </div>
+            <SystemStatus agents={agents} pipelineStage={currentPipelineStage} />
+            <OpsConsoleFooter stats={stats} />
+          </div>
+        </div>
+
+        {/* Center Panel: Pipeline Configuration & Dashboard */}
+        <div className="space-y-4">
+          {!hasActiveRun && (
+            <AutoQuantConfigPanel
+              formState={formState}
+              strategyGen={strategyGen}
+              screening={screening}
+              uiState={uiState}
+              strategiesLoading={strategiesLoading}
+              isConnecting={pipeline.isConnecting}
+              runHistoryRef={runHistoryRef}
+              onStart={handleStart}
+              onLoadRun={handleLoadRun}
+            />
+          )}
+
+          {hasActiveRun && (
+            <AutoQuantRunDashboard
+              form={form}
+              pipelineState={pipelineState}
+              runId={runId}
+              logLines={pipeline.logLines}
+              report={pipeline.report}
+              setReport={setReport}
+              fitnessCurve={pipeline.fitnessCurve}
+              hyperoptProgress={pipeline.hyperoptProgress}
+              elapsedSeconds={pipeline.elapsedSeconds}
+              runStartedAtMs={pipeline.runStartedAtMs}
+              wfoWindows={pipeline.wfoWindows}
+              dataHealingStatus={pipeline.dataHealingStatus}
+              pairStatusMap={pipeline.pairStatusMap}
+              logFilter={uiState.logFilter}
+              setLogFilter={uiState.setLogFilter}
+              loadReport={loadReport}
+              onResume={resumePipeline}
+              onCancel={handleCancel}
+              onReset={handleReset}
+              onRetryRelaxed={handleRetryRelaxed}
+            />
+          )}
+        </div>
+
+        {/* Right Panel: Additional Info */}
+        <div className="space-y-4">
+          <div className="glass-card p-4">
+            <div className="font-mono text-[10px] text-muted mb-2">PIPELINE STAGE</div>
+            <div className="font-mono text-lg text-cyan">
+              {currentPipelineStage !== null ? STAGE_NAMES[currentPipelineStage] : 'Not Active'}
+            </div>
+          </div>
+          
+          <div className="glass-card p-4">
+            <div className="font-mono text-[10px] text-muted mb-2">ACTIVE AGENT</div>
+            <div className="font-mono text-lg text-mint">
+              {currentPipelineStage !== null ? AGENT_STAGE_MAPPING[currentPipelineStage] : 'None'}
+            </div>
+          </div>
+
+          <div className="glass-card p-4">
+            <div className="font-mono text-[10px] text-muted mb-2">STRATEGY</div>
+            <div className="font-mono text-sm text-primary truncate">
+              {form.strategy || 'Not Selected'}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

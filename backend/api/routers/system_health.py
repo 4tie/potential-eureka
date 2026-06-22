@@ -49,16 +49,38 @@ async def system_health(
 
 
 @router.get("/stats")
-async def get_system_stats() -> dict:
-    """Get system statistics for the Overview tab."""
+async def get_system_stats(request: Request) -> dict:
+    """Get system statistics for the Overview tab with pipeline context."""
     import random
+    from datetime import datetime, timedelta
+    
+    # Get pipeline state from app state if available
+    pipeline_active = False
+    pipeline_progress = 0
+    try:
+        services = request.app.state.services
+        if hasattr(services, 'run_repository'):
+            runs = services.run_repository.list_runs(limit=1)
+            if runs:
+                latest_run = runs[0]
+                pipeline_active = latest_run.get("status") in ["running", "pending"]
+                pipeline_progress = latest_run.get("progress_percent", 0) or 0
+    except Exception:
+        pass
+
+    # Calculate uptime (mock - would be real in production)
+    uptime_start = datetime.now() - timedelta(hours=2, minutes=15)
+    uptime_str = f"{uptime_start.hour}h {uptime_start.minute}m"
+
     return {
         "stats": {
-            "queue": 0,
+            "queue": 1 if pipeline_active else 0,
             "sessions": 1,
             "errors": 0,
-            "today": 42,
-            "uptime": "2h 15m"
+            "today": 42 + (1 if pipeline_active else 0),
+            "uptime": uptime_str,
+            "pipeline_active": pipeline_active,
+            "pipeline_progress": pipeline_progress
         }
     }
 
