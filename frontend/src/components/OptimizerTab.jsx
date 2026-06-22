@@ -16,6 +16,7 @@ import {
   TERMINAL_STATUSES,
   TIMEFRAMES,
 } from "../features/optimizer/constants";
+import ErrorDisplay from "./shared/ErrorDisplay";
 import { datePreset, fmtElapsed, fmtMoney, fmtNum, fmtPct, fmtScore, trialDuration } from "../features/optimizer/formatters";
 import { buildOptimizerRunPayload } from "../features/optimizer/utils";
 import {
@@ -1330,20 +1331,41 @@ export default function OptimizerTab({
         </header>
 
         {submitError && (
-          <div className="shrink-0 mx-4 mt-2 text-xs text-error bg-error/10 border border-error/30 rounded-lg px-3 py-2">
-            {submitError}
+          <div className="shrink-0 mx-4 mt-2">
+            <ErrorDisplay
+              errorCode="config_error"
+              title="Configuration Error"
+              reason={submitError}
+              severity="high"
+              canAutoFix={false}
+              suggestedAction="Review your optimizer settings and try again"
+            />
           </div>
         )}
 
         {sessionError && (
-          <div className="shrink-0 mx-4 mt-2 text-xs text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2">
-            ⚠️ {sessionError}
+          <div className="shrink-0 mx-4 mt-2">
+            <ErrorDisplay
+              errorCode="config_error"
+              title="Session Error"
+              reason={sessionError}
+              severity="medium"
+              canAutoFix={false}
+              suggestedAction="Check the optimizer logs for more details"
+            />
           </div>
         )}
 
         {sessionTimeout && (
-          <div className="shrink-0 mx-4 mt-2 text-xs text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2">
-            Session is taking longer than usual. Polling is still active, and the optimizer may continue running in the background.
+          <div className="shrink-0 mx-4 mt-2">
+            <ErrorDisplay
+              errorCode="config_error"
+              title="Long Running Session"
+              reason="Session is taking longer than usual. Polling is still active, and the optimizer may continue running in the background."
+              severity="low"
+              canAutoFix={false}
+              suggestedAction="Wait for the session to complete or check logs for progress"
+            />
           </div>
         )}
 

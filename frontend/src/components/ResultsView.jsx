@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api.js";
+import ErrorDisplay from "./shared/ErrorDisplay";
 
 export default function ResultsView({ onLoadResult }) {
   const [results, setResults] = useState([]);
@@ -52,9 +53,14 @@ export default function ResultsView({ onLoadResult }) {
   if (error) {
     return (
       <div className="p-8 max-w-4xl">
-        <div className="alert alert-error">
-          <span>{error}</span>
-        </div>
+        <ErrorDisplay
+          errorCode="config_error"
+          title="Results Error"
+          reason={error}
+          severity="high"
+          canAutoFix={false}
+          suggestedAction="Check the backend connection and try again"
+        />
       </div>
     );
   }

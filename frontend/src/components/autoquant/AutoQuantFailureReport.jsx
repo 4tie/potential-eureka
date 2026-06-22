@@ -1,25 +1,204 @@
 import { useState, Fragment } from "react";
 import {
   ArrowPathIcon,
-  BeakerIcon,
   ChevronRightIcon,
   DocumentTextIcon,
   ExclamationTriangleIcon,
   XCircleIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
+import ErrorDisplay from "../shared/ErrorDisplay";
 
-function RetryHistoryTable({ history }) {
+function RetryHistoryTable({ history, onAcceptFix, onRejectFix }) {
+  const [expandedDetails, setExpandedDetails] = useState({});
+  const [expandedMetrics, setExpandedMetrics] = useState({});
   const [expandedReasoning, setExpandedReasoning] = useState({});
 
   if (!history || history.length === 0) return null;
-  
+
+  const toggleDetails = (attempt) => {
+    setExpandedDetails(prev => ({
+      ...prev,
+      [attempt]: !prev[attempt]
+    }));
+  };
+
+  const toggleMetrics = (attempt) => {
+    setExpandedMetrics(prev => ({
+      ...prev,
+      [attempt]: !prev[attempt]
+    }));
+  };
+
   const toggleReasoning = (attempt) => {
     setExpandedReasoning(prev => ({
       ...prev,
       [attempt]: !prev[attempt]
     }));
   };
-  
+
+  // Check if this is the new retry history structure
+  const isNewStructure = history.length > 0 && history[0].error_code !== undefined;
+
+  if (isNewStructure) {
+    // New structure with enhanced retry history
+    return (
+      <div className="mt-3 space-y-2">
+        {history.map((attempt, index) => (
+          <div
+            key={attempt.attempt || index}
+            className="rounded-lg bg-base-200/50 border border-base-300 p-3"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="badge badge-xs badge-outline">
+                    Attempt {attempt.attempt || index + 1}
+                  </span>
+                  <span className={`badge badge-xs ${
+                    attempt.status === "improved" ? "badge-success" :
+                    attempt.status === "declined" ? "badge-warning" :
+                    attempt.status === "failed" ? "badge-error" :
+                    "badge-neutral"
+                  }`}>
+                    {attempt.status || "pending"}
+                  </span>
+                  {attempt.accepted !== undefined && (
+                    <span className={`badge badge-xs ${
+                      attempt.accepted ? "badge-success" : "badge-error"
+                    }`}>
+                      {attempt.accepted ? "Accepted" : "Rejected"}
+                    </span>
+                  )}
+                  {attempt.error_code && (
+                    <span className={`badge badge-xs ${
+                      attempt.error_code === "sharp_peak" ? "badge-secondary" :
+                      "badge-error"
+                    }`}>
+                      {attempt.error_code}
+                    </span>
+                  )}
+                </div>
+                {attempt.action && (
+                  <p className="text-[10px] text-base-content/50 mt-1">
+                    Action: <span className="font-mono text-primary/80">{attempt.action}</span>
+                  </p>
+                )}
+                {attempt.reason && (
+                  <p className="text-[10px] text-base-content/70 mt-1 italic">{attempt.reason}</p>
+                )}
+              </div>
+              <div className="text-[10px] text-base-content/40">
+                {attempt.timestamp && new Date(attempt.timestamp).toLocaleTimeString()}
+              </div>
+            </div>
+
+            {/* Metrics comparison */}
+            {(attempt.metrics_before || attempt.metrics_after) && (
+              <div className="mt-2 pt-2 border-t border-base-300/50">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 text-[10px] text-base-content/60 hover:text-base-content transition-colors"
+                  onClick={() => toggleMetrics(attempt.attempt || index)}
+                >
+                  <ChevronRightIcon
+                    className={`h-3 w-3 transition-transform duration-200 ${
+                      expandedMetrics[attempt.attempt || index] ? "rotate-90" : ""
+                    }`}
+                  />
+                  {expandedMetrics[attempt.attempt || index] ? "Hide" : "Show"} metrics
+                </button>
+                {expandedMetrics[attempt.attempt || index] && (
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-[10px]">
+                    <div className="bg-base-300/30 rounded p-2">
+                      <span className="text-base-content/50 font-semibold">Before:</span>
+                      <div className="font-mono text-base-content/70 mt-1">
+                        {attempt.metrics_before &&
+                          Object.entries(attempt.metrics_before).map(([k, v]) => (
+                            <span key={k} className="mr-2">
+                              {k}: {typeof v === "number" ? v.toFixed(3) : v}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                    <div className="bg-base-300/30 rounded p-2">
+                      <span className="text-base-content/50 font-semibold">After:</span>
+                      <div className="font-mono text-base-content/70 mt-1">
+                        {attempt.metrics_after &&
+                          Object.entries(attempt.metrics_after).map(([k, v]) => (
+                            <span key={k} className="mr-2">
+                              {k}: {typeof v === "number" ? v.toFixed(3) : v}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Parameter changes */}
+            {(attempt.before || attempt.after) && (
+              <div className="mt-2 pt-2 border-t border-base-300/50">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 text-[10px] text-base-content/60 hover:text-base-content transition-colors"
+                  onClick={() => toggleDetails(attempt.attempt || index)}
+                >
+                  <ChevronRightIcon
+                    className={`h-3 w-3 transition-transform duration-200 ${
+                      expandedDetails[attempt.attempt || index] ? "rotate-90" : ""
+                    }`}
+                  />
+                  {expandedDetails[attempt.attempt || index] ? "Hide" : "Show"} parameter changes
+                </button>
+                {expandedDetails[attempt.attempt || index] && (
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-[10px]">
+                    <div className="bg-base-300/30 rounded p-2">
+                      <span className="text-base-content/50 font-semibold">Before:</span>
+                      <pre className="font-mono text-base-content/70 mt-1 overflow-x-auto">
+                        {JSON.stringify(attempt.before, null, 2)}
+                      </pre>
+                    </div>
+                    <div className="bg-base-300/30 rounded p-2">
+                      <span className="text-base-content/50 font-semibold">After:</span>
+                      <pre className="font-mono text-base-content/70 mt-1 overflow-x-auto">
+                        {JSON.stringify(attempt.after, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action buttons for pending attempts */}
+            {attempt.status === "pending" && onAcceptFix && onRejectFix && (
+              <div className="mt-2 pt-2 border-t border-base-300/50 flex gap-2">
+                <button
+                  type="button"
+                  className="btn btn-xs btn-success gap-1"
+                  onClick={() => onAcceptFix(attempt)}
+                >
+                  <CheckCircleIcon className="h-3 w-3" />
+                  Accept Fix
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-xs btn-error gap-1"
+                  onClick={() => onRejectFix(attempt)}
+                >
+                  <XCircleIcon className="h-3 w-3" />
+                  Reject Fix
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Old structure (backward compatibility)
   return (
     <div className="overflow-x-auto mt-2">
       <table className="table table-xs w-full">
@@ -119,57 +298,67 @@ function RetryHistoryTable({ history }) {
   );
 }
 
-function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
+function GeneralizationFailurePanel({ gf, onRetryRelaxed, onAcceptFix, onRejectFix }) {
   const [open, setOpen] = useState(false);
   if (!gf) return null;
   const { thresholds, attempts, best_attempt, best_attempt_file, best_attempt_strategy_name, suggestions } = gf;
 
+  // Determine error code from reason
+  const errorCode = gf.reason === "sharp_peak" ? "sharp_peak" : "robustness_failed";
+  const severity = gf.reason === "sharp_peak" ? "high" : "high";
+  const canAutoFix = gf.reason === "sharp_peak"; // Only sharp_peak allows auto-fix
+
+  // Calculate relaxed thresholds for button
+  const relaxedProfit = best_attempt?.profit != null
+    ? parseFloat((best_attempt.profit - 0.01).toFixed(4))
+    : null;
+  const relaxedDd = best_attempt?.drawdown != null || thresholds?.max_drawdown_threshold != null
+    ? Math.min(35, parseFloat(((best_attempt?.drawdown ?? thresholds?.max_drawdown_threshold ?? 30) + 5).toFixed(1)))
+    : null;
+
   return (
     <div className="space-y-3 mt-3">
-      {/* Structured diagnostics block */}
-      <div className={`rounded-xl border p-4 space-y-3 ${gf.reason === "sharp_peak" ? "border-secondary/25 bg-secondary/5" : "border-error/25 bg-error/5"}`}>
-        <div className="flex items-start gap-2">
-          {gf.reason === "sharp_peak" ? (
-            <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
-          ) : (
-            <BeakerIcon className="mt-0.5 h-5 w-5 shrink-0 text-error" />
-          )}
-            <div>
-              <p className={`text-xs font-semibold ${gf.reason === "sharp_peak" ? "text-secondary" : "text-error"}`}>
-                {gf.reason === "sharp_peak" ? "Robustness Check Failure (Sharp Peak)" : "Generalization Failure Diagnostics"}
-              </p>
-              <p className="text-[10px] text-base-content/50 mt-0.5">
-                {gf.reason === "sharp_peak"
-                  ? "Strategy params are too sensitive. Small variations cause massive performance drops."
-                  : `Active gates - OOS profit >= ${thresholds?.min_oos_profit ?? 0} / Max drawdown < ${thresholds?.max_drawdown_threshold ?? 30}%`
-                }
-              </p>
-            </div>
-          </div>
+      {/* Use ErrorDisplay for consistent error presentation */}
+      <ErrorDisplay
+        errorCode={errorCode}
+        title={gf.reason === "sharp_peak" ? "Robustness Check Failure (Sharp Peak)" : "Generalization Failure Diagnostics"}
+        reason={gf.reason === "sharp_peak"
+          ? "Strategy params are too sensitive. Small variations cause massive performance drops."
+          : `Active gates - OOS profit >= ${thresholds?.min_oos_profit ?? 0} / Max drawdown < ${thresholds?.max_drawdown_threshold ?? 30}%`
+        }
+        severity={severity}
+        canAutoFix={canAutoFix}
+        suggestedAction={gf.reason === "sharp_peak"
+          ? "Apply ROI smoothing auto-fix to reduce parameter sensitivity"
+          : suggestions && suggestions.length > 0 ? suggestions[0] : "Review parameters and retry with adjusted thresholds"
+        }
+        retryHistory={attempts}
+        showRetryHistory={false} // We show retry history separately below
+      />
 
-          {/* Active thresholds summary */}
-          <div className="flex flex-wrap gap-1.5">
-            {gf.reason === "sharp_peak" ? (
-              <span className="badge badge-xs badge-outline badge-secondary">
-                Sensitivity {'>'} 25% (Robustness Gate)
-              </span>
-            ) : (
-              <>
-                <span className="badge badge-xs badge-outline badge-error">
-                  Min OOS Profit: {thresholds?.min_oos_profit ?? 0}
-                </span>
-                <span className="badge badge-xs badge-outline badge-error">
-                  Max DD: {thresholds?.max_drawdown_threshold ?? 30}%
-                </span>
-              </>
-            )}
-            {best_attempt && best_attempt.profit != null && (
-              <span className={`badge badge-xs badge-outline ${gf.reason === "sharp_peak" ? "badge-secondary" : "badge-warning"}`}>
-                Best profit: {best_attempt.profit >= 0 ? "+" : ""}{(best_attempt.profit * 100).toFixed(2)}%
-                ({best_attempt.label})
-              </span>
-            )}
-          </div>
+      {/* Active thresholds summary */}
+      <div className="flex flex-wrap gap-1.5">
+        {gf.reason === "sharp_peak" ? (
+          <span className="badge badge-xs badge-outline badge-secondary">
+            Sensitivity {'>'} 25% (Robustness Gate)
+          </span>
+        ) : (
+          <>
+            <span className="badge badge-xs badge-outline badge-error">
+              Min OOS Profit: {thresholds?.min_oos_profit ?? 0}
+            </span>
+            <span className="badge badge-xs badge-outline badge-error">
+              Max DD: {thresholds?.max_drawdown_threshold ?? 30}%
+            </span>
+          </>
+        )}
+        {best_attempt && best_attempt.profit != null && (
+          <span className={`badge badge-xs badge-outline ${gf.reason === "sharp_peak" ? "badge-secondary" : "badge-warning"}`}>
+            Best profit: {best_attempt.profit >= 0 ? "+" : ""}{(best_attempt.profit * 100).toFixed(2)}%
+            ({best_attempt.label})
+          </span>
+        )}
+      </div>
 
         {/* Retry history table (collapsible) */}
         <div>
@@ -181,7 +370,7 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
             <ChevronRightIcon className={`h-3 w-3 transition-transform duration-200 ${open ? "rotate-90" : ""}`} />
             {open ? "Hide" : "Show"} attempt history ({attempts?.length ?? 0} attempts)
           </button>
-          {open && <RetryHistoryTable history={attempts} />}
+          {open && <RetryHistoryTable history={attempts} onAcceptFix={onAcceptFix} onRejectFix={onRejectFix} />}
         </div>
 
         {/* Best attempt artifact */}
@@ -211,15 +400,9 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
             </ul>
           </div>
         )}
-      </div>
 
-      {/* Retry with relaxed thresholds button is not applicable for Sharp Peak failures. */}
-      {onRetryRelaxed && best_attempt && gf.reason !== "sharp_peak" && (() => {
-        const relaxedProfit = best_attempt.profit != null
-          ? parseFloat((best_attempt.profit - 0.01).toFixed(4))
-          : null;
-        const relaxedDd = Math.min(35, parseFloat(((best_attempt.drawdown ?? thresholds?.max_drawdown_threshold ?? 30) + 5).toFixed(1)));
-        return (
+        {/* Retry with relaxed thresholds button is not applicable for Sharp Peak failures. */}
+        {onRetryRelaxed && best_attempt && gf.reason !== "sharp_peak" && (
           <button
             type="button"
             className="btn btn-sm btn-outline btn-warning gap-2 w-full"
@@ -234,8 +417,7 @@ function GeneralizationFailurePanel({ gf, onRetryRelaxed }) {
               </span>
             )}
           </button>
-        );
-      })()}
+        )}
     </div>
   );
 }

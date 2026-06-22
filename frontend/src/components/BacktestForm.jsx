@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "../services/api.js";
 import BacktestResults from "./BacktestResults";
 import SmartPairSelector from "./SmartPairSelector";
+import ErrorDisplay from "./shared/ErrorDisplay";
 
 function CommandViewer({ command }) {
   const [copied, setCopied] = useState(false);
@@ -604,7 +605,14 @@ export default function BacktestForm({
 
             {/* Error */}
             {runError && (
-              <div className="alert alert-error alert-sm"><span>{runError}</span></div>
+              <ErrorDisplay
+                errorCode="config_error"
+                title="Backtest Error"
+                reason={runError}
+                severity="high"
+                canAutoFix={false}
+                suggestedAction="Check your configuration and try again"
+              />
             )}
 
             {/* Run Backtest Button */}
@@ -628,9 +636,14 @@ export default function BacktestForm({
                 {downloading ? "Downloading Candle Data…" : "Download Historical Data"}
               </button>
               {downloadError && (
-                <div className="alert alert-error alert-sm text-sm">
-                  <span>{downloadError}</span>
-                </div>
+                <ErrorDisplay
+                  errorCode="exchange_download_failure"
+                  title="Data Download Error"
+                  reason={downloadError}
+                  severity="high"
+                  canAutoFix={false}
+                  suggestedAction="Check your exchange connection and try again"
+                />
               )}
               {downloadDone && !downloadError && (
                 <div className="alert alert-success alert-sm text-sm">
