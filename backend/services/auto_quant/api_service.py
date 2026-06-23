@@ -13,6 +13,11 @@ from typing import Any
 from fastapi import HTTPException
 
 from . import pipeline as _pipeline
+from .pipeline_modules.stage_runtime import (
+    build_stage_cards,
+    build_workflow_summary,
+    derive_error_object,
+)
 
 
 def list_pipeline_runs() -> dict[str, list[dict[str, Any]]]:
@@ -27,6 +32,9 @@ def get_pipeline_status(run_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail=f"Pipeline run '{run_id}' not found.")
     snapshot = _pipeline._state_snapshot(state)
     snapshot["recent_events"] = _pipeline.get_event_history(run_id)
+    snapshot["stage_cards"] = build_stage_cards(state)
+    snapshot["workflow"] = build_workflow_summary(state)
+    snapshot["error_object"] = derive_error_object(state)
     return snapshot
 
 
