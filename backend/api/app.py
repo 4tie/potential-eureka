@@ -34,7 +34,7 @@ from ..core.errors import BackendError
 from ..runtime import create_services
 from .log_broadcaster import LogBroadcaster, wire_service_callbacks
 from .session_store import SessionStore
-from .routers import data, backtest, stress_lab, temporal_stress_lab, session, settings, logs, strategies, pairs, shared_state, results, results_list, system_health, optimizer, performance, ai_assistant, pair_explorer, auto_quant, agent, ai_agent, candidate, charts, discord, quant, events
+from .routers import data, backtest, stress_lab, temporal_stress_lab, session, settings, logs, strategies, pairs, shared_state, results, results_list, system_health, optimizer, performance, ai_assistant, pair_explorer, auto_quant, auto_quant_export, agent, ai_agent, candidate, charts, discord, quant, events
 from ..services.auto_quant import pipeline as _aq_pipeline
 
 
@@ -200,6 +200,18 @@ def create_app(root_dir: Path | None = None) -> FastAPI:
     app.include_router(agent.router)
     app.include_router(pair_explorer.router)
     app.include_router(auto_quant.router)
+    # Replace only the legacy AutoQuant export handler. All other AutoQuant
+    # routes remain owned by auto_quant.py, while export QA lives in a focused
+    # audited router.
+    app.router.routes[:] = [
+        route
+        for route in app.router.routes
+        if not (
+            getattr(route, "path", None) == "/api/auto-quant/export/{run_id}"
+            and "POST" in getattr(route, "methods", set())
+        )
+    ]
+    app.include_router(auto_quant_export.router)
     app.include_router(ai_agent.router)
     app.include_router(candidate.router)
     app.include_router(charts.router)
