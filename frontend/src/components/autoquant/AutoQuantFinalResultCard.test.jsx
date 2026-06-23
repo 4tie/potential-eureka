@@ -241,4 +241,32 @@ describe("AutoQuantFinalResultCard", () => {
     render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
     expect(screen.getByText("Technical details")).toBeInTheDocument();
   });
+
+  it("should display Export Ready when backend validation_status is 'passed' even with low score", () => {
+    const report = {
+      ...mockReport,
+      validation_status: "passed",
+      readiness_label: null,
+      score: 10,
+      score_explanation: ["Low score but backend passed"],
+      thresholds: { min_profit_factor: 1.5, max_drawdown: 25 },
+      risk: { profit_factor: 2.5, expectancy: 0.15, max_drawdown_pct: 15.5, trade_count: 150 },
+    };
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Export Ready")).toBeInTheDocument();
+  });
+
+  it("should display Rejected when backend validation_status is 'failed' even with high score", () => {
+    const report = {
+      ...mockReport,
+      validation_status: "failed",
+      readiness_label: null,
+      score: 95,
+      score_explanation: ["High score but backend failed"],
+      thresholds: { min_profit_factor: 1.5, max_drawdown: 25 },
+      risk: { profit_factor: 2.5, expectancy: 0.15, max_drawdown_pct: 15.5, trade_count: 150 },
+    };
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Rejected")).toBeInTheDocument();
+  });
 });

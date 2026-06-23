@@ -101,7 +101,7 @@ function NavDropdown({ group, activeTab, onChange, isOpen, onToggle }) {
         </svg>
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 glass-card rounded-lg py-1 min-w-[140px] shadow-xl">
+        <div className="absolute top-full left-0 mt-1 glass-card rounded-lg py-1 min-w-[140px] shadow-xl z-[100]">
           {group.tabs.map((tab) => (
             <button
               key={tab.id}
@@ -138,31 +138,33 @@ export default function TopNav({ activeTab, onChange, backendOnline, isWorkRunni
     <nav className="fixed top-0 left-0 right-0 h-16 glass-card border-b border-white/10 z-50 px-6 flex items-center justify-between">
       <BrandMark backendOnline={backendOnline} isWorkRunning={isWorkRunning} />
 
-      <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 overflow-x-auto max-w-[70vw] scrollbar-hide">
-        {PRIMARY_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onChange(tab.id)}
-            className={`px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-              activeTab === tab.id
-                ? "bg-white text-base-100 shadow-lg shadow-white/10"
-                : "text-text/60 hover:text-text hover:bg-white/5"
-            }`}
-            title={tab.label}
-          >
-            {tab.label}
-          </button>
-        ))}
-        {DROPDOWN_GROUPS.map((group) => (
-          <NavDropdown
-            key={group.label}
-            group={group}
-            activeTab={activeTab}
-            onChange={onChange}
-            isOpen={openDropdown === group.label}
-            onToggle={() => toggleDropdown(group.label)}
-          />
-        ))}
+      <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 overflow-visible">
+        <div className="flex items-center gap-1 overflow-x-auto max-w-[70vw] scrollbar-hide">
+          {PRIMARY_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onChange(tab.id)}
+              className={`px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? "bg-white text-base-100 shadow-lg shadow-white/10"
+                  : "text-text/60 hover:text-text hover:bg-white/5"
+              }`}
+              title={tab.label}
+            >
+              {tab.label}
+            </button>
+          ))}
+          {DROPDOWN_GROUPS.map((group) => (
+            <NavDropdown
+              key={group.label}
+              group={group}
+              activeTab={activeTab}
+              onChange={onChange}
+              isOpen={openDropdown === group.label}
+              onToggle={() => toggleDropdown(group.label)}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="flex items-center gap-4">

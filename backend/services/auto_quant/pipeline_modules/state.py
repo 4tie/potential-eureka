@@ -83,6 +83,7 @@ class PipelineState:
     wfo_oos_months: int = 1
     wfo_recency_weight: float = 1.0
     wfo_windows: list = field(default_factory=list)
+    wfo_skip_reason: str | None = None
     # Alpha Ensemble Voting
     ensemble_enabled: bool = False
     # Optional single-pair override (set via the Pair Screener; if provided,
@@ -280,6 +281,7 @@ def _save_state_to_disk(state: PipelineState) -> None:
             "wfo_oos_months": state.wfo_oos_months,
             "wfo_recency_weight": state.wfo_recency_weight,
             "wfo_windows": state.wfo_windows,
+            "wfo_skip_reason": state.wfo_skip_reason,
             "ensemble_enabled": state.ensemble_enabled,
             "pair_universe": state.pair_universe,
             "winning_pairs": state.winning_pairs,
@@ -422,6 +424,7 @@ def load_runs_from_disk(user_data_dir: str) -> None:
                 wfo_oos_months=data.get("wfo_oos_months", 1),
                 wfo_recency_weight=data.get("wfo_recency_weight", 1.0),
                 wfo_windows=data.get("wfo_windows", []),
+                wfo_skip_reason=data.get("wfo_skip_reason"),
                 ensemble_enabled=data.get("ensemble_enabled", False),
                 pair_universe=data.get("pair_universe", BROAD_UNIVERSE_PAIRS),
                 winning_pairs=data.get("winning_pairs", []),

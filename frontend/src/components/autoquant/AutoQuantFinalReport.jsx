@@ -278,20 +278,26 @@ export default function AutoQuantFinalReport({ report, runId, expectedPairs, exp
               <thead>
                 <tr>
                   <th>Attempt</th>
-                  <th>Stage</th>
                   <th>Reason</th>
-                  <th>Action</th>
+                  <th>Loss</th>
+                  <th>Spaces</th>
+                  <th>Epochs</th>
+                  <th>Profit</th>
+                  <th>Passed</th>
                 </tr>
               </thead>
               <tbody>
                 {report.retry_history.map((retry, idx) => (
                   <tr key={idx}>
                     <td>{retry.attempt ?? idx + 1}</td>
-                    <td>{retry.stage ?? '-'}</td>
                     <td className="text-xs max-w-xs truncate">{retry.reason || '-'}</td>
+                    <td>{retry.before?.loss ?? retry.after?.loss ?? '-'}</td>
+                    <td>{retry.before?.spaces ?? retry.after?.spaces ?? '-'}</td>
+                    <td>{retry.before?.epochs ?? retry.after?.epochs ?? '-'}</td>
+                    <td>{retry.metrics_after?.profit ?? retry.metrics_before?.profit ?? '-'}</td>
                     <td>
-                      <span className={`badge badge-xs ${retry.success ? 'badge-success' : 'badge-warning'} badge-outline`}>
-                        {retry.action || (retry.success ? 'Success' : 'Retry')}
+                      <span className={`badge badge-xs ${retry.status === 'improved' || retry.accepted ? 'badge-success' : 'badge-warning'} badge-outline`}>
+                        {retry.status === 'improved' || retry.accepted ? 'Yes' : 'No'}
                       </span>
                     </td>
                   </tr>
@@ -312,19 +318,23 @@ export default function AutoQuantFinalReport({ report, runId, expectedPairs, exp
             <div>
               <div className="text-[10px] text-base-content/50 uppercase tracking-wider">Status</div>
               <div className="text-sm font-semibold">
-                {report.wfo_status.ran ? (
+                {report.wfo_status.enabled === false ? (
+                  <span className="text-base-content/60">Disabled</span>
+                ) : report.wfo_status.ran ? (
                   <span className="text-success">Ran</span>
                 ) : (
                   <span className="text-warning">Skipped</span>
                 )}
               </div>
             </div>
-            <div>
-              <div className="text-[10px] text-base-content/50 uppercase tracking-wider">Windows</div>
-              <div className="text-sm font-semibold">{report.wfo_status.windows_count}</div>
-            </div>
+            {report.wfo_status.ran && (
+              <div>
+                <div className="text-[10px] text-base-content/50 uppercase tracking-wider">Windows</div>
+                <div className="text-sm font-semibold">{report.wfo_status.windows_count}</div>
+              </div>
+            )}
           </div>
-          {report.wfo_status.skip_reason && (
+          {report.wfo_status.enabled === true && report.wfo_status.ran === false && report.wfo_status.skip_reason && (
             <div className="mt-2 p-2 bg-warning/10 rounded border border-warning/30">
               <div className="text-[10px] text-warning font-semibold uppercase tracking-wider mb-1">Skip Reason</div>
               <div className="text-xs text-base-content/70">{report.wfo_status.skip_reason}</div>
