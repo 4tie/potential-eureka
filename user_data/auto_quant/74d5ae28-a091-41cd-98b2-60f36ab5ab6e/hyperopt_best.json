@@ -1,6 +1,24 @@
 {
-  "strategy_name": "AIStrategy_HardMutation",
-  "params": {
+  "loss": null,
+  "params_dict": {
+    "trailing_stop": false,
+    "trailing_stop_positive": null,
+    "trailing_stop_positive_offset": 0.0,
+    "trailing_only_offset_is_reached": false,
+    "max_open_trades": 3,
+    "sell_ma_count": 12,
+    "sell_ma_gap": 68,
+    "buy_ma_count": 14,
+    "buy_ma_gap": 15,
+    "minimal_roi": {
+      "0": 0.13,
+      "34": 0.031,
+      "83": 0.021,
+      "180": 0
+    },
+    "stoploss": -0.199
+  },
+  "params_details": {
     "trailing": {
       "trailing_stop": false,
       "trailing_stop_positive": null,
@@ -27,7 +45,5 @@
     "stoploss": {
       "stoploss": -0.199
     }
-  },
-  "ft_stratparam_v": 1,
-  "export_time": "2026-06-23 12:25:11.172919+00:00"
+  }
 }

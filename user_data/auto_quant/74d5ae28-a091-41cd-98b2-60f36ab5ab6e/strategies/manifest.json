@@ -67,6 +67,41 @@
       "role": "mutation",
       "strategy_name": "AIStrategy_HardMutation",
       "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_HardMutation_mutation_v2.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensBest",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensBest_sensitivity_v3.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensPlus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensPlus_sensitivity_v3.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensMinus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensMinus_sensitivity_v3.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_HardMutation",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_HardMutation_mutation_v3.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensBest",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensBest_sensitivity_v4.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensPlus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensPlus_sensitivity_v4.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensMinus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensMinus_sensitivity_v4.py"
     }
   ]
 }

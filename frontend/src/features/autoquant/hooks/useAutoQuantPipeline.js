@@ -261,6 +261,21 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     }
   }, [appendEventLog, applySnapshot, applyStageEvent, stopLiveTimersForStatus]);
 
+  const syncStatus = useCallback(async (targetRunId = runId) => {
+    if (!targetRunId || statusRequestRef.current) return null;
+    statusRequestRef.current = true;
+    try {
+      const data = await api.autoquant.getStatus(targetRunId);
+      applySnapshot(data);
+      return data;
+    } catch (err) {
+      console.debug("Failed to sync AutoQuant status:", err);
+      return null;
+    } finally {
+      statusRequestRef.current = false;
+    }
+  }, [runId, applySnapshot]);
+
   const connectWs = useCallback((targetRunId = runId) => {
     if (!targetRunId) return;
 
@@ -289,7 +304,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
       setIsConnecting(false);
     };
 
-    ws.onclose = async (event = {}) => {
+    ws.onclose = (event = {}) => {
       setIsConnecting(false);
       if (wsRef.current === ws) {
         wsRef.current = null;
@@ -306,32 +321,46 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
         return;
       }
 
-      // Before reconnecting, sync status to check if run still exists
-      const statusData = await syncStatus(targetRunId);
-      if (!statusData) {
-        console.debug(`AutoQuant WebSocket closed; run not found, not reconnecting`);
-        return;
-      }
+      // Sync status before deciding to reconnect (non-blocking)
+      syncStatus(targetRunId).then((statusData) => {
+        if (!statusData) {
+          console.debug(`AutoQuant WebSocket closed; run not found, not reconnecting`);
+          return;
+        }
 
-      // Check if run is terminal after sync
-      if (isTerminalStatus(statusData.status)) {
-        console.debug(`AutoQuant WebSocket closed; run is ${statusData.status}, not reconnecting`);
-        return;
-      }
+        // Check if run is terminal after sync
+        if (isTerminalStatus(statusData.status)) {
+          console.debug(`AutoQuant WebSocket closed; run is ${statusData.status}, not reconnecting`);
+          return;
+        }
 
-      const shouldReconnect = reconnectAttemptsRef.current < maxReconnectAttempts;
+        const shouldReconnect = reconnectAttemptsRef.current < maxReconnectAttempts;
 
-      if (shouldReconnect) {
-        reconnectAttemptsRef.current += 1;
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-        console.debug(`AutoQuant WebSocket closed (${event.code || "unknown"}); reconnecting in ${delay}ms`);
-        reconnectTimeoutRef.current = setTimeout(() => {
-          reconnectTimeoutRef.current = null;
-          connectWsRef.current?.(targetRunId);
-        }, delay);
-      } else {
-        console.debug(`AutoQuant WebSocket closed; max reconnect attempts reached`);
-      }
+        if (shouldReconnect) {
+          reconnectAttemptsRef.current += 1;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+          console.debug(`AutoQuant WebSocket closed (${event.code || "unknown"}); reconnecting in ${delay}ms`);
+          reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectTimeoutRef.current = null;
+            connectWsRef.current?.(targetRunId);
+          }, delay);
+        } else {
+          console.debug(`AutoQuant WebSocket closed; max reconnect attempts reached`);
+        }
+      }).catch((err) => {
+        console.debug("Error checking status before reconnect:", err);
+        // Still try to reconnect if sync fails, up to max attempts
+        const shouldReconnect = reconnectAttemptsRef.current < maxReconnectAttempts;
+        if (shouldReconnect) {
+          reconnectAttemptsRef.current += 1;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+          console.debug(`AutoQuant WebSocket closed (${event.code || "unknown"}); reconnecting in ${delay}ms`);
+          reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectTimeoutRef.current = null;
+            connectWsRef.current?.(targetRunId);
+          }, delay);
+        }
+      });
     };
   }, [runId, clearReconnectTimeout, handleWsMessage, syncStatus]);
 
@@ -342,21 +371,6 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
       setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
   }, [clearElapsedTimer]);
-
-  const syncStatus = useCallback(async (targetRunId = runId) => {
-    if (!targetRunId || statusRequestRef.current) return null;
-    statusRequestRef.current = true;
-    try {
-      const data = await api.autoquant.getStatus(targetRunId);
-      applySnapshot(data);
-      return data;
-    } catch (err) {
-      console.debug("Failed to sync AutoQuant status:", err);
-      return null;
-    } finally {
-      statusRequestRef.current = false;
-    }
-  }, [runId, applySnapshot]);
 
   const resetPipelineState = useCallback(() => {
     clearElapsedTimer();

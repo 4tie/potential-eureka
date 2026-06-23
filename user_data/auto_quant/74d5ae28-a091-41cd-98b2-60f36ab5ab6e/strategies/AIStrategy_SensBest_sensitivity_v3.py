@@ -33,14 +33,14 @@ class AIStrategy_SensBest(IStrategy):
 
     # ROI table:
     minimal_roi = {
-    "0": 0.13,
-    "34": 0.031,
-    "83": 0.021,
-    "180": 0
+    "0": 0.059,
+    "24": 0.031,
+    "53": 0.018,
+    "75": 0
 }
 
     # Stoploss:
-    stoploss = -0.199
+    stoploss = -0.297
 
     # Trailing stop:
     trailing_stop = False  # value loaded from strategy

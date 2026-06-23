@@ -15,7 +15,7 @@ from functools import reduce
 import pandas as pd
 
 
-class AIStrategy_SensBest(IStrategy):
+class AIStrategy_SensMinus(IStrategy):
     # 111/2000:     18 trades. 12/4/2 Wins/Draws/Losses. Avg profit   9.72%. Median profit   3.01%. Total profit  733.01234143 USDT (  73.30%). Avg duration 2 days, 18:40:00 min. Objective: 1.67048
 
     INTERFACE_VERSION: int = 3
@@ -33,14 +33,14 @@ class AIStrategy_SensBest(IStrategy):
 
     # ROI table:
     minimal_roi = {
-    "0": 0.13,
-    "34": 0.031,
-    "83": 0.021,
-    "180": 0
+    "0": 0.059,
+    "24": 0.031,
+    "53": 0.018,
+    "75": 0
 }
 
     # Stoploss:
-    stoploss = -0.199
+    stoploss = -0.28215
 
     # Trailing stop:
     trailing_stop = False  # value loaded from strategy

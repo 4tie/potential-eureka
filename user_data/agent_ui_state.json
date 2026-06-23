@@ -1,12 +1,12 @@
 {
   "active_tab": "auto-quant",
-  "active_panel": null,
-  "strategy_name": null,
-  "auto_quant_run_id": null,
+  "active_panel": "stage-3",
+  "strategy_name": "AIStrategy",
+  "auto_quant_run_id": "74d5ae28-a091-41cd-98b2-60f36ab5ab6e",
   "optimizer_session_id": null,
   "backtest_run_id": null,
   "api_session_id": null,
   "schema_version": "agent_ui_state_v1",
-  "updated_at": "2026-06-23T12:06:26.128104+00:00",
+  "updated_at": "2026-06-23T12:25:50.855034+00:00",
   "optimizer_trial_number": null
 }

@@ -10,7 +10,7 @@
   "config_file": "/home/mohs/Desktop/fictional-octo-guide/user_data/config.json",
   "freqtrade_path": "freqtrade",
   "user_data_dir": "/home/mohs/Desktop/fictional-octo-guide/user_data",
-  "status": "running",
+  "status": "failed",
   "current_stage": 3,
   "stages": [
     {
@@ -670,6 +670,8 @@
           "validation: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
           "Discovery found 3 candidate pair(s), below the 3 pair target; validation will continue with notes.",
           "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
+          "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
+          "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
           "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution."
         ]
       },
@@ -688,11 +690,103 @@
     {
       "index": 3,
       "name": "WFA Hyperopt",
-      "status": "pending",
-      "message": "",
-      "data": {},
-      "started_at": "2026-06-23T11:59:57.095130+00:00",
-      "duration_s": 275.2
+      "status": "failed",
+      "message": "\u274c Strategy failed robustness check after 3 self-healing attempts (Negative Baseline detected). See retry history and suggestions below.",
+      "data": {
+        "thresholds": {
+          "min_oos_profit": 0.0,
+          "max_drawdown_threshold": 0.4
+        },
+        "attempts": [
+          {
+            "attempt": 0,
+            "label": "Initial attempt",
+            "loss": "ProfitLockinHyperOptLoss",
+            "spaces": [
+              "buy",
+              "stoploss",
+              "roi"
+            ],
+            "epochs": 100,
+            "profit": -0.311559215,
+            "drawdown": null,
+            "trades": null,
+            "reason": "FAIL_NEGATIVE_BASELINE",
+            "passed": false
+          },
+          {
+            "attempt": 1,
+            "label": "Retry 1",
+            "loss": "ProfitLockinHyperOptLoss",
+            "spaces": [
+              "buy",
+              "stoploss",
+              "roi"
+            ],
+            "epochs": 200,
+            "profit": -0.3420357326,
+            "drawdown": null,
+            "trades": null,
+            "reason": "FAIL_NEGATIVE_BASELINE",
+            "passed": false
+          },
+          {
+            "attempt": 2,
+            "label": "Retry 2",
+            "loss": "ProfitLockinHyperOptLoss",
+            "spaces": [
+              "buy",
+              "stoploss",
+              "roi"
+            ],
+            "epochs": 400,
+            "profit": -0.3061981364,
+            "drawdown": null,
+            "trades": null,
+            "reason": "FAIL_NEGATIVE_BASELINE",
+            "passed": false
+          },
+          {
+            "attempt": 3,
+            "label": "Retry 3",
+            "loss": "ProfitLockinHyperOptLoss",
+            "spaces": [
+              "buy",
+              "stoploss",
+              "roi"
+            ],
+            "epochs": 800,
+            "profit": -0.1955412763,
+            "drawdown": null,
+            "trades": null,
+            "reason": "FAIL_NEGATIVE_BASELINE",
+            "passed": false
+          }
+        ],
+        "best_attempt": {
+          "attempt": 3,
+          "label": "Retry 3",
+          "loss": "ProfitLockinHyperOptLoss",
+          "spaces": [
+            "buy",
+            "stoploss",
+            "roi"
+          ],
+          "epochs": 800,
+          "profit": -0.1955412763,
+          "drawdown": null,
+          "trades": null,
+          "reason": "FAIL_NEGATIVE_BASELINE",
+          "passed": false
+        },
+        "best_attempt_file": null,
+        "best_attempt_strategy_name": null,
+        "suggestions": [
+          "Strategy is unprofitable with current configuration (Negative Baseline). Consider: 1) Different timeframe or pairs, 2) Enabling trend/volatility filters, 3) Switching to OnlyProfitHyperOptLoss, 4) Strategy redesign."
+        ]
+      },
+      "started_at": "2026-06-23T12:12:30.679909+00:00",
+      "duration_s": 799.7
     },
     {
       "index": 4,
@@ -722,9 +816,9 @@
       "duration_s": null
     }
   ],
-  "error": null,
+  "error": "\u274c Strategy failed robustness check after 3 self-healing attempts (Negative Baseline detected). See retry history and suggestions below.",
   "created_at": "2026-06-23T11:49:25.753093+00:00",
-  "completed_at": null,
+  "completed_at": "2026-06-23T12:25:50.337307+00:00",
   "report": null,
   "max_drawdown_threshold": 0.4,
   "min_win_rate": 0.45,
@@ -737,10 +831,10 @@
     "stoploss",
     "roi"
   ],
-  "hyperopt_epochs": 400,
+  "hyperopt_epochs": 800,
   "hyperopt_workers": 4,
   "min_oos_profit": 0.0,
-  "retry_count": 2,
+  "retry_count": 4,
   "max_retries": 3,
   "retry_history": [
     {
@@ -774,16 +868,140 @@
       "trades": null,
       "reason": "FAIL_NEGATIVE_BASELINE",
       "passed": false
+    },
+    {
+      "attempt": 2,
+      "label": "Retry 2",
+      "loss": "ProfitLockinHyperOptLoss",
+      "spaces": [
+        "buy",
+        "stoploss",
+        "roi"
+      ],
+      "epochs": 400,
+      "profit": -0.3061981364,
+      "drawdown": null,
+      "trades": null,
+      "reason": "FAIL_NEGATIVE_BASELINE",
+      "passed": false
+    },
+    {
+      "attempt": 3,
+      "label": "Retry 3",
+      "loss": "ProfitLockinHyperOptLoss",
+      "spaces": [
+        "buy",
+        "stoploss",
+        "roi"
+      ],
+      "epochs": 800,
+      "profit": -0.1955412763,
+      "drawdown": null,
+      "trades": null,
+      "reason": "FAIL_NEGATIVE_BASELINE",
+      "passed": false
     }
   ],
-  "generalization_failure": null,
+  "generalization_failure": {
+    "thresholds": {
+      "min_oos_profit": 0.0,
+      "max_drawdown_threshold": 0.4
+    },
+    "attempts": [
+      {
+        "attempt": 0,
+        "label": "Initial attempt",
+        "loss": "ProfitLockinHyperOptLoss",
+        "spaces": [
+          "buy",
+          "stoploss",
+          "roi"
+        ],
+        "epochs": 100,
+        "profit": -0.311559215,
+        "drawdown": null,
+        "trades": null,
+        "reason": "FAIL_NEGATIVE_BASELINE",
+        "passed": false
+      },
+      {
+        "attempt": 1,
+        "label": "Retry 1",
+        "loss": "ProfitLockinHyperOptLoss",
+        "spaces": [
+          "buy",
+          "stoploss",
+          "roi"
+        ],
+        "epochs": 200,
+        "profit": -0.3420357326,
+        "drawdown": null,
+        "trades": null,
+        "reason": "FAIL_NEGATIVE_BASELINE",
+        "passed": false
+      },
+      {
+        "attempt": 2,
+        "label": "Retry 2",
+        "loss": "ProfitLockinHyperOptLoss",
+        "spaces": [
+          "buy",
+          "stoploss",
+          "roi"
+        ],
+        "epochs": 400,
+        "profit": -0.3061981364,
+        "drawdown": null,
+        "trades": null,
+        "reason": "FAIL_NEGATIVE_BASELINE",
+        "passed": false
+      },
+      {
+        "attempt": 3,
+        "label": "Retry 3",
+        "loss": "ProfitLockinHyperOptLoss",
+        "spaces": [
+          "buy",
+          "stoploss",
+          "roi"
+        ],
+        "epochs": 800,
+        "profit": -0.1955412763,
+        "drawdown": null,
+        "trades": null,
+        "reason": "FAIL_NEGATIVE_BASELINE",
+        "passed": false
+      }
+    ],
+    "best_attempt": {
+      "attempt": 3,
+      "label": "Retry 3",
+      "loss": "ProfitLockinHyperOptLoss",
+      "spaces": [
+        "buy",
+        "stoploss",
+        "roi"
+      ],
+      "epochs": 800,
+      "profit": -0.1955412763,
+      "drawdown": null,
+      "trades": null,
+      "reason": "FAIL_NEGATIVE_BASELINE",
+      "passed": false
+    },
+    "best_attempt_file": null,
+    "best_attempt_strategy_name": null,
+    "suggestions": [
+      "Strategy is unprofitable with current configuration (Negative Baseline). Consider: 1) Different timeframe or pairs, 2) Enabling trend/volatility filters, 3) Switching to OnlyProfitHyperOptLoss, 4) Strategy redesign."
+    ]
+  },
   "sensitivity": {
     "passed": false,
     "score": "Low",
     "label": "Negative Baseline",
-    "p_best": -0.3420357326,
-    "p_minus": -0.3420357326,
-    "p_plus": -0.3420357326,
+    "p_best": -0.1955412763,
+    "p_minus": -0.1955412763,
+    "p_plus": -0.1955412763,
     "param": "stoploss",
     "failure_reason": "FAIL_NEGATIVE_BASELINE"
   },
@@ -946,6 +1164,8 @@
     "validation: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
     "Discovery found 3 candidate pair(s), below the 3 pair target; validation will continue with notes.",
     "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
+    "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
+    "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
     "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution."
   ],
   "run_config_snapshot": {
@@ -1076,7 +1296,7 @@
   "validation_status": "Candidate",
   "readiness_label": "Candidate",
   "score_explanation": [],
-  "progress_percent": 50,
+  "progress_percent": 33,
   "eta_seconds": null,
   "progress_counters": {
     "strategies_generated": 0,
@@ -1146,6 +1366,46 @@
       "role": "sensitivity",
       "strategy_name": "AIStrategy_SensMinus",
       "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensMinus_sensitivity_v2.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_HardMutation",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_HardMutation_mutation_v2.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensBest",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensBest_sensitivity_v3.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensPlus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensPlus_sensitivity_v3.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensMinus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensMinus_sensitivity_v3.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_HardMutation",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_HardMutation_mutation_v3.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensBest",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensBest_sensitivity_v4.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensPlus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensPlus_sensitivity_v4.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensMinus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensMinus_sensitivity_v4.py"
     }
   ],
   "artifact_versions": {
