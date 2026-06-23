@@ -664,6 +664,13 @@ async def _stage_delivery(
             "failing_pairs": stress_result.get("failing_pairs", []),
             "per_pair": stress_result.get("per_pair", []),
         },
+        "filtered_pairs": s1_result.get("filtered_pairs", []) if s1_result else [],
+        "retry_history": state.retry_history or [],
+        "wfo_status": {
+            "ran": bool(state.wfo_windows),
+            "windows_count": len(state.wfo_windows) if state.wfo_windows else 0,
+            "skip_reason": getattr(state, 'wfo_skip_reason', None),
+        },
         "excluded_time_windows": state.excluded_time_windows,
         "risk": risk_result,
         "monte_carlo": risk_result.get("monte_carlo"),

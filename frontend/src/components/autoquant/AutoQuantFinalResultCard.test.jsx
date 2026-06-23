@@ -40,14 +40,32 @@ describe("AutoQuantFinalResultCard", () => {
     expect(screen.getByText("Export Ready")).toBeInTheDocument();
   });
 
+  it("should render export ready status for backend validation_status 'passed'", () => {
+    const report = {...mockReport, validation_status: "passed", readiness_label: null};
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Export Ready")).toBeInTheDocument();
+  });
+
   it("should render needs repair status", () => {
     const report = {...mockReport, validation_status: "Candidate", readiness_label: "Qualified", score: 60, score_explanation: ["Issues found"]};
     render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
     expect(screen.getByText("Needs Repair")).toBeInTheDocument();
   });
 
+  it("should render needs repair status for backend validation_status 'candidate'", () => {
+    const report = {...mockReport, validation_status: "candidate", readiness_label: null, score: 60, score_explanation: ["Issues found"]};
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Needs Repair")).toBeInTheDocument();
+  });
+
   it("should render rejected status", () => {
     const report = {...mockReport, validation_status: "Rejected", readiness_label: null, score: 30, score_explanation: ["Did not meet thresholds"]};
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Rejected")).toBeInTheDocument();
+  });
+
+  it("should render rejected status for backend validation_status 'failed'", () => {
+    const report = {...mockReport, validation_status: "failed", readiness_label: null, score: 30, score_explanation: ["Did not meet thresholds"]};
     render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
     expect(screen.getByText("Rejected")).toBeInTheDocument();
   });

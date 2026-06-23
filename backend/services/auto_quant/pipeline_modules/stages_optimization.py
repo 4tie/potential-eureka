@@ -288,6 +288,9 @@ async def _stage_hyperopt_wfo(
         skip_note = policy.wfo_skip_note(n)
         state.validation_notes.append(skip_note)
         state.wfo_windows = []
+        # Store skip reason for report
+        if not hasattr(state, 'wfo_skip_reason'):
+            state.wfo_skip_reason = skip_note
         _rlog(run_id, 3, logging.WARNING,
               f"WFO: {skip_note}")
         _emit(run_id, 3, "running",

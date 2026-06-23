@@ -192,16 +192,18 @@ export default function AutoQuantFinalResultCard({ report, onDownload }) {
     // --- Priority 1: Authoritative backend status ---
     // Backend validation_status / readiness_label takes full precedence.
     // Score is NOT consulted when a recognized status is present.
+    // Backend returns: "passed", "candidate", "failed" (from scoring.py)
+    // Legacy readiness labels: "Production Ready", "Elite", "Candidate", "Qualified", "Rejected"
     const backendStatus = report.validation_status || report.readiness_label;
 
-    if (backendStatus === "Production Ready" || backendStatus === "Elite") {
+    if (backendStatus === "passed" || backendStatus === "Production Ready" || backendStatus === "Elite") {
       return {
         status: "export_ready",
         reason: rawReason || "Strategy meets all validation criteria",
         rawReason: null,
       };
     }
-    if (backendStatus === "Candidate" || backendStatus === "Qualified") {
+    if (backendStatus === "candidate" || backendStatus === "Candidate" || backendStatus === "Qualified") {
       const { reason, rawReason: raw } = translateReason(rawReason);
       return {
         status: "needs_repair",
@@ -209,7 +211,7 @@ export default function AutoQuantFinalResultCard({ report, onDownload }) {
         rawReason: raw,
       };
     }
-    if (backendStatus === "Rejected") {
+    if (backendStatus === "failed" || backendStatus === "Rejected") {
       const { reason, rawReason: raw } = translateReason(rawReason);
       return {
         status: "rejected",

@@ -194,6 +194,41 @@ export default function AutoQuantFinalReport({ report, runId, expectedPairs, exp
         <AutoQuantEquityCurveChart data={equityCurveOos} mcFan={monteCarlo?.equity_fan ?? null} />
       </div>
 
+      {/* Stage 1 Filtered Pairs with reasons */}
+      {report?.filtered_pairs?.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
+            Stage 1 Filtered Pairs ({report.filtered_pairs.length})
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="table table-xs">
+              <thead>
+                <tr>
+                  <th>Pair</th>
+                  <th>Reason</th>
+                  <th>Trades</th>
+                  <th>Profit Factor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.filtered_pairs.map((p, idx) => (
+                  <tr key={idx}>
+                    <td className="font-mono">{p.key}</td>
+                    <td>
+                      <span className="badge badge-xs badge-warning badge-outline">
+                        {p.reason}
+                      </span>
+                    </td>
+                    <td>{p.total_trades ?? '-'}</td>
+                    <td>{p.profit_factor != null ? p.profit_factor.toFixed(2) : '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {(stressTest.winning_pairs?.length > 0 || stressTest.failing_pairs?.length > 0 || stressTest.per_pair?.length > 0) && (
         <div className="space-y-4">
           <h4 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
@@ -229,6 +264,72 @@ export default function AutoQuantFinalReport({ report, runId, expectedPairs, exp
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Retry History */}
+      {report?.retry_history?.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
+            Retry History ({report.retry_history.length})
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="table table-xs">
+              <thead>
+                <tr>
+                  <th>Attempt</th>
+                  <th>Stage</th>
+                  <th>Reason</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.retry_history.map((retry, idx) => (
+                  <tr key={idx}>
+                    <td>{retry.attempt ?? idx + 1}</td>
+                    <td>{retry.stage ?? '-'}</td>
+                    <td className="text-xs max-w-xs truncate">{retry.reason || '-'}</td>
+                    <td>
+                      <span className={`badge badge-xs ${retry.success ? 'badge-success' : 'badge-warning'} badge-outline`}>
+                        {retry.action || (retry.success ? 'Success' : 'Retry')}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* WFO Status */}
+      {report?.wfo_status && (
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
+            Walk-Forward Optimization
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-[10px] text-base-content/50 uppercase tracking-wider">Status</div>
+              <div className="text-sm font-semibold">
+                {report.wfo_status.ran ? (
+                  <span className="text-success">Ran</span>
+                ) : (
+                  <span className="text-warning">Skipped</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] text-base-content/50 uppercase tracking-wider">Windows</div>
+              <div className="text-sm font-semibold">{report.wfo_status.windows_count}</div>
+            </div>
+          </div>
+          {report.wfo_status.skip_reason && (
+            <div className="mt-2 p-2 bg-warning/10 rounded border border-warning/30">
+              <div className="text-[10px] text-warning font-semibold uppercase tracking-wider mb-1">Skip Reason</div>
+              <div className="text-xs text-base-content/70">{report.wfo_status.skip_reason}</div>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,18 +1,36 @@
 import { useState, useEffect } from "react";
 
-const NAV_TABS = [
+const PRIMARY_TABS = [
   { id: "auto-quant", label: "AutoQuant" },
-  { id: "optimizer", label: "Optimizer" },
   { id: "backtest", label: "Backtest" },
   { id: "results", label: "Results" },
-  { id: "pair-explorer", label: "Pair Explorer" },
   { id: "settings", label: "Settings" },
-  { id: "strategy-lab", label: "Strategy Lab" },
-  { id: "quant", label: "Quant" },
-  { id: "performance", label: "Performance" },
-  { id: "ai-assistant", label: "AI Assistant" },
-  { id: "strategy-editor", label: "Strategy Editor" },
-  { id: "stress-test", label: "Stress Test" },
+];
+
+const DROPDOWN_GROUPS = [
+  {
+    label: "Strategy",
+    tabs: [
+      { id: "optimizer", label: "Optimizer" },
+      { id: "strategy-lab", label: "Strategy Lab" },
+      { id: "strategy-editor", label: "Strategy Editor" },
+    ]
+  },
+  {
+    label: "Analysis",
+    tabs: [
+      { id: "quant", label: "Quant" },
+      { id: "performance", label: "Performance" },
+      { id: "pair-explorer", label: "Pair Explorer" },
+    ]
+  },
+  {
+    label: "Tools",
+    tabs: [
+      { id: "ai-assistant", label: "AI Assistant" },
+      { id: "stress-test", label: "Stress Test" },
+    ]
+  }
 ];
 
 function LiveClock() {
@@ -61,15 +79,67 @@ function StatusPill() {
   );
 }
 
+function NavDropdown({ group, activeTab, onChange, isOpen, onToggle }) {
+  const activeTabInGroup = group.tabs.find(tab => tab.id === activeTab);
+  const isActive = !!activeTabInGroup;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className={`px-3 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1 ${
+          isActive
+            ? "bg-white text-base-100 shadow-lg shadow-white/10"
+            : isOpen
+            ? "bg-white/10 text-text"
+            : "text-text/60 hover:text-text hover:bg-white/5"
+        }`}
+      >
+        {group.label}
+        <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 glass-card rounded-lg py-1 min-w-[140px] shadow-xl">
+          {group.tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                onChange(tab.id);
+                onToggle();
+              }}
+              className={`w-full px-3 py-2 text-left text-xs font-medium transition-all ${
+                activeTab === tab.id
+                  ? "bg-white/10 text-text"
+                  : "text-text/60 hover:text-text hover:bg-white/5"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TopNav({ activeTab, onChange, backendOnline, isWorkRunning }) {
-  const activeTabLabel = NAV_TABS.find(tab => tab.id === activeTab)?.label || activeTab;
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  const allTabs = [...PRIMARY_TABS, ...DROPDOWN_GROUPS.flatMap(g => g.tabs)];
+  const activeTabLabel = allTabs.find(tab => tab.id === activeTab)?.label || activeTab;
+
+  const toggleDropdown = (groupLabel) => {
+    setOpenDropdown(openDropdown === groupLabel ? null : groupLabel);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 glass-card border-b border-white/10 z-50 px-6 flex items-center justify-between">
       <BrandMark backendOnline={backendOnline} isWorkRunning={isWorkRunning} />
 
       <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 overflow-x-auto max-w-[70vw] scrollbar-hide">
-        {NAV_TABS.map((tab) => (
+        {PRIMARY_TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
@@ -82,6 +152,16 @@ export default function TopNav({ activeTab, onChange, backendOnline, isWorkRunni
           >
             {tab.label}
           </button>
+        ))}
+        {DROPDOWN_GROUPS.map((group) => (
+          <NavDropdown
+            key={group.label}
+            group={group}
+            activeTab={activeTab}
+            onChange={onChange}
+            isOpen={openDropdown === group.label}
+            onToggle={() => toggleDropdown(group.label)}
+          />
         ))}
       </div>
 
