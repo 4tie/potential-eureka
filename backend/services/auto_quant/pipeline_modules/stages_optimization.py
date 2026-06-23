@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 from ..ollama_service import ask_ollama_for_wfa_fix
-from ..policy import load_policy
+from ..policy import load_policy, walk_forward_windows_for_depth
 from ..profit_lockin import ensure_profit_lockin_hyperopt_loss
 from ..variants import active_strategy_path, create_variant, read_strategy_source, strategy_path_args
 from .config import _generate_wfo_windows
@@ -273,12 +273,12 @@ async def _stage_hyperopt_wfo(
     if pairs is None and state.selected_pairs:
         pairs = [p["key"] for p in state.selected_pairs]
 
-    windows = _generate_wfo_windows(
-        state.in_sample_range,
-        state.wfo_is_months,
-        state.wfo_oos_months,
-    )
-    n = len(windows)
+    # Use policy-based WFO windows for depth-aware window generation
+    policy_windows = walk_forward_windows_for_depth(state.analysis_depth)
+    n = len(policy_windows)
+    
+    # Convert policy windows to tuple format for compatibility
+    windows = [(w["train"], w["test"]) for w in policy_windows]
 
     policy = load_policy()
     min_windows = policy.min_wfo_windows()

@@ -12,7 +12,7 @@ import math
 from datetime import datetime
 from typing import Any
 
-from ..policy import load_policy
+from ..policy import latest_complete_day, load_policy
 from .logging import _rlog
 
 
@@ -90,7 +90,7 @@ def compute_score(
             "in_sample": str(getattr(state, "in_sample_range", "unknown")),
             "out_of_sample": str(getattr(state, "out_sample_range", "unknown")),
             "oos_years": normalized.get("oos_years", 1.0),
-            "latest_complete_day": datetime.utcnow().strftime("%Y-%m-%d"),
+            "latest_complete_day": latest_complete_day().strftime("%Y-%m-%d"),
         },
         "trade_activity_gate": {
             "required_oos_trades": normalized.get("required_oos_trades", 0),
@@ -429,6 +429,11 @@ def _build_gate_checks(
     wfo_pass_rate = normalized.get("wfo_pass_rate")
     if wfo_pass_rate is not None:
         checks.append(_gate("wfo_stability", wfo_pass_rate, min_wfo_pass_rate, ">=", _passes_min(wfo_pass_rate, min_wfo_pass_rate), True, "WFO pass rate must be stable when WFO runs."))
+    
+    # Latest window collapse check - blocks Validated/Elite if latest WFO window failed
+    latest_window_passed = normalized.get("latest_window_passed")
+    if latest_window_passed is not None:
+        checks.append(_gate("latest_window_collapse", latest_window_passed, True, "==", bool(latest_window_passed), True, "Latest WFO window must not fail catastrophically for Validated/Elite status."))
 
     sharpe = normalized.get("sharpe_ratio")
     if sharpe is not None and sharpe != 0.0 and min_sharpe > 0:
@@ -540,8 +545,8 @@ def _threshold_summary(gates: dict[str, Any], elite_gates: dict[str, Any], norma
         },
         "timeframe_min_trades": {
             "1m/3m/5m": 500,
-            "15m/30m/1h": 200,
-            "2h/4h/6h/8h/12h": 100,
+            "15m/30m/1h": 250,
+            "2h/4h/6h/8h/12h": 120,
             "1d/3d/1w": 30,
         },
     }
@@ -556,6 +561,22 @@ def _score_warnings(checks: list[dict[str, Any]], normalized: dict[str, Any]) ->
             warnings.append(check["message"])
     if normalized.get("sharpe_ratio") is None and normalized.get("calmar_ratio") is None:
         warnings.append("Sharpe/Calmar were not available; risk-adjusted score component was skipped, not assumed.")
+    
+    # Scalping/intraday activity warning for low trade counts
+    timeframe = normalized.get("timeframe", "").lower()
+    total_trades = normalized.get("total_trades", 0)
+    oos_years = normalized.get("oos_years", 1.0)
+    scalping_timeframes = {"1m", "3m", "5m", "15m", "30m", "1h"}
+    
+    if timeframe in scalping_timeframes and oos_years > 0:
+        trades_per_year = total_trades / oos_years
+        if trades_per_year < SCALPING_MIN_TRADES_PER_YEAR:
+            warnings.append(
+                f"Low trade activity for {timeframe} timeframe: {trades_per_year:.0f} trades/year vs "
+                f"recommended {SCALPING_MIN_TRADES_PER_YEAR}+ trades/year for scalping/intraday strategies. "
+                f"This may indicate insufficient signal frequency."
+            )
+    
     return warnings
 
 

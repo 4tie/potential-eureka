@@ -589,9 +589,13 @@ async def _stage_delivery(
         stability_values = list((state.stability_scores or {}).values())
         robustness_score = sum(stability_values) / len(stability_values) if stability_values else 0.5
         wfo_pass_rate = None
+        latest_window_passed = None
         if state.wfo_windows:
             passed = len([w for w in state.wfo_windows if w.get("passed")])
             wfo_pass_rate = passed / len(state.wfo_windows) * 100 if state.wfo_windows else 0.5
+            # Check if the latest (last) window passed - this is the most recent window
+            if state.wfo_windows:
+                latest_window_passed = state.wfo_windows[-1].get("passed", True)
         target_pairs = max(1, policy.pair_target_count(state.trading_style, state.risk_profile))
         pair_consistency = min(100.0, len(state.selected_pairs or []) / target_pairs * 100.0) / 100.0
         
@@ -604,6 +608,7 @@ async def _stage_delivery(
             "oos_retention": metrics.get("oos_profit_retention", 0.5),
             "walk_forward_score": wfo_pass_rate / 100.0 if wfo_pass_rate else 0.5,
             "pair_consistency": pair_consistency,
+            "latest_window_passed": latest_window_passed,
         }
         
         # Compute score using scoring module
