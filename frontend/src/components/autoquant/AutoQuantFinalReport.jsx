@@ -8,7 +8,7 @@ import AutoQuantRobustnessBadge from "./AutoQuantRobustnessBadge";
 import AutoQuantEquityCurveChart from "./AutoQuantEquityCurveChart";
 import AutoQuantPerPairProfitChart from "./AutoQuantPerPairProfitChart";
 
-export default function AutoQuantFinalReport({ report, runId, strategy, expectedPairs, expectedTimeframe }) {
+export default function AutoQuantFinalReport({ report, runId, expectedPairs, expectedTimeframe }) {
   const risk = report?.risk || {};
   const oos = report?.oos_validation || {};
   const sanity = report?.sanity_backtest || {};

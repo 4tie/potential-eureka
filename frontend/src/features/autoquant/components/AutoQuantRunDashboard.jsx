@@ -17,6 +17,8 @@ import AutoQuantWfoWindowsTable from "../../../components/autoquant/AutoQuantWfo
 import AutoQuantRobustnessBadge from "../../../components/autoquant/AutoQuantRobustnessBadge";
 import AutoQuantTradeDistributionChart from "../../../components/autoquant/AutoQuantTradeDistributionChart";
 import AutoQuantFinalReport from "../../../components/autoquant/AutoQuantFinalReport";
+import AutoQuantPipelineCard from "../../../components/autoquant/AutoQuantPipelineCard";
+import AutoQuantFinalResultCard from "../../../components/autoquant/AutoQuantFinalResultCard";
 import ProfessionalChartsTab from "../../../components/ProfessionalChartsTab";
 import { formatElapsed, getEstimatedTimeRemaining, getProgressPercent, getRunStatusFlags, getRunStatusLabel } from "../viewModel";
 
@@ -582,6 +584,20 @@ export default function AutoQuantRunDashboard({
   const tradeDistribution =
     pipelineState?.stages?.[3]?.data?.trade_distribution || pipelineState?.stages?.[0]?.data?.trade_distribution;
 
+  // View mode state for pipeline display
+  const [viewMode, setViewMode] = useState("compact"); // 'compact' or 'detailed'
+
+  // Download file handler for final result card
+  const downloadFile = (filename) => {
+    const url = `${""}/api/auto-quant/download/${runId}/${filename}`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   return (
     <div className="space-y-4">
       <div className="card bg-base-200/50 border border-primary/30 neon-glow scan-effect">
@@ -657,9 +673,27 @@ export default function AutoQuantRunDashboard({
         </div>
       </div>
 
+      {/* View Mode Toggle */}
+      <div className="flex items-center justify-end gap-2">
+        <span className="text-[10px] text-base-content/50 uppercase tracking-wider">Pipeline View:</span>
+        <button
+          className={`btn btn-xs ${viewMode === "compact" ? "btn-primary" : "btn-ghost"}`}
+          onClick={() => setViewMode("compact")}
+        >
+          Compact
+        </button>
+        <button
+          className={`btn btn-xs ${viewMode === "detailed" ? "btn-primary" : "btn-ghost"}`}
+          onClick={() => setViewMode("detailed")}
+        >
+          Detailed
+        </button>
+      </div>
+
       <ApprovalReviewPanel pipelineState={pipelineState} onResume={onResume} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Pipeline Stages - Compact or Detailed View */}
         <div className="lg:col-span-1">
           <div className="card bg-base-200/50 border border-primary/30 h-full neon-glow">
             <div className="card-body p-4">
@@ -670,7 +704,19 @@ export default function AutoQuantRunDashboard({
                 meta={flags.isRunning && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
               />
               <DataHealingPanel dataHealingStatus={dataHealingStatus} pairStatusMap={pairStatusMap} />
-              <AutoQuantStageStepper stages={pipelineState.stages || []} nowMs={stageNowMs} />
+              {viewMode === "compact" ? (
+                <AutoQuantStageStepper stages={pipelineState.stages || []} nowMs={stageNowMs} />
+              ) : (
+                <div className="space-y-2 mt-3">
+                  {(pipelineState.stages || []).map((stage, idx) => (
+                    <AutoQuantPipelineCard
+                      key={stage.index || idx}
+                      stage={stage}
+                      isExpanded={stage.status === "running" || stage.status === "failed"}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -781,20 +827,25 @@ export default function AutoQuantRunDashboard({
       )}
 
       {flags.isCompleted && report && (
-        <div className="card bg-base-200 border border-base-300">
-          <div className="card-body p-5">
-            <h3 className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest mb-4">
-              Results &amp; Downloads
-            </h3>
-            <AutoQuantFinalReport 
-              report={report} 
-              runId={runId} 
-              strategy={pipelineState?.strategy || form.strategy} 
-              expectedPairs={form.pair_universe}
-              expectedTimeframe={form.timeframe}
-            />
-          </div>
-        </div>
+        <>
+          {viewMode === "detailed" ? (
+            <AutoQuantFinalResultCard report={report} onDownload={downloadFile} />
+          ) : (
+            <div className="card bg-base-200 border border-base-300">
+              <div className="card-body p-5">
+                <h3 className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest mb-4">
+                  Results &amp; Downloads
+                </h3>
+                <AutoQuantFinalReport 
+                  report={report} 
+                  runId={runId} 
+                  expectedPairs={form.pair_universe}
+                  expectedTimeframe={form.timeframe}
+                />
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {flags.isCompleted && !report && (
