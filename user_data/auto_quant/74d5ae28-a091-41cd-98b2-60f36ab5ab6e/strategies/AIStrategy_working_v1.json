@@ -1,0 +1,33 @@
+{
+  "strategy_name": "AIStrategy",
+  "params": {
+    "trailing": {
+      "trailing_stop": false,
+      "trailing_stop_positive": null,
+      "trailing_stop_positive_offset": 0.0,
+      "trailing_only_offset_is_reached": false
+    },
+    "max_open_trades": {
+      "max_open_trades": 3
+    },
+    "sell": {
+      "sell_ma_count": 12,
+      "sell_ma_gap": 68
+    },
+    "buy": {
+      "buy_ma_count": 10,
+      "buy_ma_gap": 15
+    },
+    "roi": {
+      "0": 0.096,
+      "12": 0.05,
+      "24": 0.028,
+      "106": 0
+    },
+    "stoploss": {
+      "stoploss": -0.338
+    }
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2026-06-23 11:59:07.953424+00:00"
+}

@@ -155,8 +155,10 @@ export const api = {
      * @returns {WebSocket}
      */
     connectWebSocket(runId) {
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      return new WebSocket(`${protocol}//${window.location.host}${this.baseURL}/ws/${runId}`);
+      // Use relative path to leverage Vite proxy in dev (ws: true in proxy config)
+      // The proxy will upgrade the connection to WebSocket and forward to backend
+      const wsUrl = `${this.baseURL}/ws/${runId}`;
+      return new WebSocket(wsUrl);
     },
   },
 

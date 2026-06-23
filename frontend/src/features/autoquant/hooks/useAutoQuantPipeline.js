@@ -285,11 +285,11 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     ws.onmessage = handleWsMessage;
 
     ws.onerror = (err) => {
-      console.error("WebSocket error:", err);
+      console.debug("WebSocket error:", err);
       setIsConnecting(false);
     };
 
-    ws.onclose = (event = {}) => {
+    ws.onclose = async (event = {}) => {
       setIsConnecting(false);
       if (wsRef.current === ws) {
         wsRef.current = null;
@@ -299,9 +299,27 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
       }
 
       const currentStatus = latestStatusRef.current;
-      const shouldReconnect =
-        currentStatus === "running" &&
-        reconnectAttemptsRef.current < maxReconnectAttempts;
+
+      // Do not reconnect if run is in terminal state
+      if (isTerminalStatus(currentStatus)) {
+        console.debug(`AutoQuant WebSocket closed; run is ${currentStatus}, not reconnecting`);
+        return;
+      }
+
+      // Before reconnecting, sync status to check if run still exists
+      const statusData = await syncStatus(targetRunId);
+      if (!statusData) {
+        console.debug(`AutoQuant WebSocket closed; run not found, not reconnecting`);
+        return;
+      }
+
+      // Check if run is terminal after sync
+      if (isTerminalStatus(statusData.status)) {
+        console.debug(`AutoQuant WebSocket closed; run is ${statusData.status}, not reconnecting`);
+        return;
+      }
+
+      const shouldReconnect = reconnectAttemptsRef.current < maxReconnectAttempts;
 
       if (shouldReconnect) {
         reconnectAttemptsRef.current += 1;
@@ -311,9 +329,11 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
           reconnectTimeoutRef.current = null;
           connectWsRef.current?.(targetRunId);
         }, delay);
+      } else {
+        console.debug(`AutoQuant WebSocket closed; max reconnect attempts reached`);
       }
     };
-  }, [runId, clearReconnectTimeout, handleWsMessage]);
+  }, [runId, clearReconnectTimeout, handleWsMessage, syncStatus]);
 
   const startElapsedTimer = useCallback(() => {
     clearElapsedTimer();

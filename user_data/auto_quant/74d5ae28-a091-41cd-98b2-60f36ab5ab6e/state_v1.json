@@ -11,16 +11,670 @@
   "freqtrade_path": "freqtrade",
   "user_data_dir": "/home/mohs/Desktop/fictional-octo-guide/user_data",
   "status": "running",
-  "current_stage": 0,
+  "current_stage": 3,
   "stages": [
     {
       "index": 1,
       "name": "Pre-Flight Filtering",
-      "status": "pending",
-      "message": "",
-      "data": {},
-      "started_at": null,
-      "duration_s": null
+      "status": "passed",
+      "message": "Pre-flight filtering complete \u2014 3 pairs approved.",
+      "data": {
+        "profit_total": -0.5504961112,
+        "profit_total_abs": -55.04961112,
+        "profit_mean_pct": -0.1501348710121082,
+        "max_drawdown_account": 0.5668693145000002,
+        "total_trades": 1452,
+        "wins": 428,
+        "losses": 1024,
+        "draws": 0,
+        "win_rate": 0.0,
+        "profit_factor": 0.7789319596679468,
+        "sharpe_ratio": 0.0,
+        "calmar_ratio": 0.0,
+        "sortino_ratio": 0.0,
+        "stake_currency": "USDT",
+        "per_pair": [
+          {
+            "key": "GMX/USDT",
+            "profit_total": 0.06917669090000002,
+            "profit_mean_pct": 0.9413421403009558,
+            "trades": 36,
+            "wins": 9,
+            "losses": 27,
+            "profit_factor": 1.94791449335946
+          },
+          {
+            "key": "FIL/USDT",
+            "profit_total": 0.0662130224,
+            "profit_mean_pct": 2.147752089581171,
+            "trades": 19,
+            "wins": 4,
+            "losses": 15,
+            "profit_factor": 2.941267662043044
+          },
+          {
+            "key": "ARB/USDT",
+            "profit_total": 0.05183284909999999,
+            "profit_mean_pct": 0.9407345416346083,
+            "trades": 21,
+            "wins": 10,
+            "losses": 11,
+            "profit_factor": 3.410268362747593
+          },
+          {
+            "key": "UNI/USDT",
+            "profit_total": 0.0425789894,
+            "profit_mean_pct": 0.8933622396118892,
+            "trades": 27,
+            "wins": 10,
+            "losses": 17,
+            "profit_factor": 2.3022763036336054
+          },
+          {
+            "key": "PENDLE/USDT",
+            "profit_total": 0.029756742999999995,
+            "profit_mean_pct": 0.3367138923544338,
+            "trades": 41,
+            "wins": 20,
+            "losses": 21,
+            "profit_factor": 1.5262963686280435
+          },
+          {
+            "key": "MANA/USDT",
+            "profit_total": 0.025351613,
+            "profit_mean_pct": 0.6301087960070935,
+            "trades": 17,
+            "wins": 8,
+            "losses": 9,
+            "profit_factor": 2.4989243315459335
+          },
+          {
+            "key": "NEAR/USDT",
+            "profit_total": 0.024749886999999998,
+            "profit_mean_pct": 0.39868892173611703,
+            "trades": 28,
+            "wins": 9,
+            "losses": 19,
+            "profit_factor": 1.7796404917950575
+          },
+          {
+            "key": "PEPE/USDT",
+            "profit_total": 0.016402642,
+            "profit_mean_pct": 0.09774311180793843,
+            "trades": 36,
+            "wins": 10,
+            "losses": 26,
+            "profit_factor": 1.2121793476988463
+          },
+          {
+            "key": "ENJ/USDT",
+            "profit_total": 0.006561697000000002,
+            "profit_mean_pct": 0.2535469744455228,
+            "trades": 16,
+            "wins": 4,
+            "losses": 12,
+            "profit_factor": 1.4759686360049353
+          },
+          {
+            "key": "ROSE/USDT",
+            "profit_total": 0.0031263394000000024,
+            "profit_mean_pct": 0.08739228762470952,
+            "trades": 42,
+            "wins": 18,
+            "losses": 24,
+            "profit_factor": 1.052343331771525
+          },
+          {
+            "key": "GRT/USDT",
+            "profit_total": 0.002654927599999999,
+            "profit_mean_pct": 0.12342136457540909,
+            "trades": 22,
+            "wins": 7,
+            "losses": 15,
+            "profit_factor": 1.0798816592705316
+          },
+          {
+            "key": "AXS/USDT",
+            "profit_total": 0.0009844238000000002,
+            "profit_mean_pct": 0.01798531555201322,
+            "trades": 19,
+            "wins": 6,
+            "losses": 13,
+            "profit_factor": 1.058344213934265
+          },
+          {
+            "key": "ADA/USDT",
+            "profit_total": -0.0034552016999999996,
+            "profit_mean_pct": -0.1209239680926322,
+            "trades": 28,
+            "wins": 9,
+            "losses": 19,
+            "profit_factor": 0.9097618085078564
+          },
+          {
+            "key": "YFI/USDT",
+            "profit_total": -0.003589971700000002,
+            "profit_mean_pct": -0.002133462855847575,
+            "trades": 29,
+            "wins": 12,
+            "losses": 17,
+            "profit_factor": 0.8814220287607555
+          },
+          {
+            "key": "AAVE/USDT",
+            "profit_total": -0.0063742919000000006,
+            "profit_mean_pct": -0.17124108008705005,
+            "trades": 31,
+            "wins": 13,
+            "losses": 18,
+            "profit_factor": 0.8465425613313354
+          },
+          {
+            "key": "SUI/USDT",
+            "profit_total": -0.008353014000000002,
+            "profit_mean_pct": -0.10797906683646856,
+            "trades": 25,
+            "wins": 9,
+            "losses": 16,
+            "profit_factor": 0.7945013570747954
+          },
+          {
+            "key": "DOT/USDT",
+            "profit_total": -0.010668489399999998,
+            "profit_mean_pct": -0.08314050263228956,
+            "trades": 27,
+            "wins": 10,
+            "losses": 17,
+            "profit_factor": 0.7253406795238218
+          },
+          {
+            "key": "SHIB/USDT",
+            "profit_total": -0.012512112899999999,
+            "profit_mean_pct": -0.5068356330257495,
+            "trades": 16,
+            "wins": 4,
+            "losses": 12,
+            "profit_factor": 0.4669445508387163
+          },
+          {
+            "key": "LDO/USDT",
+            "profit_total": -0.014019488599999998,
+            "profit_mean_pct": -0.19699594620936506,
+            "trades": 31,
+            "wins": 11,
+            "losses": 20,
+            "profit_factor": 0.7000244685828947
+          },
+          {
+            "key": "ETH/USDT",
+            "profit_total": -0.016878567500000004,
+            "profit_mean_pct": -0.13863638908742817,
+            "trades": 52,
+            "wins": 16,
+            "losses": 36,
+            "profit_factor": 0.727027780662316
+          },
+          {
+            "key": "ETC/USDT",
+            "profit_total": -0.017078574,
+            "profit_mean_pct": -0.2830593696080934,
+            "trades": 26,
+            "wins": 6,
+            "losses": 20,
+            "profit_factor": 0.5225203969730075
+          },
+          {
+            "key": "BNB/USDT",
+            "profit_total": -0.0178901737,
+            "profit_mean_pct": -0.062322955526548485,
+            "trades": 67,
+            "wins": 22,
+            "losses": 45,
+            "profit_factor": 0.7552381452740757
+          },
+          {
+            "key": "SNX/USDT",
+            "profit_total": -0.021034946,
+            "profit_mean_pct": -0.29433671435171793,
+            "trades": 36,
+            "wins": 9,
+            "losses": 27,
+            "profit_factor": 0.8002727672372664
+          },
+          {
+            "key": "XRP/USDT",
+            "profit_total": -0.0219237885,
+            "profit_mean_pct": -0.14734293777751226,
+            "trades": 57,
+            "wins": 19,
+            "losses": 38,
+            "profit_factor": 0.7193444603208177
+          },
+          {
+            "key": "VET/USDT",
+            "profit_total": -0.0227652635,
+            "profit_mean_pct": -0.4640163522074532,
+            "trades": 21,
+            "wins": 6,
+            "losses": 15,
+            "profit_factor": 0.30879951189938804
+          },
+          {
+            "key": "OP/USDT",
+            "profit_total": -0.023263460700000006,
+            "profit_mean_pct": -0.6239318186109502,
+            "trades": 20,
+            "wins": 4,
+            "losses": 16,
+            "profit_factor": 0.3539828955231165
+          },
+          {
+            "key": "ALGO/USDT",
+            "profit_total": -0.024301062,
+            "profit_mean_pct": -0.2290907176835047,
+            "trades": 31,
+            "wins": 12,
+            "losses": 19,
+            "profit_factor": 0.5508082187412922
+          },
+          {
+            "key": "BTC/USDT",
+            "profit_total": -0.0263207781,
+            "profit_mean_pct": -0.22506078956875303,
+            "trades": 50,
+            "wins": 10,
+            "losses": 40,
+            "profit_factor": 0.4281869710934726
+          },
+          {
+            "key": "ATOM/USDT",
+            "profit_total": -0.028629447899999994,
+            "profit_mean_pct": -0.37425192614667446,
+            "trades": 32,
+            "wins": 2,
+            "losses": 30,
+            "profit_factor": 0.44136173331778017
+          },
+          {
+            "key": "LINK/USDT",
+            "profit_total": -0.028834193999999997,
+            "profit_mean_pct": -0.6456072637353004,
+            "trades": 20,
+            "wins": 3,
+            "losses": 17,
+            "profit_factor": 0.39418094903729123
+          },
+          {
+            "key": "ICP/USDT",
+            "profit_total": -0.0382517486,
+            "profit_mean_pct": -0.543505392384298,
+            "trades": 33,
+            "wins": 11,
+            "losses": 22,
+            "profit_factor": 0.5194009368438964
+          },
+          {
+            "key": "AVAX/USDT",
+            "profit_total": -0.039269226000000004,
+            "profit_mean_pct": -0.323678609285955,
+            "trades": 45,
+            "wins": 11,
+            "losses": 34,
+            "profit_factor": 0.5809717428001883
+          },
+          {
+            "key": "IMX/USDT",
+            "profit_total": -0.0420149742,
+            "profit_mean_pct": -0.5711253769771804,
+            "trades": 36,
+            "wins": 10,
+            "losses": 26,
+            "profit_factor": 0.5527359030671919
+          },
+          {
+            "key": "SOL/USDT",
+            "profit_total": -0.0433789435,
+            "profit_mean_pct": -0.4775725546664878,
+            "trades": 47,
+            "wins": 12,
+            "losses": 35,
+            "profit_factor": 0.3733282604142509
+          },
+          {
+            "key": "CRV/USDT",
+            "profit_total": -0.044402542600000004,
+            "profit_mean_pct": -0.4528568133716078,
+            "trades": 42,
+            "wins": 14,
+            "losses": 28,
+            "profit_factor": 0.5405942867846101
+          },
+          {
+            "key": "GLM/USDT",
+            "profit_total": -0.0483794801,
+            "profit_mean_pct": -0.31055258557782406,
+            "trades": 68,
+            "wins": 18,
+            "losses": 50,
+            "profit_factor": 0.71298272397398
+          },
+          {
+            "key": "INJ/USDT",
+            "profit_total": -0.04990987300000001,
+            "profit_mean_pct": -0.8802794410132297,
+            "trades": 29,
+            "wins": 6,
+            "losses": 23,
+            "profit_factor": 0.3849296132657772
+          },
+          {
+            "key": "QNT/USDT",
+            "profit_total": -0.05805053690000001,
+            "profit_mean_pct": -0.24908357297346437,
+            "trades": 84,
+            "wins": 25,
+            "losses": 59,
+            "profit_factor": 0.5953028178543437
+          },
+          {
+            "key": "DOGE/USDT",
+            "profit_total": -0.0611253362,
+            "profit_mean_pct": -0.7888378152681804,
+            "trades": 30,
+            "wins": 5,
+            "losses": 25,
+            "profit_factor": 0.09205174272182211
+          },
+          {
+            "key": "LTC/USDT",
+            "profit_total": -0.0750719861,
+            "profit_mean_pct": -0.600728715891317,
+            "trades": 49,
+            "wins": 9,
+            "losses": 40,
+            "profit_factor": 0.2501184331033968
+          },
+          {
+            "key": "KAVA/USDT",
+            "profit_total": -0.0821384625,
+            "profit_mean_pct": -0.609577990123128,
+            "trades": 66,
+            "wins": 15,
+            "losses": 51,
+            "profit_factor": 0.44201689852680914
+          }
+        ],
+        "passing_pairs": [
+          "ARB/USDT",
+          "FIL/USDT",
+          "MANA/USDT"
+        ],
+        "filtered_pairs": [
+          {
+            "key": "GMX/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 36,
+            "profit_factor": 1.94791449335946
+          },
+          {
+            "key": "FIL/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 19,
+            "profit_factor": 2.941267662043044
+          },
+          {
+            "key": "ARB/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 21,
+            "profit_factor": 3.410268362747593
+          },
+          {
+            "key": "UNI/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 27,
+            "profit_factor": 2.3022763036336054
+          },
+          {
+            "key": "PENDLE/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 41,
+            "profit_factor": 1.5262963686280435
+          },
+          {
+            "key": "MANA/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 17,
+            "profit_factor": 2.4989243315459335
+          },
+          {
+            "key": "NEAR/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 28,
+            "profit_factor": 1.7796404917950575
+          },
+          {
+            "key": "PEPE/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 36,
+            "profit_factor": 1.2121793476988463
+          },
+          {
+            "key": "ENJ/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 16,
+            "profit_factor": 1.4759686360049353
+          },
+          {
+            "key": "ROSE/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 42,
+            "profit_factor": 1.052343331771525
+          },
+          {
+            "key": "GRT/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 22,
+            "profit_factor": 1.0798816592705316
+          },
+          {
+            "key": "AXS/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 19,
+            "profit_factor": 1.058344213934265
+          },
+          {
+            "key": "ADA/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 28,
+            "profit_factor": 0.9097618085078564
+          },
+          {
+            "key": "YFI/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 29,
+            "profit_factor": 0.8814220287607555
+          },
+          {
+            "key": "AAVE/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 31,
+            "profit_factor": 0.8465425613313354
+          },
+          {
+            "key": "SUI/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 25,
+            "profit_factor": 0.7945013570747954
+          },
+          {
+            "key": "DOT/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 27,
+            "profit_factor": 0.7253406795238218
+          },
+          {
+            "key": "SHIB/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 16,
+            "profit_factor": 0.4669445508387163
+          },
+          {
+            "key": "LDO/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 31,
+            "profit_factor": 0.7000244685828947
+          },
+          {
+            "key": "ETH/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 52,
+            "profit_factor": 0.727027780662316
+          },
+          {
+            "key": "ETC/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 26,
+            "profit_factor": 0.5225203969730075
+          },
+          {
+            "key": "BNB/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 67,
+            "profit_factor": 0.7552381452740757
+          },
+          {
+            "key": "SNX/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 36,
+            "profit_factor": 0.8002727672372664
+          },
+          {
+            "key": "XRP/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 57,
+            "profit_factor": 0.7193444603208177
+          },
+          {
+            "key": "VET/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 21,
+            "profit_factor": 0.30879951189938804
+          },
+          {
+            "key": "OP/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 20,
+            "profit_factor": 0.3539828955231165
+          },
+          {
+            "key": "ALGO/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 31,
+            "profit_factor": 0.5508082187412922
+          },
+          {
+            "key": "BTC/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 50,
+            "profit_factor": 0.4281869710934726
+          },
+          {
+            "key": "ATOM/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 32,
+            "profit_factor": 0.44136173331778017
+          },
+          {
+            "key": "LINK/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 20,
+            "profit_factor": 0.39418094903729123
+          },
+          {
+            "key": "ICP/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 33,
+            "profit_factor": 0.5194009368438964
+          },
+          {
+            "key": "AVAX/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 45,
+            "profit_factor": 0.5809717428001883
+          },
+          {
+            "key": "IMX/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 36,
+            "profit_factor": 0.5527359030671919
+          },
+          {
+            "key": "SOL/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 47,
+            "profit_factor": 0.3733282604142509
+          },
+          {
+            "key": "CRV/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 42,
+            "profit_factor": 0.5405942867846101
+          },
+          {
+            "key": "GLM/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 68,
+            "profit_factor": 0.71298272397398
+          },
+          {
+            "key": "INJ/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 29,
+            "profit_factor": 0.3849296132657772
+          },
+          {
+            "key": "QNT/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 84,
+            "profit_factor": 0.5953028178543437
+          },
+          {
+            "key": "DOGE/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 30,
+            "profit_factor": 0.09205174272182211
+          },
+          {
+            "key": "LTC/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 49,
+            "profit_factor": 0.2501184331033968
+          },
+          {
+            "key": "KAVA/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 66,
+            "profit_factor": 0.44201689852680914
+          }
+        ],
+        "baseline_attempts": 1,
+        "discovery_gates": {
+          "min_profit_factor": 1.05,
+          "max_drawdown": 0.5,
+          "min_trades": 500,
+          "min_expectancy": 0.0001,
+          "min_win_rate": 0.4
+        },
+        "validation_notes": [
+          "Discovery found 0 liquid pairs, below the target of 25. Validation will continue with available pairs.",
+          "validation: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
+          "Discovery found 3 candidate pair(s), below the 3 pair target; validation will continue with notes.",
+          "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
+          "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution."
+        ]
+      },
+      "started_at": "2026-06-23T11:50:42.550114+00:00",
+      "duration_s": 379.0
     },
     {
       "index": 2,
@@ -28,7 +682,7 @@
       "status": "pending",
       "message": "",
       "data": {},
-      "started_at": null,
+      "started_at": "2026-06-23T11:56:26.340397+00:00",
       "duration_s": null
     },
     {
@@ -37,8 +691,8 @@
       "status": "pending",
       "message": "",
       "data": {},
-      "started_at": null,
-      "duration_s": null
+      "started_at": "2026-06-23T11:59:57.095130+00:00",
+      "duration_s": 275.2
     },
     {
       "index": 4,
@@ -83,14 +737,56 @@
     "stoploss",
     "roi"
   ],
-  "hyperopt_epochs": 100,
+  "hyperopt_epochs": 400,
   "hyperopt_workers": 4,
   "min_oos_profit": 0.0,
-  "retry_count": 0,
+  "retry_count": 2,
   "max_retries": 3,
-  "retry_history": [],
+  "retry_history": [
+    {
+      "attempt": 0,
+      "label": "Initial attempt",
+      "loss": "ProfitLockinHyperOptLoss",
+      "spaces": [
+        "buy",
+        "stoploss",
+        "roi"
+      ],
+      "epochs": 100,
+      "profit": -0.311559215,
+      "drawdown": null,
+      "trades": null,
+      "reason": "FAIL_NEGATIVE_BASELINE",
+      "passed": false
+    },
+    {
+      "attempt": 1,
+      "label": "Retry 1",
+      "loss": "ProfitLockinHyperOptLoss",
+      "spaces": [
+        "buy",
+        "stoploss",
+        "roi"
+      ],
+      "epochs": 200,
+      "profit": -0.3420357326,
+      "drawdown": null,
+      "trades": null,
+      "reason": "FAIL_NEGATIVE_BASELINE",
+      "passed": false
+    }
+  ],
   "generalization_failure": null,
-  "sensitivity": null,
+  "sensitivity": {
+    "passed": false,
+    "score": "Low",
+    "label": "Negative Baseline",
+    "p_best": -0.3420357326,
+    "p_minus": -0.3420357326,
+    "p_plus": -0.3420357326,
+    "param": "stoploss",
+    "failure_reason": "FAIL_NEGATIVE_BASELINE"
+  },
   "wfo_enabled": false,
   "wfo_is_months": 3,
   "wfo_oos_months": 1,
@@ -107,7 +803,6 @@
     "DOGE/USDT",
     "AVAX/USDT",
     "DOT/USDT",
-    "MATIC/USDT",
     "LINK/USDT",
     "UNI/USDT",
     "ATOM/USDT",
@@ -122,27 +817,19 @@
     "ARB/USDT",
     "PEPE/USDT",
     "SHIB/USDT",
-    "RNDR/USDT",
     "INJ/USDT",
-    "APT/USDT",
     "QNT/USDT",
     "AAVE/USDT",
-    "MKR/USDT",
     "CRV/USDT",
-    "COMP/USDT",
     "YFI/USDT",
     "SNX/USDT",
     "KAVA/USDT",
     "ROSE/USDT",
-    "FTM/USDT",
     "GLM/USDT",
     "GRT/USDT",
     "LDO/USDT",
-    "FXS/USDT",
     "PENDLE/USDT",
     "GMX/USDT",
-    "GALA/USDT",
-    "SAND/USDT",
     "MANA/USDT",
     "AXS/USDT",
     "ENJ/USDT",
@@ -150,7 +837,17 @@
     "SUI/USDT"
   ],
   "winning_pairs": [],
-  "selected_pairs": [],
+  "selected_pairs": [
+    {
+      "key": "ARB/USDT"
+    },
+    {
+      "key": "FIL/USDT"
+    },
+    {
+      "key": "MANA/USDT"
+    }
+  ],
   "excluded_time_windows": {},
   "ai_enabled": true,
   "ai_suggestions": {},
@@ -161,7 +858,11 @@
   "phase1_heal_attempts": 0,
   "stability_scores": {},
   "portfolio_weights": {},
-  "baseline_trade_counts": {},
+  "baseline_trade_counts": {
+    "FIL/USDT": 77,
+    "ARB/USDT": 81,
+    "MANA/USDT": 75
+  },
   "max_open_trades": 5,
   "strategy_source": "existing",
   "trading_style": "scalping",
@@ -241,7 +942,11 @@
     ]
   },
   "validation_notes": [
-    "Discovery found 0 liquid pairs, below the target of 25. Validation will continue with available pairs."
+    "Discovery found 0 liquid pairs, below the target of 25. Validation will continue with available pairs.",
+    "validation: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
+    "Discovery found 3 candidate pair(s), below the 3 pair target; validation will continue with notes.",
+    "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution.",
+    "hyperopt: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20250501-20260101, OOS=20260101-20260531. This may lead to overfitting. Results should be interpreted with caution."
   ],
   "run_config_snapshot": {
     "schema_version": "run_config_snapshot_v1",
@@ -371,7 +1076,7 @@
   "validation_status": "Candidate",
   "readiness_label": "Candidate",
   "score_explanation": [],
-  "progress_percent": 0,
+  "progress_percent": 50,
   "eta_seconds": null,
   "progress_counters": {
     "strategies_generated": 0,
@@ -386,6 +1091,61 @@
       "strategy_name": "AIStrategy",
       "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy.py",
       "source": "/home/mohs/Desktop/fictional-octo-guide/user_data/strategies/AIStrategy.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensBest",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensBest_sensitivity_v1.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensBest",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensBest.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensPlus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensPlus_sensitivity_v1.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensPlus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensPlus.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensMinus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensMinus_sensitivity_v1.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensMinus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensMinus.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_HardMutation",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_HardMutation_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_HardMutation",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_HardMutation.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensBest",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensBest_sensitivity_v2.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensPlus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensPlus_sensitivity_v2.py"
+    },
+    {
+      "role": "sensitivity",
+      "strategy_name": "AIStrategy_SensMinus",
+      "path": "/home/mohs/Desktop/fictional-octo-guide/user_data/auto_quant/74d5ae28-a091-41cd-98b2-60f36ab5ab6e/strategies/AIStrategy_SensMinus_sensitivity_v2.py"
     }
   ],
   "artifact_versions": {
@@ -397,5 +1157,54 @@
     "state": "state.json"
   },
   "user_approved_pairs": [],
-  "portfolio_baseline_result": {}
+  "portfolio_baseline_result": {
+    "portfolio_summary": {
+      "profit_total": 0.179986797,
+      "profit_total_abs": 17.9986797,
+      "profit_mean_pct": 0.37821680311647016,
+      "max_drawdown_account": 0.05306206673582207,
+      "total_trades": 233,
+      "wins": 82,
+      "losses": 151,
+      "draws": 0,
+      "win_rate": 0.0,
+      "profit_factor": 1.5159975703848267,
+      "sharpe_ratio": 0.0,
+      "calmar_ratio": 0.0,
+      "sortino_ratio": 0.0,
+      "stake_currency": "USDT"
+    },
+    "per_pair": [
+      {
+        "key": "FIL/USDT",
+        "profit_total": 0.0891114323,
+        "profit_mean_pct": 0.5660997633930237,
+        "trades": 77,
+        "wins": 23,
+        "losses": 54,
+        "profit_factor": 1.6560515673304455
+      },
+      {
+        "key": "ARB/USDT",
+        "profit_total": 0.06544898269999999,
+        "profit_mean_pct": 0.39654359155650903,
+        "trades": 81,
+        "wins": 32,
+        "losses": 49,
+        "profit_factor": 1.5748827491719855
+      },
+      {
+        "key": "MANA/USDT",
+        "profit_total": 0.025426381999999997,
+        "profit_mean_pct": 0.16553069905063322,
+        "trades": 75,
+        "wins": 27,
+        "losses": 48,
+        "profit_factor": 1.256480294492169
+      }
+    ],
+    "portfolio_profit": 17.9986797,
+    "portfolio_max_dd": 0.05306206673582207,
+    "portfolio_trades": 233
+  }
 }

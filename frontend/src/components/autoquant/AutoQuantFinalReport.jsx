@@ -287,21 +287,29 @@ export default function AutoQuantFinalReport({ report, runId, expectedPairs, exp
                 </tr>
               </thead>
               <tbody>
-                {report.retry_history.map((retry, idx) => (
-                  <tr key={idx}>
-                    <td>{retry.attempt ?? idx + 1}</td>
-                    <td className="text-xs max-w-xs truncate">{retry.reason || '-'}</td>
-                    <td>{retry.before?.loss ?? retry.after?.loss ?? '-'}</td>
-                    <td>{retry.before?.spaces ?? retry.after?.spaces ?? '-'}</td>
-                    <td>{retry.before?.epochs ?? retry.after?.epochs ?? '-'}</td>
-                    <td>{retry.metrics_after?.profit ?? retry.metrics_before?.profit ?? '-'}</td>
-                    <td>
-                      <span className={`badge badge-xs ${retry.status === 'improved' || retry.accepted ? 'badge-success' : 'badge-warning'} badge-outline`}>
-                        {retry.status === 'improved' || retry.accepted ? 'Yes' : 'No'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {report.retry_history.map((retry, idx) => {
+                  const attemptLabel = retry.label ? `${retry.attempt ?? idx + 1} / ${retry.label}` : (retry.attempt ?? idx + 1);
+                  const loss = retry.loss ?? retry.before?.loss ?? retry.after?.loss ?? '-';
+                  const spaces = retry.spaces ?? retry.before?.spaces ?? retry.after?.spaces ?? '-';
+                  const epochs = retry.epochs ?? retry.before?.epochs ?? retry.after?.epochs ?? '-';
+                  const profit = retry.profit ?? retry.metrics_after?.profit ?? retry.metrics_before?.profit ?? '-';
+                  const passed = retry.passed !== undefined ? retry.passed : (retry.status === 'improved' || retry.accepted);
+                  return (
+                    <tr key={idx}>
+                      <td>{attemptLabel}</td>
+                      <td className="text-xs max-w-xs truncate">{retry.reason || '-'}</td>
+                      <td>{loss}</td>
+                      <td>{spaces}</td>
+                      <td>{epochs}</td>
+                      <td>{profit}</td>
+                      <td>
+                        <span className={`badge badge-xs ${passed ? 'badge-success' : 'badge-warning'} badge-outline`}>
+                          {passed ? 'Yes' : 'No'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
