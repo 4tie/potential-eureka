@@ -15,6 +15,7 @@ from backend.services.auto_quant.pipeline_modules import config as _config
 from backend.services.auto_quant.pipeline_modules import helpers as _helpers
 from backend.services.auto_quant.pipeline_modules import logging as _logging
 from backend.services.auto_quant.pipeline_modules import orchestrator as _orchestrator
+from backend.services.auto_quant.pipeline_modules import stage_runtime as _stage_runtime
 from backend.services.auto_quant.pipeline_modules import stages_assessment as _assessment
 from backend.services.auto_quant.pipeline_modules import stages_optimization as _optimization
 from backend.services.auto_quant.pipeline_modules import stages_validation as _validation
@@ -54,10 +55,10 @@ _read_latest_freqtrade_backtest = _helpers._read_latest_freqtrade_backtest
 _extract_backtest_summary = _helpers._extract_backtest_summary
 _extract_trade_count = _helpers._extract_trade_count
 _extract_per_pair_results = _helpers._extract_per_pair_results
-_start_stage = _helpers._start_stage
-_pass_stage = _helpers._pass_stage
-_fail_stage = _helpers._fail_stage
-_emit = _helpers._emit
+_start_stage = _stage_runtime._start_stage
+_pass_stage = _stage_runtime._pass_stage
+_fail_stage = _stage_runtime._fail_stage
+_emit = _stage_runtime._emit
 
 _save_state_to_disk = _state._save_state_to_disk
 _state_snapshot = _state._state_snapshot
@@ -93,6 +94,11 @@ def _sync_facade_patches() -> None:
     _helpers._pass_stage = _pass_stage
     _helpers._fail_stage = _fail_stage
     _helpers._emit = _emit
+
+    _orchestrator._run_subprocess = _run_subprocess
+    _orchestrator._pass_stage = _pass_stage
+    _orchestrator._fail_stage = _fail_stage
+    _orchestrator._emit = _emit
 
     for module in (_optimization, _validation, _assessment):
         if hasattr(module, "_run_subprocess"):
