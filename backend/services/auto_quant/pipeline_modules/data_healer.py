@@ -411,6 +411,10 @@ async def _stage_data_healing(
     surviving_pairs = []
     evicted_pairs = []
     
+    # Parse timerange once for use in gap boundary checks
+    start_date, end_date = _parse_timerange(timerange)
+    tf_minutes = _timeframe_to_minutes(timeframe)
+
     for pair in pairs_to_heal:
         if _cancelled(run_id):
             raise _Cancelled()
@@ -442,6 +446,41 @@ async def _stage_data_healing(
                   f"Data_Healer | {pair}: data complete ({candles_before} candles)")
             continue
         
+        # Check if gap is only at start boundary (warmup region) before attempting download
+        if _is_only_start_boundary_gap(gap_check, start_date, end_date):
+            # Gaps are only in the warmup region — exchange has no earlier data.
+            # Skip download and accept with partial warmup.
+            earliest = gap_check["earliest_available"]
+            if earliest is not None and earliest < start_date:
+                warmup_candles_available = int(
+                    (start_date - earliest).total_seconds() / 60 / tf_minutes
+                )
+            else:
+                warmup_candles_available = 0
+            warmup_coverage = f"{warmup_candles_available}/{warmup_candles} candles"
+            exchange_start_str = (
+                earliest.strftime("%Y-%m-%d") if earliest is not None else "unknown"
+            )
+            surviving_pairs.append(pair)
+            _emit(
+                run_id, 0, "running",
+                f"⚠ {pair}: accepted with partial warmup ({warmup_coverage} — exchange data begins {exchange_start_str})",
+                0,
+                {
+                    "type": "data_pair_status",
+                    "pair": pair,
+                    "status": "healed_partial_warmup",
+                    "reason": "start_boundary_gap_only",
+                    "candles_before": candles_before,
+                    "candles_after": gap_check["available_candles"],
+                    "warmup_coverage": warmup_coverage,
+                }
+            )
+            _rlog(run_id, 0, logging.WARNING,
+                  f"Data_Healer | {pair}: accepted with partial warmup "
+                  f"({warmup_coverage} — exchange data begins {exchange_start_str})")
+            continue
+
         # Data has gaps - attempt download
         _emit(
             run_id, 0, "running",
@@ -460,8 +499,6 @@ async def _stage_data_healing(
               f"Data_Healer | {pair}: gaps detected ({gap_check['reason']}), downloading...")
         
         # Calculate extended timerange for download (include warm-up)
-        start_date, end_date = _parse_timerange(timerange)
-        tf_minutes = _timeframe_to_minutes(timeframe)
         warmup_delta = timedelta(minutes=tf_minutes * warmup_candles)
         download_start = (start_date - warmup_delta).strftime("%Y%m%d")
         download_end = end_date.strftime("%Y%m%d")
