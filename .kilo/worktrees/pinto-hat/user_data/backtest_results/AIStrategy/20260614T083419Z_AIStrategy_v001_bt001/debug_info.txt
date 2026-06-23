@@ -1,4 +1,0 @@
-Command: freqtrade backtesting --user-data-dir /home/mohs/Desktop/rgr/user_data --config /home/mohs/Desktop/rgr/user_data/config.json --strategy-path /home/mohs/Desktop/rgr/user_data/backtest_results/AIStrategy/20260614T083419Z_AIStrategy_v001_bt001 --strategy AIStrategy --timerange 20250614-20260614 --timeframe 5m --dry-run-wallet 100.0 --max-open-trades 2 --export trades --export-filename /home/mohs/Desktop/rgr/user_data/backtest_results/AIStrategy/20260614T083419Z_AIStrategy_v001_bt001/raw_result.json --pairs ETH/USDT ADA/USDT
-Pairs: ['ETH/USDT', 'ADA/USDT']
-Strategy: AIStrategy
-Version ID: v001

@@ -1,2 +1,0 @@
-- [AI Removal Sweep](ai-removal.md) — all AI/LLM functionality stripped from Strategy Lab; key decisions about what moved where.
-- [Optimizer Restoration](optimizer-restoration.md) — optimizer backend was deleted then restored from git; key wiring points and the set_log_callback fix.

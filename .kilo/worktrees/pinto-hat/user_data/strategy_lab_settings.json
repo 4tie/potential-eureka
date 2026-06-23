@@ -1,9 +1,0 @@
-{
-  "freqtrade_executable_path": "freqtrade",
-  "strategies_directory_path": "/home/runner/workspace/user_data/strategies",
-  "user_data_directory_path": "/home/runner/workspace/user_data",
-  "default_config_file_path": "/home/runner/workspace/user_data/config.json",
-  "ollama_api_url": "http://localhost:11434",
-  "ollama_model": "",
-  "network_mode": "local"
-}

@@ -1,9 +1,0 @@
-{
-  "version": "readiness_labels_v1",
-  "labels": [
-    {"min_score": 85, "status": "Forward Test Ready", "readiness": "Live Candidate"},
-    {"min_score": 70, "status": "Validated", "readiness": "Dry Run Recommended"},
-    {"min_score": 50, "status": "Candidate", "readiness": "Candidate"},
-    {"min_score": 0, "status": "Rejected", "readiness": "Not Ready"}
-  ]
-}

@@ -1,4 +1,0 @@
-Command: freqtrade backtesting --user-data-dir /home/runner/workspace/user_data --config /home/runner/workspace/user_data/config.json --strategy-path /home/runner/workspace/user_data/backtest_results/MultiMa/20260530T161948Z_MultiMa_opt_v001_t0002_5ebf665f_bt004 --strategy MultiMa --timerange 20240101-20240108 --timeframe 5m --dry-run-wallet 1000.0 --max-open-trades 1 --export trades --export-filename /home/runner/workspace/user_data/backtest_results/MultiMa/20260530T161948Z_MultiMa_opt_v001_t0002_5ebf665f_bt004/raw_result.json --pairs BTC/USDT
-Pairs: ['BTC/USDT']
-Strategy: MultiMa
-Version ID: opt_v001_t0002_5ebf665f

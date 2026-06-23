@@ -1,4 +1,0 @@
-Command: freqtrade backtesting --user-data-dir /home/runner/workspace/user_data --config /home/runner/workspace/user_data/config.json --strategy-path /home/runner/workspace/user_data/backtest_results/AIStrategy/20260614T102002Z_AIStrategy_opt_v001_t0005_361c3613_bt006 --strategy AIStrategy --timerange 20250614-20260614 --timeframe 5m --dry-run-wallet 100.0 --max-open-trades 2 --export trades --export-filename /home/runner/workspace/user_data/backtest_results/AIStrategy/20260614T102002Z_AIStrategy_opt_v001_t0005_361c3613_bt006/raw_result.json --pairs ETH/USDT ADA/USDT
-Pairs: ['ETH/USDT', 'ADA/USDT']
-Strategy: AIStrategy
-Version ID: opt_v001_t0005_361c3613

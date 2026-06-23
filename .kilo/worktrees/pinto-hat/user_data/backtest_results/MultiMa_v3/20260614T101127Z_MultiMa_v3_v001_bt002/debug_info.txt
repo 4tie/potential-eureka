@@ -1,4 +1,0 @@
-Command: freqtrade backtesting --user-data-dir /home/runner/workspace/user_data --config /home/runner/workspace/user_data/config.json --strategy-path /home/runner/workspace/user_data/backtest_results/MultiMa_v3/20260614T101127Z_MultiMa_v3_v001_bt002 --strategy MultiMa_v3 --timerange 20250614-20260614 --timeframe 5m --dry-run-wallet 100.0 --max-open-trades 2 --export trades --export-filename /home/runner/workspace/user_data/backtest_results/MultiMa_v3/20260614T101127Z_MultiMa_v3_v001_bt002/raw_result.json --pairs ETH/USDT ADA/USDT
-Pairs: ['ETH/USDT', 'ADA/USDT']
-Strategy: MultiMa_v3
-Version ID: v001

@@ -1,2 +1,0 @@
-class DataFrame(dict):
-    pass
