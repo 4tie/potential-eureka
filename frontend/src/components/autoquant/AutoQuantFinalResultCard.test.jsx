@@ -4,8 +4,8 @@ import AutoQuantFinalResultCard from "./AutoQuantFinalResultCard";
 
 describe("AutoQuantFinalResultCard", () => {
   const mockReport = {
-    validation_status: "export_ready",
-    readiness_label: "Export Ready",
+    validation_status: "Production Ready",
+    readiness_label: "Elite",
     validation_notes: "All checks passed",
     selected_timeframe: "5m",
     timeframe: "5m",
@@ -41,19 +41,19 @@ describe("AutoQuantFinalResultCard", () => {
   });
 
   it("should render needs repair status", () => {
-    const report = {...mockReport, validation_status: "needs_repair", readiness_label: "Needs Repair", validation_notes: "Issues found"};
+    const report = {...mockReport, validation_status: "Candidate", readiness_label: "Qualified", score: 60, score_explanation: ["Issues found"]};
     render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
     expect(screen.getByText("Needs Repair")).toBeInTheDocument();
   });
 
   it("should render rejected status", () => {
-    const report = {...mockReport, validation_status: "rejected", readiness_label: "Rejected", validation_notes: "Did not meet thresholds"};
+    const report = {...mockReport, validation_status: "Rejected", readiness_label: null, score: 30, score_explanation: ["Did not meet thresholds"]};
     render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
     expect(screen.getByText("Rejected")).toBeInTheDocument();
   });
 
   it("should render data issues status", () => {
-    const report = {...mockReport, validation_status: "data_issues", readiness_label: "Data Issues", validation_notes: "Data quality problems"};
+    const report = {...mockReport, validation_status: null, readiness_label: null, score: null, thresholds: null, risk: null};
     render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
     expect(screen.getByText("Data Issues")).toBeInTheDocument();
   });
@@ -74,7 +74,7 @@ describe("AutoQuantFinalResultCard", () => {
   it("should render metric values correctly", () => {
     render(<AutoQuantFinalResultCard report={mockReport} onDownload={() => {}} />);
     expect(screen.getByText("5m")).toBeInTheDocument();
-    expect(screen.getByText("3 pairs")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument(); // Best Pairs count without unit in main text
     expect(screen.getByText("2.50")).toBeInTheDocument();
     expect(screen.getByText("0.150")).toBeInTheDocument();
     expect(screen.getByText("15.5%")).toBeInTheDocument();
@@ -119,7 +119,7 @@ describe("AutoQuantFinalResultCard", () => {
   it("should handle null report gracefully", () => {
     render(<AutoQuantFinalResultCard report={null} onDownload={() => {}} />);
     expect(screen.getByText("Data Issues")).toBeInTheDocument();
-    expect(screen.getByText("Report data not available")).toBeInTheDocument();
+    expect(screen.getByText(/Report data not available/)).toBeInTheDocument();
   });
 
   it("should display Not available for missing metrics", () => {
@@ -149,5 +149,77 @@ describe("AutoQuantFinalResultCard", () => {
     };
     render(<AutoQuantFinalResultCard report={manyPairsReport} onDownload={() => {}} />);
     expect(screen.getByText(/\+5 more/)).toBeInTheDocument();
+  });
+
+  // Score normalization tests
+  it("should normalize score 80 (0-100 scale) to 0.8 for export_ready check", () => {
+    const report = {
+      ...mockReport,
+      validation_status: null,
+      readiness_label: null,
+      score: 80,
+      score_explanation: ["Strategy meets criteria"],
+      thresholds: { min_profit_factor: 1.5, max_drawdown: 25 },
+      risk: { profit_factor: 2.5, expectancy: 0.15, max_drawdown_pct: 15.5, trade_count: 150 },
+    };
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Export Ready")).toBeInTheDocument();
+  });
+
+  it("should treat score 0.8 (0-1 scale) as export_ready", () => {
+    const report = {
+      ...mockReport,
+      validation_status: null,
+      readiness_label: null,
+      score: 0.8,
+      score_explanation: ["Strategy meets criteria"],
+      thresholds: { min_profit_factor: 1.5, max_drawdown: 25 },
+      risk: { profit_factor: 2.5, expectancy: 0.15, max_drawdown_pct: 15.5, trade_count: 150 },
+    };
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Export Ready")).toBeInTheDocument();
+  });
+
+  it("should NOT mark score 10 as export_ready (normalizes to 0.1)", () => {
+    const report = {
+      ...mockReport,
+      validation_status: null,
+      readiness_label: null,
+      score: 10,
+      score_explanation: ["Low score"],
+      thresholds: { min_profit_factor: 1.5, max_drawdown: 25 },
+      risk: { profit_factor: 2.5, expectancy: 0.15, max_drawdown_pct: 15.5, trade_count: 150 },
+    };
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Rejected")).toBeInTheDocument();
+  });
+
+  it("should fallback safely when score is missing", () => {
+    const report = {
+      ...mockReport,
+      validation_status: null,
+      readiness_label: null,
+      score: null,
+      score_explanation: [],
+      thresholds: { min_profit_factor: 1.5, max_drawdown: 25 },
+      risk: { profit_factor: 2.5, expectancy: 0.15, max_drawdown_pct: 15.5, trade_count: 150 },
+    };
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    // Should fall back to needs_repair since no backend status and data is present
+    expect(screen.getByText("Needs Repair")).toBeInTheDocument();
+  });
+
+  it("should show technical details toggle when reason is translated", () => {
+    const report = {
+      ...mockReport,
+      validation_status: "Rejected",
+      readiness_label: null,
+      score: 10,
+      score_explanation: ["drawdown exceeds threshold"],
+      thresholds: { min_profit_factor: 1.5, max_drawdown: 25 },
+      risk: { profit_factor: 2.5, expectancy: 0.15, max_drawdown_pct: 15.5, trade_count: 150 },
+    };
+    render(<AutoQuantFinalResultCard report={report} onDownload={() => {}} />);
+    expect(screen.getByText("Technical details")).toBeInTheDocument();
   });
 });

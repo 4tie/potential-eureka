@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   CheckCircleIcon,
   XCircleIcon,
@@ -9,9 +10,14 @@ import {
   TrendingUpIcon,
   ClockIcon,
   CurrencyDollarIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { translateError } from "../../features/autoquant/errorTranslator";
 
-function StatusBanner({ status, reason }) {
+function StatusBanner({ status, reason, rawReason }) {
+  const [showTechnical, setShowTechnical] = useState(false);
+
   const statusConfig = {
     export_ready: {
       icon: CheckCircleIcon,
@@ -75,6 +81,25 @@ function StatusBanner({ status, reason }) {
           {reason && (
             <p className="text-xs text-base-content/60 mt-2 font-medium">Reason: {reason}</p>
           )}
+          {rawReason && rawReason !== reason && (
+            <button
+              type="button"
+              onClick={() => setShowTechnical(!showTechnical)}
+              className="flex items-center gap-1 text-[10px] text-base-content/40 hover:text-base-content/60 mt-2 transition-colors"
+            >
+              {showTechnical ? (
+                <ChevronDownIcon className="h-3 w-3" />
+              ) : (
+                <ChevronRightIcon className="h-3 w-3" />
+              )}
+              <span>Technical details</span>
+            </button>
+          )}
+          {showTechnical && rawReason && (
+            <div className="mt-2 p-2 bg-base-200/50 rounded text-[10px] text-base-content/50 font-mono break-words">
+              {rawReason}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -137,49 +162,65 @@ function FileList({ files, onDownload }) {
 export default function AutoQuantFinalResultCard({ report, onDownload }) {
   // Determine final status based on report data
   const determineStatus = () => {
-    if (!report) return { status: "data_issues", reason: "Report data not available" };
+    if (!report) return { status: "data_issues", reason: "Report data not available", rawReason: null };
 
     // Priority 1: Use backend-provided validation status
     const backendStatus = report.validation_status || report.readiness_label;
-    const score = report.score ?? 0;
+    
+    // Normalize score: if > 1, treat as 0-100 scale and divide by 100
+    const rawScore = typeof report.score === "number" ? report.score : null;
+    const normalizedScore = rawScore == null ? null : rawScore > 1 ? rawScore / 100 : rawScore;
+    
     const scoreExplanation = report.score_explanation || [];
+    const rawReason = scoreExplanation[0] || null;
 
     // Map backend status to UI status
-    if (backendStatus === "Production Ready" || backendStatus === "Elite" || score >= 0.75) {
+    if (backendStatus === "Production Ready" || backendStatus === "Elite" || (normalizedScore != null && normalizedScore >= 0.75)) {
       return {
         status: "export_ready",
-        reason: scoreExplanation[0] || "Strategy meets all validation criteria"
+        reason: rawReason || "Strategy meets all validation criteria",
+        rawReason: null
       };
     }
-    if (backendStatus === "Candidate" || backendStatus === "Qualified" || (score >= 0.5 && score < 0.75)) {
+    if (backendStatus === "Candidate" || backendStatus === "Qualified" || (normalizedScore != null && normalizedScore >= 0.5 && normalizedScore < 0.75)) {
+      // Translate the reason if it looks technical
+      const translated = rawReason ? translateError(rawReason) : null;
       return {
         status: "needs_repair",
-        reason: scoreExplanation[0] || "Strategy has potential but needs improvement"
+        reason: translated?.userMessage || rawReason || "Strategy has potential but needs improvement",
+        rawReason: translated?.userMessage !== rawReason ? rawReason : null
       };
     }
-    if (backendStatus === "Rejected" || score < 0.5) {
+    if (backendStatus === "Rejected" || (normalizedScore != null && normalizedScore < 0.5)) {
+      // Translate the reason if it looks technical
+      const translated = rawReason ? translateError(rawReason) : null;
       return {
         status: "rejected",
-        reason: scoreExplanation[0] || "Strategy did not meet validation criteria"
+        reason: translated?.userMessage || rawReason || "Strategy did not meet validation criteria",
+        rawReason: translated?.userMessage !== rawReason ? rawReason : null
       };
     }
 
     // Priority 2: Check if computation failed (missing thresholds or risk data)
     if (!report.thresholds || !report.risk) {
+      const translated = rawReason ? translateError(rawReason) : null;
       return {
         status: "data_issues",
-        reason: "Insufficient data to determine readiness status"
+        reason: translated?.userMessage || "Insufficient data to determine readiness status",
+        rawReason: translated?.userMessage !== rawReason ? rawReason : null
       };
     }
 
     // Fallback: if no backend status and data is present, assume needs repair
+    const translated = rawReason ? translateError(rawReason) : null;
     return {
       status: "needs_repair",
-      reason: "Status could not be determined from backend"
+      reason: translated?.userMessage || "Status could not be determined from backend",
+      rawReason: translated?.userMessage !== rawReason ? rawReason : null
     };
   };
 
-  const { status, reason } = determineStatus();
+  const { status, reason, rawReason } = determineStatus();
 
   // Extract report data — use backend thresholds when available
   const risk = report?.risk || {};
@@ -249,7 +290,7 @@ export default function AutoQuantFinalResultCard({ report, onDownload }) {
         </div>
 
         {/* Status Banner */}
-        <StatusBanner status={status} reason={reason} />
+        <StatusBanner status={status} reason={reason} rawReason={rawReason} />
 
         {/* Metrics Grid */}
         <div className="mb-6">
