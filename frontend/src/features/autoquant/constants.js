@@ -30,8 +30,8 @@ export const DEFAULT_AUTOQUANT_FORM = {
   risk_profile: "balanced",
   analysis_depth: "standard",
   timeframe: "5m",
-  in_sample_range: "20230101-20240101",
-  out_sample_range: "20240101-20241201",
+  in_sample_range: "", // Will be fetched from backend /api/auto-quant/default-ranges
+  out_sample_range: "", // Will be fetched from backend /api/auto-quant/default-ranges
   exchange: "binance",
   pair_universe: "",
   max_drawdown_threshold: 30,

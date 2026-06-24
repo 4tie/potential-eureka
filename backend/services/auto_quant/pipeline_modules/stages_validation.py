@@ -1037,20 +1037,50 @@ async def _stage_robustness_feature_injection(
     # Format output to match user's expected format
     # features_injected is already built during the injection process
     
-    # Calculate profit factor from stress results (simplified)
-    # In real implementation, this would calculate actual profit factor
-    base_pf = 1.42  # Placeholder - should be calculated from actual results
-    fee_x2_pf = base_pf * 0.92  # Placeholder degradation
-    slippage_0_10_pf = base_pf * 0.87  # Placeholder degradation
+    # Compute actual metrics from stress results (no fake placeholders)
+    stress_tests = {}
+    warnings = []
+    
+    # Calculate total profit by fee multiplier
+    total_profit_by_fee_multiplier = {}
+    for multiplier in [1.0, 2.0, 3.0]:
+        if multiplier in stress_results:
+            pair_profits = stress_results[multiplier]
+            total_profit = sum(pair_profits.values())
+            total_profit_by_fee_multiplier[f"fee_{multiplier}x_total_profit"] = total_profit
+    
+    # Calculate profit retention if baseline exists
+    if 1.0 in stress_results and 2.0 in stress_results:
+        profit_1x = sum(stress_results[1.0].values())
+        profit_2x = sum(stress_results[2.0].values())
+        if profit_1x > 0:
+            profit_retention_2x = (profit_2x / profit_1x) * 100
+            stress_tests["profit_retention_2x_pct"] = round(profit_retention_2x, 2)
+    
+    if 1.0 in stress_results and 3.0 in stress_results:
+        profit_1x = sum(stress_results[1.0].values())
+        profit_3x = sum(stress_results[3.0].values())
+        if profit_1x > 0:
+            profit_retention_3x = (profit_3x / profit_1x) * 100
+            stress_tests["profit_retention_3x_pct"] = round(profit_retention_3x, 2)
+    
+    # Add computed metrics
+    stress_tests.update(total_profit_by_fee_multiplier)
+    stress_tests["pairs_tested"] = len(pairs_to_test) if pairs_to_test else 0
+    
+    # Add note about unavailable PF/drawdown metrics
+    stress_tests["note"] = (
+        "Profit factor and drawdown metrics not computed - raw trade-level data unavailable. "
+        "Stability scores and profit retention by fee multiplier are reported instead."
+    )
+    
+    # Add warning if stress results are incomplete
+    if not stress_results or len(stress_results) < 3:
+        warnings.append("Stress test results incomplete - some fee multiplier tests may have failed.")
     
     summary = {
         "status": "passed",
-        "stress_tests": {
-            "base_pf": round(base_pf, 2),
-            "fee_x2_pf": round(fee_x2_pf, 2),
-            "slippage_0_10_pf": round(slippage_0_10_pf, 2),
-            "max_drawdown_stressed": 0.23,  # Placeholder
-        },
+        "stress_tests": stress_tests,
         "features_injected": features_injected,
         "failure_reasons": failure_reasons,
         "stability_scores": state.stability_scores,
@@ -1058,6 +1088,7 @@ async def _stage_robustness_feature_injection(
         "excluded_time_windows": state.excluded_time_windows,
         "injection_success": injection_success,
         "injection_error": injection_error,
+        "warnings": warnings,
     }
     _pass_stage(run_id, state, 4, "Robustness & Feature Injection complete", summary)
     return summary

@@ -44,7 +44,11 @@ from ...services.auto_quant.api_service import (
     request_pipeline_cancel,
     save_options_data,
 )
-from ...services.auto_quant.policy import build_run_config
+from ...services.auto_quant.policy import (
+    build_run_config,
+    date_ranges_for_depth,
+    latest_complete_day,
+)
 from ...services.auto_quant.variants import copy_to_output
 
 router = APIRouter(prefix="/api/auto-quant", tags=["Auto-Quant Factory"])
@@ -157,6 +161,44 @@ class AutoQuantOptions(BaseModel):
 
 # ── REST endpoints ────────────────────────────────────────────────────────────
 
+
+@router.get(
+    "/default-ranges",
+    summary="Get dynamic default date ranges for AutoQuant",
+)
+async def get_default_ranges() -> dict[str, Any]:
+    """Return current dynamic default date ranges from policy.
+
+    Returns ranges for quick, standard, and deep analysis depths,
+    all calculated relative to the latest complete day.
+    """
+    from datetime import datetime
+
+    latest_day = latest_complete_day()
+    generated_at = latest_day.strftime("%Y-%m-%d")
+
+    quick_is, quick_oos = date_ranges_for_depth("quick")
+    standard_is, standard_oos = date_ranges_for_depth("standard")
+    deep_is, deep_oos = date_ranges_for_depth("deep")
+
+    return {
+        "quick": {
+            "in_sample_range": quick_is,
+            "out_sample_range": quick_oos,
+        },
+        "standard": {
+            "in_sample_range": standard_is,
+            "out_sample_range": standard_oos,
+        },
+        "deep": {
+            "in_sample_range": deep_is,
+            "out_sample_range": deep_oos,
+        },
+        "latest_complete_day": generated_at,
+        "generated_at": datetime.utcnow().isoformat(),
+    }
+
+
 @router.post(
     "/start",
     response_model=StartAutoQuantResponse,
@@ -215,6 +257,7 @@ async def _start_pipeline_from_body(
             "wfo_is_months": normalized["wfo_is_months"],
             "wfo_oos_months": normalized["wfo_oos_months"],
             "wfo_recency_weight": normalized["wfo_recency_weight"],
+            "planned_wfo_windows": normalized.get("planned_wfo_windows", []),
         },
         "thresholds": thresholds,
         "exchange": normalized["exchange"],
@@ -244,6 +287,7 @@ async def _start_pipeline_from_body(
         wfo_is_months=normalized["wfo_is_months"],
         wfo_oos_months=normalized["wfo_oos_months"],
         wfo_recency_weight=normalized["wfo_recency_weight"],
+        planned_wfo_windows=normalized.get("planned_wfo_windows", []),
         ensemble_enabled=normalized["ensemble_enabled"],
         pair=normalized["pair"] or None,
         pair_universe=normalized["pair_universe"],

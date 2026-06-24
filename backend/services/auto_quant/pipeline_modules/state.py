@@ -82,7 +82,8 @@ class PipelineState:
     wfo_is_months: int = 3
     wfo_oos_months: int = 1
     wfo_recency_weight: float = 1.0
-    wfo_windows: list = field(default_factory=list)
+    planned_wfo_windows: list = field(default_factory=list)  # Planned windows from policy
+    wfo_windows: list = field(default_factory=list)  # Executed window results
     wfo_skip_reason: str | None = None
     # Alpha Ensemble Voting
     ensemble_enabled: bool = False
@@ -423,6 +424,7 @@ def load_runs_from_disk(user_data_dir: str) -> None:
                 wfo_is_months=data.get("wfo_is_months", 3),
                 wfo_oos_months=data.get("wfo_oos_months", 1),
                 wfo_recency_weight=data.get("wfo_recency_weight", 1.0),
+                planned_wfo_windows=data.get("planned_wfo_windows", []),
                 wfo_windows=data.get("wfo_windows", []),
                 wfo_skip_reason=data.get("wfo_skip_reason"),
                 ensemble_enabled=data.get("ensemble_enabled", False),
@@ -569,6 +571,7 @@ def create_run(
     wfo_is_months: int = 3,
     wfo_oos_months: int = 1,
     wfo_recency_weight: float = 1.0,
+    planned_wfo_windows: list | None = None,
     ensemble_enabled: bool = False,
     pair: str | None = None,
     pair_universe: list | None = None,
@@ -618,6 +621,7 @@ def create_run(
         wfo_is_months=wfo_is_months,
         wfo_oos_months=wfo_oos_months,
         wfo_recency_weight=wfo_recency_weight,
+        planned_wfo_windows=planned_wfo_windows if planned_wfo_windows is not None else [],
         ensemble_enabled=ensemble_enabled,
         pair=pair or None,
         pair_universe=pair_universe if pair_universe is not None else BROAD_UNIVERSE_PAIRS,

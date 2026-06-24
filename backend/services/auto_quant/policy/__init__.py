@@ -7,6 +7,7 @@ from this module instead of duplicating policy values.
 
 from __future__ import annotations
 
+import calendar
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -22,6 +23,53 @@ DEFAULT_DATE_RANGES = {
     "standard": ("20230101-20240101", "20240101-20241201"),
     "deep": ("20220101-20240101", "20240101-20250101"),
 }
+
+
+def subtract_months(dt: datetime, months: int) -> datetime:
+    """Subtract exact calendar months from a datetime, preserving day when possible.
+
+    This uses stdlib calendar to handle month/year rollovers correctly and clamps
+    to the last day of the target month when necessary (e.g., Jan 31 - 1 month = Dec 31).
+
+    Args:
+        dt: Source datetime
+        months: Number of months to subtract (must be >= 0)
+
+    Returns:
+        New datetime with months subtracted, day clamped to valid date in target month
+
+    Example:
+        >>> subtract_months(datetime(2024, 1, 31), 1)
+        datetime(2023, 12, 31)
+        >>> subtract_months(datetime(2024, 3, 31), 1)
+        datetime(2024, 2, 29)  # Clamped to Feb 29 in leap year
+    """
+    if months < 0:
+        raise ValueError("months must be non-negative")
+    if months == 0:
+        return dt
+
+    year = dt.year
+    month = dt.month
+    day = dt.day
+
+    # Calculate target year and month
+    total_months = year * 12 + month - months
+    target_year = total_months // 12
+    target_month = total_months % 12
+
+    if target_month == 0:
+        target_year -= 1
+        target_month = 12
+
+    # Get last day of target month
+    last_day_of_month = calendar.monthrange(target_year, target_month)[1]
+
+    # Clamp day to valid date in target month
+    target_day = min(day, last_day_of_month)
+
+    return datetime(target_year, target_month, target_day, dt.hour, dt.minute, dt.second, dt.microsecond)
+
 
 DEPTH_SETTINGS = {
     "quick": {
@@ -115,6 +163,7 @@ def date_ranges_for_depth(
 
     Ranges are calculated relative to the latest complete day, not hard-coded.
     This ensures validation stays current as time progresses.
+    Uses exact calendar-month arithmetic via subtract_months().
 
     Args:
         depth: Analysis depth ("quick", "standard", or "deep")
@@ -142,14 +191,14 @@ def date_ranges_for_depth(
     # Calculate OOS end (next day boundary to include last complete day)
     oos_end = latest_data_end + timedelta(days=1)
 
-    # Calculate OOS start
-    oos_start = oos_end - timedelta(days=oos_months * 30)
+    # Calculate OOS start using exact calendar-month arithmetic
+    oos_start = subtract_months(oos_end, oos_months)
 
     # Calculate IS end (same as OOS start)
     is_end = oos_start
 
-    # Calculate IS start
-    is_start = is_end - timedelta(days=is_months * 30)
+    # Calculate IS start using exact calendar-month arithmetic
+    is_start = subtract_months(is_end, is_months)
 
     # Format as Freqtrade timeranges
     is_range = f"{is_start.strftime('%Y%m%d')}-{is_end.strftime('%Y%m%d')}"
@@ -168,6 +217,7 @@ def walk_forward_windows_for_depth(
     Windows are rolling and end at the latest data, ensuring recent market
     conditions are tested. The latest window must not fail catastrophically
     for a strategy to be considered Validated or Elite.
+    Uses exact calendar-month arithmetic via subtract_months().
 
     Args:
         depth: Analysis depth ("quick", "standard", or "deep")
@@ -212,21 +262,21 @@ def walk_forward_windows_for_depth(
         # Calculate test end (next day boundary)
         test_end = latest_data_end + timedelta(days=1)
 
-        # Calculate test start
-        test_start = test_end - timedelta(days=test_months * 30)
+        # Calculate test start using exact calendar-month arithmetic
+        test_start = subtract_months(test_end, test_months)
 
         # Calculate train end (same as test start)
         train_end = test_start
 
-        # Calculate train start
-        train_start = train_end - timedelta(days=train_months * 30)
+        # Calculate train start using exact calendar-month arithmetic
+        train_start = subtract_months(train_end, train_months)
 
-        # Shift windows backward for earlier iterations
+        # Shift windows backward for earlier iterations using calendar-month arithmetic
         shift_months = (window_count - 1 - i) * 6
-        train_start -= timedelta(days=shift_months * 30)
-        train_end -= timedelta(days=shift_months * 30)
-        test_start -= timedelta(days=shift_months * 30)
-        test_end -= timedelta(days=shift_months * 30)
+        train_start = subtract_months(train_start, shift_months)
+        train_end = subtract_months(train_end, shift_months)
+        test_start = subtract_months(test_start, shift_months)
+        test_end = subtract_months(test_end, shift_months)
 
         windows.append({
             "train": f"{train_start.strftime('%Y%m%d')}-{train_end.strftime('%Y%m%d')}",
@@ -465,6 +515,13 @@ class Policy:
 
         # Use dynamic date ranges based on current date
         default_is, default_oos = date_ranges_for_depth(depth)
+        
+        # Generate planned WFO windows if enabled
+        wfo_enabled = bool(payload.get("wfo_enabled", advanced.get("wfo_enabled", depth_defaults["wfo_enabled"])))
+        planned_wfo_windows = []
+        if wfo_enabled and depth != "quick":
+            planned_wfo_windows = walk_forward_windows_for_depth(depth)
+        
         pair_universe = (
             advanced.get("pair_universe")
             or payload.get("pair_universe")
@@ -528,10 +585,11 @@ class Policy:
             "hyperopt_epochs": int(
                 payload.get("hyperopt_epochs", advanced.get("hyperopt_epochs", depth_defaults["hyperopt_epochs"]))
             ),
-            "wfo_enabled": bool(payload.get("wfo_enabled", advanced.get("wfo_enabled", depth_defaults["wfo_enabled"]))),
+            "wfo_enabled": wfo_enabled,
             "wfo_is_months": int(payload.get("wfo_is_months", advanced.get("wfo_is_months", 3))),
             "wfo_oos_months": int(payload.get("wfo_oos_months", advanced.get("wfo_oos_months", 1))),
             "wfo_recency_weight": float(payload.get("wfo_recency_weight", advanced.get("wfo_recency_weight", 1.0))),
+            "planned_wfo_windows": planned_wfo_windows,
             "ensemble_enabled": bool(payload.get("ensemble_enabled", advanced.get("ensemble_enabled", False))),
             "validation_notes": notes,
             "policy_versions": self.versions,
