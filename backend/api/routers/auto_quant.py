@@ -50,7 +50,7 @@ from ...services.auto_quant.policy import (
     latest_complete_day,
 )
 from ...services.auto_quant.variants import copy_to_output
-from ...services.auto_quant.strategy_designer import generate_strategy_spec
+from ...services.auto_quant.strategy_designer import generate_strategy_spec, generate_strategy_spec_simple
 from ...services.auto_quant.ollama_service import create_strategy_lab_client
 
 router = APIRouter(prefix="/api/auto-quant", tags=["Auto-Quant Factory"])
@@ -426,8 +426,8 @@ async def generate_strategy_spec_endpoint(
             raw_response="",
         )
 
-    # Generate the strategy spec
-    result = await generate_strategy_spec(
+    # Generate the strategy spec using simplified approach
+    result = await generate_strategy_spec_simple(
         client,
         trading_style=body.trading_style,
         timeframe=body.timeframe_preference,
