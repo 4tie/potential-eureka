@@ -45,7 +45,7 @@ class SettingsStore(ISettingsStore):
             ollama_connection_keepalive=30,
             ollama_model_chat="",
             ollama_model_autoquant="",
-            ollama_model_strategylab="",
+            ollama_model_strategylab="hermes3:3b",
             ollama_model_optimizer="",
         )
 

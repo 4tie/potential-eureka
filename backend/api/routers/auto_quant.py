@@ -50,6 +50,8 @@ from ...services.auto_quant.policy import (
     latest_complete_day,
 )
 from ...services.auto_quant.variants import copy_to_output
+from ...services.auto_quant.strategy_designer import generate_strategy_spec
+from ...services.auto_quant.ollama_service import create_strategy_lab_client
 
 router = APIRouter(prefix="/api/auto-quant", tags=["Auto-Quant Factory"])
 
@@ -90,6 +92,7 @@ class StartAutoQuantRequest(BaseModel):
     risk_profile: str | None = Field(None, description="Risk profile: conservative, balanced, aggressive")
     analysis_depth: str | None = Field(None, description="Analysis depth: quick, standard, deep")
     uploaded_strategy_id: str | None = Field(None, description="Uploaded/generated strategy identifier")
+    generated_by: str | None = Field(None, description="AI provider that generated the strategy (e.g., 'hermes')")
     advanced_overrides: dict[str, Any] | None = Field(default_factory=dict, description="Advanced compatibility overrides")
 
 
@@ -124,6 +127,22 @@ class ScreenPairsRequest(BaseModel):
     pairs: list[str] = Field(..., min_length=1, description="List of pairs to screen")
     exchange: str = Field("binance", description="Exchange name")
     config_file: str | None = Field(None, description="Path to config.json (optional)")
+
+
+class GenerateStrategySpecRequest(BaseModel):
+    """Request model for generating a StrategySpec via Hermes AI."""
+    trading_style: str = Field(..., description="Trading style: scalping, intraday, swing, position")
+    direction: str = Field(..., description="Direction: long, short, both")
+    risk_profile: str = Field(..., description="Risk profile: conservative, balanced, aggressive")
+    timeframe_preference: str = Field(..., description="Preferred timeframe, e.g. '5m', '1h'")
+    user_notes: str | None = Field(None, description="Optional user notes for the AI")
+
+
+class GenerateStrategySpecResponse(BaseModel):
+    """Response model for generating a StrategySpec via Hermes AI."""
+    spec: dict[str, Any] | None = Field(None, description="Generated StrategySpec JSON")
+    errors: list[str] = Field(default_factory=list, description="Validation errors if any")
+    raw_response: str = Field("", description="Raw AI response for debugging")
 
 
 class AutoQuantOptions(BaseModel):
@@ -238,6 +257,7 @@ async def _start_pipeline_from_body(
         "strategy": strategy_name,
         "strategy_source": normalized["strategy_source"],
         "uploaded_strategy_id": normalized.get("uploaded_strategy_id"),
+        "generated_by": normalized.get("generated_by"),
         "trading_style": normalized["trading_style"],
         "risk_profile": normalized["risk_profile"],
         "analysis_depth": normalized["analysis_depth"],
@@ -377,6 +397,54 @@ async def generate_template(
     return GenerateTemplateResponse(
         strategy_name=name,
         file_path=str(target),
+    )
+
+
+@router.post(
+    "/generate-strategy-spec",
+    response_model=GenerateStrategySpecResponse,
+    summary="Generate a StrategySpec using Hermes AI",
+)
+async def generate_strategy_spec_endpoint(
+    body: GenerateStrategySpecRequest, request: Request
+) -> GenerateStrategySpecResponse:
+    """Generate a structured StrategySpec using the Hermes AI model.
+
+    This endpoint uses the configured strategy lab model (ollama_model_strategylab)
+    to generate a StrategySpec based on user inputs. The AI only generates the
+    structured spec, not actual strategy code or profitability decisions.
+    """
+    services = request.app.state.services
+    settings = services.settings_store.load()
+
+    # Create Ollama client with strategy lab model override
+    client = create_strategy_lab_client(settings.user_data_directory_path)
+    if client is None:
+        return GenerateStrategySpecResponse(
+            spec=None,
+            errors=["OLLAMA_CLIENT_NOT_AVAILABLE"],
+            raw_response="",
+        )
+
+    # Generate the strategy spec
+    result = await generate_strategy_spec(
+        client,
+        trading_style=body.trading_style,
+        timeframe=body.timeframe_preference,
+        direction=body.direction,
+        risk_profile=body.risk_profile,
+        description=body.user_notes,
+    )
+
+    # Convert StrategySpec to dict if successful
+    spec_dict = None
+    if result["spec"] is not None:
+        spec_dict = result["spec"].model_dump(mode="json")
+
+    return GenerateStrategySpecResponse(
+        spec=spec_dict,
+        errors=result["errors"],
+        raw_response=result.get("raw_response", ""),
     )
 
 

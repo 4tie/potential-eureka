@@ -8,6 +8,7 @@ The JSON must use these fields:
 - description: short plain text, max 500 characters.
 - timeframe: one of 1m, 5m, 15m, 30m, 1h, 4h, 1d.
 - trading_style: one of trend_following, mean_reversion, momentum, breakout, adaptive, ensemble.
+- direction: one of long, short, both.
 - indicators: at least one item with name and params.
 - entry_conditions: at least one condition.
 - exit_conditions: at least one condition unless trailing.trailing_stop is true.

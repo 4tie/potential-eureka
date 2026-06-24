@@ -33,7 +33,18 @@ def config_from_settings(
         return None
 
     base_url = str(_get(settings, "ollama_api_url", "http://localhost:11434") or "").strip()
-    model = str(model_override if model_override is not None else (_get(settings, "ollama_model", "") or "")).strip()
+
+    # Handle model_override: can be a key name (e.g., "ollama_model_strategylab") or a direct model name
+    if model_override is not None and model_override.startswith("ollama_model_"):
+        # model_override is a settings key name
+        model = str(_get(settings, model_override, "") or "").strip()
+    elif model_override is not None:
+        # model_override is a direct model name
+        model = str(model_override).strip()
+    else:
+        # Use default ollama_model
+        model = str(_get(settings, "ollama_model", "") or "").strip()
+
     provider = str(_get(settings, "ollama_provider", "local") or "local").strip()
     raw_api_key = str(_get(settings, "ollama_api_key", "") or "").strip()
     resolved_timeout = timeout if timeout is not None else _get(settings, "ollama_timeout", 30)

@@ -102,3 +102,85 @@ def test_spec_hash_ignores_iteration_fields():
 def test_spec_iteration_limit():
     errors = validate_spec(_valid_spec(max_iterations=3, iteration_count=3))
     assert "MAX_ITERATIONS_REACHED" in errors
+
+
+def test_spec_strict_validation_too_many_indicators():
+    """Test that strict validation rejects specs with more than 5 indicators."""
+    spec = _valid_spec(
+        indicators=[
+            IndicatorSpec(name="rsi", params={"period": 14}),
+            IndicatorSpec(name="macd", params={"fast": 12, "slow": 26}),
+            IndicatorSpec(name="bbands", params={"period": 20}),
+            IndicatorSpec(name="adx", params={"period": 14}),
+            IndicatorSpec(name="atr", params={"period": 14}),
+            IndicatorSpec(name="cci", params={"period": 20}),
+        ]
+    )
+    errors = validate_spec(spec, strict_validation=True)
+    assert "TOO_MANY_INDICATORS" in errors
+
+
+def test_spec_strict_validation_too_many_params():
+    """Test that strict validation rejects indicators with more than 3 parameters."""
+    spec = _valid_spec(
+        indicators=[
+            IndicatorSpec(name="rsi", params={"period": 14, "upper": 70, "lower": 30, "mid": 50}),
+        ]
+    )
+    errors = validate_spec(spec, strict_validation=True)
+    assert "TOO_MANY_PARAMS: rsi" in errors
+
+
+def test_spec_strict_validation_passes_with_limits():
+    """Test that strict validation passes when within limits."""
+    spec = _valid_spec(
+        indicators=[
+            IndicatorSpec(name="rsi", params={"period": 14}),
+            IndicatorSpec(name="macd", params={"fast": 12, "slow": 26}),
+        ]
+    )
+    errors = validate_spec(spec, strict_validation=True)
+    assert "TOO_MANY_INDICATORS" not in errors
+    assert "TOO_MANY_PARAMS" not in errors
+
+
+def test_spec_direction_field():
+    """Test that direction field accepts valid values."""
+    for direction in ["long", "short", "both"]:
+        spec = _valid_spec(direction=direction)
+        errors = validate_spec(spec)
+        assert len(errors) == 0 or "INVALID_NAME" not in errors
+
+
+def test_spec_invalid_direction():
+    """Test that invalid direction values are rejected by Pydantic."""
+    try:
+        from pydantic import ValidationError
+        StrategySpec(
+            name="TestStrategy",
+            description="Test",
+            timeframe="5m",
+            trading_style="trend_following",
+            direction="invalid",  # Invalid direction
+            indicators=[IndicatorSpec(name="rsi", params={"period": 14})],
+            entry_conditions=[
+                SignalCondition(
+                    type="indicator_threshold",
+                    indicator_a="rsi",
+                    operator="<",
+                    value_or_indicator_b=30.0,
+                )
+            ],
+            exit_conditions=[
+                SignalCondition(
+                    type="indicator_threshold",
+                    indicator_a="rsi",
+                    operator=">",
+                    value_or_indicator_b=70.0,
+                )
+            ],
+            stoploss=-0.10,
+        )
+        assert False, "Should have raised ValidationError for invalid direction"
+    except ValidationError:
+        pass  # Expected

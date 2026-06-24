@@ -28,6 +28,7 @@ def _valid_spec_payload(**overrides):
         "description": "RSI mean reversion design.",
         "timeframe": "5m",
         "trading_style": "mean_reversion",
+        "direction": "both",
         "indicators": [
             {"name": "rsi", "params": {"period": 14}},
         ],
@@ -133,3 +134,53 @@ async def test_strategy_designer_passes_feature_name():
 
     assert result["errors"] == []
     assert client.calls[0]["feature"] == "strategy_designer"
+
+
+@pytest.mark.asyncio
+async def test_strategy_designer_valid_direction_field():
+    payload = _valid_spec_payload(direction="long")
+    result, _client = await _generate(json.dumps(payload))
+
+    assert isinstance(result["spec"], StrategySpec)
+    assert result["spec"].direction == "long"
+    assert result["errors"] == []
+
+
+@pytest.mark.asyncio
+async def test_strategy_designer_invalid_direction_returns_error():
+    payload = _valid_spec_payload(direction="invalid_direction")
+    result, _client = await _generate(json.dumps(payload))
+
+    assert result["spec"] is None
+    assert result["errors"] == ["INVALID_STRATEGY_SPEC_SCHEMA"]
+
+
+@pytest.mark.asyncio
+async def test_strategy_designer_too_many_indicators_strict_validation():
+    # Create 6 indicators (exceeds limit of 5)
+    indicators = [
+        {"name": "rsi", "params": {"period": 14}},
+        {"name": "macd", "params": {"fast": 12, "slow": 26, "signal": 9}},
+        {"name": "bbands", "params": {"period": 20, "std": 2}},
+        {"name": "adx", "params": {"period": 14}},
+        {"name": "atr", "params": {"period": 14}},
+        {"name": "cci", "params": {"period": 20}},
+    ]
+    payload = _valid_spec_payload(indicators=indicators)
+    result, _client = await _generate(json.dumps(payload))
+
+    assert result["spec"] is None
+    assert "TOO_MANY_INDICATORS" in result["errors"]
+
+
+@pytest.mark.asyncio
+async def test_strategy_designer_too_many_params_strict_validation():
+    # Create indicator with 4 parameters (exceeds limit of 3)
+    indicators = [
+        {"name": "rsi", "params": {"period": 14, "param2": 1, "param3": 2, "param4": 3}},
+    ]
+    payload = _valid_spec_payload(indicators=indicators)
+    result, _client = await _generate(json.dumps(payload))
+
+    assert result["spec"] is None
+    assert "TOO_MANY_PARAMS" in result["errors"]

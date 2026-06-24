@@ -40,6 +40,8 @@ TradingStyle = Literal[
     "ensemble",
 ]
 
+Direction = Literal["long", "short", "both"]
+
 PositionSizingMethod = Literal["fixed", "atr_percent", "risk_per_trade"]
 
 VALID_TIMEFRAMES = {"1m", "5m", "15m", "30m", "1h", "4h", "1d"}
@@ -77,6 +79,7 @@ class StrategySpec(StrictModel):
     description: str = ""
     timeframe: str = "5m"
     trading_style: TradingStyle
+    direction: Direction = "both"
 
     indicators: list[IndicatorSpec] = Field(default_factory=list)
     entry_conditions: list[SignalCondition] = Field(default_factory=list)
@@ -100,7 +103,7 @@ class StrategySpec(StrictModel):
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def validate_spec(spec: StrategySpec) -> list[str]:
+def validate_spec(spec: StrategySpec, strict_validation: bool = False) -> list[str]:
     errors: list[str] = []
 
     if not _NAME_RE.fullmatch(spec.name or ""):
@@ -119,10 +122,17 @@ def validate_spec(spec: StrategySpec) -> list[str]:
     if len(indicator_names) != len(indicator_set):
         errors.append("DUPLICATE_INDICATORS")
 
+    # Strict validation: limit max indicators to 5
+    if strict_validation and len(spec.indicators) > 5:
+        errors.append("TOO_MANY_INDICATORS")
+
     for indicator in spec.indicators:
         for param_name, value in indicator.params.items():
             if value <= 0:
                 errors.append(f"INVALID_INDICATOR_PARAM: {indicator.name}.{param_name}")
+            # Strict validation: limit max parameters per indicator to 3
+            if strict_validation and len(indicator.params) > 3:
+                errors.append(f"TOO_MANY_PARAMS: {indicator.name}")
 
     if not spec.entry_conditions:
         errors.append("NO_ENTRY_CONDITIONS")

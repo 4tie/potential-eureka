@@ -236,6 +236,17 @@ export default function AutoQuantConfigPanel({
   } = screening;
   const { showHyperopt, setShowHyperopt, showWfo, setShowWfo, showEnsemble, setShowEnsemble } = uiState;
   const [showRisk, setShowRisk] = useState(true);
+  const [strategySource, setStrategySource] = useState("existing");
+  const [hermesForm, setHermesForm] = useState({
+    trading_style: "swing",
+    direction: "both",
+    risk_profile: "balanced",
+    timeframe_preference: "5m",
+    user_notes: "",
+  });
+  const [hermesSpec, setHermesSpec] = useState(null);
+  const [isGeneratingSpec, setIsGeneratingSpec] = useState(false);
+  const [hermesError, setHermesError] = useState(null);
   const wfoSummary = form.wfo_enabled ? getWfoWindowSummary(form) : null;
   const pairCount = useMemo(() => countPairs(form.pair_universe), [form.pair_universe]);
   const searchSpaceLabel = form.hyperopt_spaces.length ? form.hyperopt_spaces.join(", ") : "none";
@@ -243,6 +254,64 @@ export default function AutoQuantConfigPanel({
   const selectScreenedPair = (pair) => {
     setSelectedPair(pair);
     updateField("pair_universe", pair);
+  };
+
+  const handleGenerateStrategySpec = async () => {
+    setIsGeneratingSpec(true);
+    setHermesError(null);
+    try {
+      const response = await fetch("/api/auto-quant/generate-strategy-spec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(hermesForm),
+      });
+      const data = await response.json();
+      if (data.errors && data.errors.length > 0) {
+        setHermesError(data.errors.join(", "));
+        setHermesSpec(null);
+      } else if (data.spec) {
+        setHermesSpec(data.spec);
+        setHermesError(null);
+      } else {
+        setHermesError("Failed to generate strategy spec");
+        setHermesSpec(null);
+      }
+    } catch (err) {
+      setHermesError(err.message || "Network error while generating strategy spec");
+      setHermesSpec(null);
+    } finally {
+      setIsGeneratingSpec(false);
+    }
+  };
+
+  const handleConfirmAndStart = async () => {
+    if (!hermesSpec) return;
+    // Generate strategy file from spec using template generation endpoint
+    try {
+      const response = await fetch("/api/auto-quant/generate-template", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          strategy_name: hermesSpec.name || "HermesStrategy",
+          adaptive: hermesSpec.trading_style === "adaptive",
+          ensemble: hermesSpec.trading_style === "ensemble",
+          momentum: hermesSpec.trading_style === "momentum",
+          omni: true,
+          timeframe: hermesSpec.timeframe || "5m",
+        }),
+      });
+      const data = await response.json();
+      if (data.strategy_name) {
+        updateField("strategy", data.strategy_name);
+        updateField("strategy_source", "generated");
+        updateField("generated_by", "hermes");
+        updateField("trading_style", hermesForm.trading_style);
+        updateField("risk_profile", hermesForm.risk_profile);
+        onStart();
+      }
+    } catch (err) {
+      setHermesError(err.message || "Failed to generate strategy file");
+    }
   };
 
   const startDisabled = !form.strategy || isConnecting;
@@ -293,56 +362,194 @@ export default function AutoQuantConfigPanel({
               <div className="flex items-center gap-2">
                 <RectangleStackIcon className="h-4 w-4 text-primary" />
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-base-content/40">
-                  Strategy
+                  Strategy Source
                 </p>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                {strategiesLoading ? (
-                  <div className="skeleton h-9 min-w-0 flex-1 rounded-lg" />
-                ) : (
-                  <label className="form-control min-w-0 flex-1">
-                    <span className="sr-only">Strategy</span>
+              
+              {/* Strategy Source Radio Buttons */}
+              <div className="flex gap-2">
+                {[
+                  { value: "existing", label: "Upload strategy file" },
+                  { value: "generated", label: "Generate with Hermes Agent" },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={classNames(
+                      "flex-1 rounded-lg border px-3 py-2 text-left transition-all",
+                      strategySource === value
+                        ? "border-primary bg-primary/10"
+                        : "border-base-300 bg-base-200/50 hover:border-base-content/30"
+                    )}
+                    onClick={() => {
+                      setStrategySource(value);
+                      setHermesSpec(null);
+                      setHermesError(null);
+                    }}
+                  >
+                    <span className={classNames(
+                      "text-xs font-medium",
+                      strategySource === value ? "text-primary" : "text-base-content/70"
+                    )}>
+                      {label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Existing Strategy Selection */}
+              {strategySource === "existing" && (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {strategiesLoading ? (
+                    <div className="skeleton h-9 min-w-0 flex-1 rounded-lg" />
+                  ) : (
+                    <label className="form-control min-w-0 flex-1">
+                      <span className="sr-only">Strategy</span>
+                      <select
+                        className="select select-bordered select-sm w-full"
+                        value={form.strategy}
+                        onChange={(e) => updateField("strategy", e.target.value)}
+                      >
+                        <option value="">Select strategy...</option>
+                        {strategyList.map((s) => (
+                          <option key={s.strategy_name} value={s.strategy_name}>
+                            {s.strategy_name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  <label className="form-control sm:w-64">
+                    <span className="sr-only">Template Type</span>
                     <select
                       className="select select-bordered select-sm w-full"
-                      value={form.strategy}
-                      onChange={(e) => updateField("strategy", e.target.value)}
+                      value={templateType}
+                      onChange={(e) => setTemplateType(e.target.value)}
+                      disabled={isGenerating}
+                      title="Choose which strategy template to generate"
                     >
-                      <option value="">Select strategy...</option>
-                      {strategyList.map((s) => (
-                        <option key={s.strategy_name} value={s.strategy_name}>
-                          {s.strategy_name}
-                        </option>
-                      ))}
+                      <option value="omni">Omni-Strategy</option>
+                      <option value="catfactory">CatFactory</option>
+                      <option value="adaptive">Adaptive Regime</option>
+                      <option value="ensemble">Ensemble Voting</option>
+                      <option value="momentum">Momentum EMA/ATR</option>
                     </select>
                   </label>
-                )}
-                <label className="form-control sm:w-64">
-                  <span className="sr-only">Template Type</span>
-                  <select
-                    className="select select-bordered select-sm w-full"
-                    value={templateType}
-                    onChange={(e) => setTemplateType(e.target.value)}
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm gap-1.5"
+                    onClick={() => handleGenerateTemplate(form, updateField)}
                     disabled={isGenerating}
-                    title="Choose which strategy template to generate"
                   >
-                    <option value="omni">Omni-Strategy</option>
-                    <option value="catfactory">CatFactory</option>
-                    <option value="adaptive">Adaptive Regime</option>
-                    <option value="ensemble">Ensemble Voting</option>
-                    <option value="momentum">Momentum EMA/ATR</option>
-                  </select>
-                </label>
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm gap-1.5"
-                  onClick={() => handleGenerateTemplate(form, updateField)}
-                  disabled={isGenerating}
-                >
-                  {isGenerating && <span className="loading loading-spinner loading-xs" />}
-                  Generate
-                </button>
-              </div>
-              {generateStatus && (
+                    {isGenerating && <span className="loading loading-spinner loading-xs" />}
+                    Generate
+                  </button>
+                </div>
+              )}
+
+              {/* Hermes Agent Generation Form */}
+              {strategySource === "generated" && (
+                <div className="space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="form-control">
+                      <span className="label label-text text-xs font-medium">Trading Style</span>
+                      <select
+                        className="select select-bordered select-xs"
+                        value={hermesForm.trading_style}
+                        onChange={(e) => setHermesForm({ ...hermesForm, trading_style: e.target.value })}
+                      >
+                        <option value="scalping">Scalping</option>
+                        <option value="intraday">Intraday</option>
+                        <option value="swing">Swing</option>
+                        <option value="position">Position</option>
+                      </select>
+                    </label>
+                    <label className="form-control">
+                      <span className="label label-text text-xs font-medium">Direction</span>
+                      <select
+                        className="select select-bordered select-xs"
+                        value={hermesForm.direction}
+                        onChange={(e) => setHermesForm({ ...hermesForm, direction: e.target.value })}
+                      >
+                        <option value="long">Long Only</option>
+                        <option value="short">Short Only</option>
+                        <option value="both">Both</option>
+                      </select>
+                    </label>
+                    <label className="form-control">
+                      <span className="label label-text text-xs font-medium">Risk Profile</span>
+                      <select
+                        className="select select-bordered select-xs"
+                        value={hermesForm.risk_profile}
+                        onChange={(e) => setHermesForm({ ...hermesForm, risk_profile: e.target.value })}
+                      >
+                        <option value="conservative">Conservative</option>
+                        <option value="balanced">Balanced</option>
+                        <option value="aggressive">Aggressive</option>
+                      </select>
+                    </label>
+                    <label className="form-control">
+                      <span className="label label-text text-xs font-medium">Timeframe</span>
+                      <select
+                        className="select select-bordered select-xs"
+                        value={hermesForm.timeframe_preference}
+                        onChange={(e) => setHermesForm({ ...hermesForm, timeframe_preference: e.target.value })}
+                      >
+                        {["1m", "5m", "15m", "30m", "1h", "4h", "1d"].map((tf) => (
+                          <option key={tf} value={tf}>{tf}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <label className="form-control">
+                    <span className="label label-text text-xs font-medium">User Notes (optional)</span>
+                    <textarea
+                      className="textarea textarea-bordered textarea-xs"
+                      rows={2}
+                      value={hermesForm.user_notes}
+                      onChange={(e) => setHermesForm({ ...hermesForm, user_notes: e.target.value })}
+                      placeholder="Describe your strategy preferences..."
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm gap-2"
+                    onClick={handleGenerateStrategySpec}
+                    disabled={isGeneratingSpec}
+                  >
+                    {isGeneratingSpec && <span className="loading loading-spinner loading-xs" />}
+                    Generate Strategy Spec
+                  </button>
+                  {hermesError && (
+                    <div className="rounded border border-error/20 bg-error/10 px-3 py-2 text-xs text-error">
+                      {hermesError}
+                    </div>
+                  )}
+                  {hermesSpec && (
+                    <div className="rounded border border-success/20 bg-success/10 p-3">
+                      <p className="text-xs font-semibold text-success mb-2">Strategy Spec Generated</p>
+                      <div className="text-[10px] text-base-content/70 space-y-1">
+                        <p><strong>Name:</strong> {hermesSpec.name}</p>
+                        <p><strong>Description:</strong> {hermesSpec.description}</p>
+                        <p><strong>Style:</strong> {hermesSpec.trading_style}</p>
+                        <p><strong>Direction:</strong> {hermesSpec.direction}</p>
+                        <p><strong>Timeframe:</strong> {hermesSpec.timeframe}</p>
+                        <p><strong>Indicators:</strong> {hermesSpec.indicators?.length || 0}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-success btn-xs mt-3 gap-2"
+                        onClick={handleConfirmAndStart}
+                      >
+                        <PlayIcon className="h-3 w-3" />
+                        Confirm & Start AutoQuant
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {generateStatus && strategySource === "existing" && (
                 <div
                   className={classNames(
                     "rounded border px-3 py-2 text-xs",

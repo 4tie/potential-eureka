@@ -58,7 +58,7 @@ async def generate_strategy_spec(
     except (ValidationError, TypeError, ValueError):
         return {"spec": None, "errors": ["INVALID_STRATEGY_SPEC_SCHEMA"], "raw_response": raw_response}
 
-    errors = validate_spec(spec)
+    errors = validate_spec(spec, strict_validation=True)
     if errors:
         return {"spec": None, "errors": errors, "raw_response": raw_response}
 

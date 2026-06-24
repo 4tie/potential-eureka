@@ -460,6 +460,35 @@ export default function SettingsTab() {
                 )}
               </div>
 
+              {/* Strategy Designer Model */}
+              <div className="form-control">
+                <label className="label py-1">
+                  <span className="label-text font-medium text-sm">Strategy Designer Model</span>
+                  <span className="label-text-alt text-base-content/50 text-xs">Optional override for AI strategy generation (default: hermes3:3b)</span>
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    className="select select-bordered select-sm flex-1"
+                    value={settings.ollama_model_strategylab || ""}
+                    onChange={e => update("ollama_model_strategylab", e.target.value)}
+                    disabled={saving || modelsLoading}
+                  >
+                    {!settings.ollama_model_strategylab && (
+                      <option value="">— Use default (hermes3:3b) —</option>
+                    )}
+                    {settings.ollama_model_strategylab && !models.includes(settings.ollama_model_strategylab) && (
+                      <option value={settings.ollama_model_strategylab}>{settings.ollama_model_strategylab}</option>
+                    )}
+                    {models.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <p className="mt-1.5 text-[11px] text-base-content/40">
+                  Leave empty to use the default hermes3:3b model for strategy design
+                </p>
+              </div>
+
               {/* quick-start hint */}
               {!currentModel && (
                 <div className="bg-base-300/30 border border-base-300 rounded-lg p-3 text-xs text-base-content/50 space-y-1">
