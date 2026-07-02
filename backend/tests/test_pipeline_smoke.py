@@ -1,10 +1,10 @@
 """
-backend/tests/test_pipeline_smoke.py — End-to-end smoke tests for the 7-stage
+backend/tests/test_pipeline_smoke.py — End-to-end smoke tests for the 6-stage
 Auto-Quant pipeline using a minimal mock strategy and a patched _run_subprocess.
 
 Coverage
 --------
-  • All 7 stages transition correctly  (pending → running → passed)
+  • All 6 stages transition correctly  (pending → running → passed)
   • Self-healing retry loop fires and terminates when OOS improves
   • Retry loop exhausts max_retries and terminates with a failed stage
   • state.json is written at the right checkpoints (create_run + every _pass_stage)

@@ -48,6 +48,7 @@ export default function ProfessionalChartsTab({ runId, runType = "backtest" }) {
 
   useEffect(() => {
     if (!runId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadChartData(indicators);
   }, [runId, indicators, loadChartData]);
 

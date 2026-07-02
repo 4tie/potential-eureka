@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import pytest
 
+from backend.api.routers.auto_quant import _websocket_state_message
+from backend.tests.test_helpers import _make_state
+
 from .fixtures.websocket import (
     create_final_message,
     create_keepalive_message,
@@ -109,9 +112,9 @@ class TestWebSocketStageValidation:
         msg = create_snapshot_message(stage=0)
         assert validate_websocket_message(msg)
 
-    def test_stage_one_through_seven(self):
-        """Verify all stages 1-7 are valid."""
-        for stage in range(1, 8):
+    def test_stage_one_through_six(self):
+        """Verify all current stages 1-6 are valid."""
+        for stage in range(1, 7):
             msg = create_stage_message(stage=stage, progress=50)
             assert validate_websocket_message(msg)
 
@@ -122,10 +125,10 @@ class TestWebSocketStageValidation:
         with pytest.raises(ValueError):
             validate_websocket_message(msg)
 
-    def test_stage_invalid_over_seven(self):
-        """Verify stage over 7 raises error."""
+    def test_stage_invalid_over_six(self):
+        """Verify stage over 6 raises error."""
         msg = create_snapshot_message(stage=0)
-        msg["stage"] = 8
+        msg["stage"] = 7
         with pytest.raises(ValueError):
             validate_websocket_message(msg)
 
@@ -185,6 +188,24 @@ class TestWebSocketDataField:
         """Verify snapshot data contains stages list."""
         msg = create_snapshot_message()
         assert isinstance(msg["data"].get("stages"), list)
+
+    def test_backend_snapshot_data_includes_status_enrichments(self, tmp_path):
+        """Backend WebSocket snapshots should match HTTP status enrichments."""
+        state = _make_state(str(tmp_path / "user_data"), status="running", current_stage=2)
+
+        msg = _websocket_state_message(
+            state,
+            message_type="snapshot",
+            message="Connected to pipeline stream.",
+        )
+
+        assert validate_websocket_message(msg)
+        assert msg["type"] == "snapshot"
+        assert msg["data"]["run_id"] == state.run_id
+        assert "recent_events" in msg["data"]
+        assert "stage_cards" in msg["data"]
+        assert "workflow" in msg["data"]
+        assert "error_object" in msg["data"]
 
 
 class TestWebSocketStatusValues:

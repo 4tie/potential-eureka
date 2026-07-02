@@ -61,6 +61,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
   const [wfoWindows, setWfoWindows] = useState([]);
   const [dataHealingStatus, setDataHealingStatus] = useState(null);
   const [pairStatusMap, setPairStatusMap] = useState({});
+  const [pipelineError, setPipelineError] = useState(null);
 
   const elapsedRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -214,6 +215,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
   const handleWsMessage = useCallback((event) => {
     try {
       const msg = JSON.parse(event.data);
+      setPipelineError(null);
       if (msg.type === "keepalive") return;
 
       if (msg.type === "snapshot" || msg.type === "final") {
@@ -295,6 +297,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
       }
     } catch (err) {
       console.error("Failed to parse WebSocket message:", err);
+      setPipelineError(`Failed to read a live AutoQuant update: ${err.message || err}`);
     }
   }, [appendEventLog, applySnapshot, applyStageEvent, stopLiveTimersForStatus]);
 
@@ -303,10 +306,12 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     statusRequestRef.current = true;
     try {
       const data = await api.autoquant.getStatus(targetRunId);
+      setPipelineError(null);
       applySnapshot(data);
       return data;
     } catch (err) {
       console.debug("Failed to sync AutoQuant status:", err);
+      setPipelineError(`Failed to refresh AutoQuant status: ${err.message || err}`);
       return null;
     } finally {
       statusRequestRef.current = false;
@@ -434,6 +439,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     setWfoWindows([]);
     setDataHealingStatus(null);
     setPairStatusMap({});
+    setPipelineError(null);
     seenLogEventsRef.current.clear();
     reconnectAttemptsRef.current = 0;
     completedNotifiedRef.current = false;
@@ -443,10 +449,12 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     if (!currentRunId) return null;
     try {
       const data = await api.autoquant.getReport(currentRunId);
+      setPipelineError(null);
       setReport(data);
       return data;
     } catch (err) {
       console.error("Failed to load report:", err);
+      setPipelineError(`Failed to load AutoQuant report: ${err.message || err}`);
       return null;
     }
   }, []);
@@ -455,6 +463,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     try {
       resetPipelineState();
       const data = await api.autoquant.startRun(payload);
+      setPipelineError(null);
       setRunId(data.run_id);
       setPipelineState({ run_id: data.run_id, status: "running", created_at: new Date().toISOString() });
       setRunStartedAtMs(Date.now());
@@ -463,6 +472,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
       return data.run_id;
     } catch (err) {
       console.error("Failed to start pipeline:", err);
+      setPipelineError(`Failed to start AutoQuant: ${err.message || err}`);
       throw err;
     }
   }, [resetPipelineState, startElapsedTimer]);
@@ -472,6 +482,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     const pairs = (approvedPairs || []).filter(Boolean);
     try {
       const data = await api.autoquant.resumeRun(runId, pairs);
+      setPipelineError(null);
       setPipelineState((prev) => ({
         ...(prev || {}),
         status: "running",
@@ -486,6 +497,7 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
       return data;
     } catch (err) {
       console.error("Failed to resume pipeline:", err);
+      setPipelineError(`Failed to resume AutoQuant: ${err.message || err}`);
       throw err;
     }
   }, [runId, startElapsedTimer, connectWs, syncStatus]);
@@ -494,9 +506,11 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     if (!runId) return;
     try {
       await api.autoquant.cancelRun(runId);
+      setPipelineError(null);
       applySnapshot({ status: "cancelled", completed_at: new Date().toISOString() });
     } catch (err) {
       console.error("Failed to cancel pipeline:", err);
+      setPipelineError(`Failed to cancel AutoQuant: ${err.message || err}`);
       throw err;
     }
   }, [runId, applySnapshot]);
@@ -576,6 +590,8 @@ export default function useAutoQuantPipeline(initialPipelineState = null) {
     setDataHealingStatus,
     pairStatusMap,
     setPairStatusMap,
+    pipelineError,
+    clearPipelineError: () => setPipelineError(null),
     startPipeline,
     resumePipeline,
     cancelPipeline,

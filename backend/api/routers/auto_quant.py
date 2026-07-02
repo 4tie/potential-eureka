@@ -1830,6 +1830,26 @@ async def get_rl_trades(run_id: str) -> dict:
 
 # ── WebSocket endpoint ────────────────────────────────────────────────────────
 
+def _websocket_state_message(
+    state: Any,
+    *,
+    message_type: str,
+    message: str,
+    progress: int | None = None,
+) -> dict[str, Any]:
+    """Build a WebSocket snapshot while preserving the legacy top-level shape."""
+    data = get_pipeline_status(state.run_id)
+    resolved_progress = data.get("progress", 0) if progress is None else progress
+    return {
+        "type": message_type,
+        "stage": state.current_stage,
+        "status": state.status,
+        "message": message,
+        "progress": resolved_progress,
+        "data": data,
+    }
+
+
 @router.websocket("/ws/{run_id}")
 async def pipeline_websocket(websocket: WebSocket, run_id: str) -> None:
     """Real-time event stream for a pipeline run.
@@ -1848,14 +1868,13 @@ async def pipeline_websocket(websocket: WebSocket, run_id: str) -> None:
         return
 
     # Send current state snapshot immediately so clients can restore on reconnect
-    await websocket.send_json({
-        "type": "snapshot",
-        "stage": state.current_stage,
-        "status": state.status,
-        "message": "Connected to pipeline stream.",
-        "progress": _pl._state_snapshot(state).get("progress", 0),
-        "data": _pl._state_snapshot(state),
-    })
+    await websocket.send_json(
+        _websocket_state_message(
+            state,
+            message_type="snapshot",
+            message="Connected to pipeline stream.",
+        )
+    )
 
     # If pipeline is already finished, just close
     if state.status in ("completed", "failed", "cancelled", "interrupted"):
@@ -1879,14 +1898,14 @@ async def pipeline_websocket(websocket: WebSocket, run_id: str) -> None:
                 # Pipeline done — send final snapshot then close
                 final = _pl.get_state(run_id)
                 if final:
-                    await websocket.send_json({
-                        "type": "final",
-                        "stage": final.current_stage,
-                        "status": final.status,
-                        "message": final.error or "Pipeline finished.",
-                        "progress": 100 if final.status == "completed" else -1,
-                        "data": _pl._state_snapshot(final),
-                    })
+                    await websocket.send_json(
+                        _websocket_state_message(
+                            final,
+                            message_type="final",
+                            message=final.error or "Pipeline finished.",
+                            progress=100 if final.status == "completed" else -1,
+                        )
+                    )
                 break
 
             await websocket.send_json(msg)

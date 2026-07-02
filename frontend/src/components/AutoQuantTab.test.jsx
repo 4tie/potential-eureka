@@ -152,34 +152,36 @@ describe('AutoQuantTab', () => {
       status: 'running',
       current_stage: 1,
       stages: [
-        { index: 1, name: 'Pre-Selection', status: 'running', message: '', data: {} },
-        { index: 2, name: 'Hyperopt Execution', status: 'pending', message: '', data: {} },
-        { index: 3, name: 'OOS Validation', status: 'pending', message: '', data: {} },
-        { index: 4, name: 'Risk Assessment', status: 'pending', message: '', data: {} },
-        { index: 5, name: 'Delivery', status: 'pending', message: '', data: {} },
+        { index: 1, name: 'Pre-Flight Filtering', status: 'running', message: '', data: {} },
+        { index: 2, name: 'Portfolio Baseline Backtest', status: 'pending', message: '', data: {} },
+        { index: 3, name: 'WFA Hyperopt', status: 'pending', message: '', data: {} },
+        { index: 4, name: 'Robustness & Feature Injection', status: 'pending', message: '', data: {} },
+        { index: 5, name: 'Portfolio Competition', status: 'pending', message: '', data: {} },
+        { index: 6, name: 'Delivery', status: 'pending', message: '', data: {} },
       ],
     };
 
     await renderAutoQuant({ pipelineState: mockPipelineState });
-    expect(screen.getAllByText(/Pre-Selection/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Pre-Flight Filtering/).length).toBeGreaterThan(0);
   });
 
-  test('displays new 5-stage workflow', async () => {
+  test('displays current 6-stage workflow', async () => {
     const mockPipelineState = {
       run_id: 'test-run-id',
       status: 'running',
       current_stage: 1,
       stages: [
-        { index: 1, name: 'Pre-Selection', status: 'running', message: '', data: {} },
-        { index: 2, name: 'Hyperopt Execution', status: 'pending', message: '', data: {} },
-        { index: 3, name: 'OOS Validation', status: 'pending', message: '', data: {} },
-        { index: 4, name: 'Risk Assessment', status: 'pending', message: '', data: {} },
-        { index: 5, name: 'Delivery', status: 'pending', message: '', data: {} },
+        { index: 1, name: 'Pre-Flight Filtering', status: 'running', message: '', data: {} },
+        { index: 2, name: 'Portfolio Baseline Backtest', status: 'pending', message: '', data: {} },
+        { index: 3, name: 'WFA Hyperopt', status: 'pending', message: '', data: {} },
+        { index: 4, name: 'Robustness & Feature Injection', status: 'pending', message: '', data: {} },
+        { index: 5, name: 'Portfolio Competition', status: 'pending', message: '', data: {} },
+        { index: 6, name: 'Delivery', status: 'pending', message: '', data: {} },
       ],
     };
 
     await renderAutoQuant({ pipelineState: mockPipelineState });
-    expect(screen.getAllByText(/Hyperopt Execution/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/WFA Hyperopt/).length).toBeGreaterThan(0);
   });
 
   test('displays selected_pairs after stage 1 completion', async () => {
@@ -194,17 +196,44 @@ describe('AutoQuantTab', () => {
         { key: 'SOL/USDT', profit: 0.05 },
       ],
       stages: [
-        { index: 1, name: 'Pre-Selection', status: 'passed', message: '', data: {} },
-        { index: 2, name: 'Hyperopt Execution', status: 'running', message: '', data: {} },
-        { index: 3, name: 'OOS Validation', status: 'pending', message: '', data: {} },
-        { index: 4, name: 'Risk Assessment', status: 'pending', message: '', data: {} },
-        { index: 5, name: 'Delivery', status: 'pending', message: '', data: {} },
+        { index: 1, name: 'Pre-Flight Filtering', status: 'passed', message: '', data: {} },
+        { index: 2, name: 'Portfolio Baseline Backtest', status: 'running', message: '', data: {} },
+        { index: 3, name: 'WFA Hyperopt', status: 'pending', message: '', data: {} },
+        { index: 4, name: 'Robustness & Feature Injection', status: 'pending', message: '', data: {} },
+        { index: 5, name: 'Portfolio Competition', status: 'pending', message: '', data: {} },
+        { index: 6, name: 'Delivery', status: 'pending', message: '', data: {} },
       ],
     };
 
     await renderAutoQuant({ pipelineState: mockPipelineState });
     // Pipeline now has 6 stages instead of 7
     expect(screen.getByText(/Stage 2\/6/)).toBeInTheDocument();
+  });
+
+  test('displays AutoQuant settings errors visibly', async () => {
+    fetch.mockImplementation((url) => {
+      if (String(url).includes('/api/auto-quant/timeframe-thresholds/')) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ detail: 'Threshold service unavailable' }),
+        });
+      }
+      if (String(url).includes('/api/auto-quant/options')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({}),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ runs: [] }),
+      });
+    });
+
+    await renderAutoQuant();
+
+    expect(await screen.findByText('AutoQuant Settings Error')).toBeInTheDocument();
+    expect(screen.getByText(/Threshold service unavailable/)).toBeInTheDocument();
   });
 
   test('displays pre-selection configuration options', async () => {

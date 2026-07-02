@@ -125,8 +125,8 @@ def validate_websocket_message(msg: dict[str, Any]) -> bool:
             raise ValueError(f"Progress must be int in range [0, 100], got {progress}")
 
         stage = msg.get("stage")
-        if not isinstance(stage, int) or not (0 <= stage <= 7):
-            raise ValueError(f"Stage must be int in range [0, 7], got {stage}")
+        if not isinstance(stage, int) or not (0 <= stage <= 6):
+            raise ValueError(f"Stage must be int in range [0, 6], got {stage}")
 
     return True
 
@@ -177,13 +177,13 @@ def create_final_message(
     """Create a valid final message."""
     return {
         "type": "final",
-        "stage": 7,
+        "stage": 6,
         "status": status,
         "message": f"Pipeline {status}",
         "progress": progress,
         "data": {
             "run_id": "test-run-id",
             "status": status,
-            "stages": [{"index": i, "status": "passed"} for i in range(1, 8)],
+            "stages": [{"index": i, "status": "passed"} for i in range(1, 7)],
         },
     }

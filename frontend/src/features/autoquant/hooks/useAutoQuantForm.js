@@ -7,18 +7,21 @@ export default function useAutoQuantForm() {
   const [optionsLoaded, setOptionsLoaded] = useState(false);
   const [timeframeProfile, setTimeframeProfile] = useState(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [formError, setFormError] = useState(null);
 
   // Load saved options on mount
   useEffect(() => {
     const loadOptions = async () => {
       try {
         const data = await loadAutoQuantOptions();
+        setFormError(null);
         setForm((prev) => ({
           ...prev,
           ...data,
         }));
       } catch (err) {
         console.error("Failed to load saved options:", err);
+        setFormError(`Failed to load saved AutoQuant options: ${err.message || err}`);
       } finally {
         setOptionsLoaded(true);
       }
@@ -34,6 +37,7 @@ export default function useAutoQuantForm() {
         await saveAutoQuantOptions(form);
       } catch (err) {
         console.error("Failed to save options:", err);
+        setFormError(`Failed to save AutoQuant options: ${err.message || err}`);
       }
     }, 500); // 500ms debounce
 
@@ -54,6 +58,7 @@ export default function useAutoQuantForm() {
       }));
     } catch (err) {
       console.debug("Failed to apply timeframe thresholds:", err);
+      setFormError(`Failed to load thresholds for ${tf}: ${err.message || err}`);
     }
   }, []);
 
@@ -86,5 +91,7 @@ export default function useAutoQuantForm() {
     showAdvanced,
     setShowAdvanced,
     optionsLoaded,
+    formError,
+    clearFormError: () => setFormError(null),
   };
 }

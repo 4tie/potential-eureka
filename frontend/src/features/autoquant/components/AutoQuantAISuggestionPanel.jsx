@@ -67,7 +67,10 @@ export default function AutoQuantAISuggestionPanel({
   const [error, setError] = useState("");
   const [decision, setDecision] = useState(null);
 
-  const suggestions = pipelineState?.ai_suggestions || pipelineState?.ai_assistance?.suggestions || [];
+  const suggestions = useMemo(
+    () => pipelineState?.ai_suggestions || pipelineState?.ai_assistance?.suggestions || [],
+    [pipelineState?.ai_suggestions, pipelineState?.ai_assistance?.suggestions]
+  );
   const pendingId = pipelineState?.pending_ai_suggestion_id || pipelineState?.ai_assistance?.pending_ai_suggestion_id;
   const pendingSuggestion = useMemo(
     () => suggestions.find((item) => item?.id === pendingId) || null,

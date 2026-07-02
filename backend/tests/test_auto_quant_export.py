@@ -25,6 +25,7 @@ def _completed_export_state(
     *,
     include_params: bool = True,
     include_config: bool = True,
+    config_dry_run: bool = True,
     validation_status: str = "validated",
     readiness_label: str = "Dry-run ready",
 ):
@@ -59,7 +60,7 @@ class {strategy_name}(IStrategy):
         encoding="utf-8",
     )
     if include_config:
-        config_file.write_text(json.dumps({"exchange": {"name": "binance"}, "dry_run": True}), encoding="utf-8")
+        config_file.write_text(json.dumps({"exchange": {"name": "binance"}, "dry_run": config_dry_run}), encoding="utf-8")
     if include_params:
         params_file.write_text(json.dumps({"strategy_name": strategy_name, "params": {"buy": {}}}), encoding="utf-8")
 
@@ -175,6 +176,22 @@ def test_export_auto_creates_config_when_missing(tmp_path):
     assert config["exchange"]["name"] == "binance"
     assert config["exchange"]["pair_whitelist"] == ["BTC/USDT"]
     assert any("Config artifact was missing" in warning for warning in manifest["warnings"])
+
+
+def test_export_forces_existing_live_config_to_dry_run(tmp_path):
+    state = _completed_export_state(
+        tmp_path,
+        strategy="LiveConfig",
+        include_config=True,
+        config_dry_run=False,
+    )
+
+    response = _run(export_pipeline(state.run_id))
+    config = _zip_json(response, "config.json")
+    manifest = _zip_json(response, "autoquant_export_manifest.json")
+
+    assert config["dry_run"] is True
+    assert any("dry_run=false" in warning and "forced" in warning for warning in manifest["warnings"])
 
 
 def test_export_manifest_warns_when_not_validated(tmp_path):

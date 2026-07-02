@@ -1,4 +1,4 @@
-"""Full 7-stage pipeline execution tests with mocked subprocess.
+"""Full 6-stage pipeline execution tests with mocked subprocess.
 
 Tests the complete pipeline orchestration from start to completion,
 verifying all stages execute in order with correct state transitions.
@@ -18,8 +18,8 @@ class TestPipelineHappyPath:
     """Test complete pipeline execution with all stages passing."""
 
     @pytest.mark.asyncio
-    async def test_all_7_stages_complete(self, app_with_service, mock_freqtrade_subprocess):
-        """Verify all 7 stages execute sequentially and complete successfully."""
+    async def test_all_6_stages_complete(self, app_with_service, mock_freqtrade_subprocess):
+        """Verify all 6 stages execute sequentially and complete successfully."""
         client, tmp_path, settings = app_with_service
 
         payload = {

@@ -41,11 +41,26 @@ A comprehensive Freqtrade-based trading strategy discovery, validation, optimiza
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- Freqtrade
+- Freqtrade only for trading/backtest pipeline runs
 
 ### Backend Setup
+For API development and lightweight backend tests, install only core and dev dependencies:
+
 ```bash
-# Install TA-Lib system dependencies (required before pip install)
+# Recommended local environment
+python -m venv .venv
+.venv/bin/python -m pip install -U pip
+.venv/bin/python -m pip install -r requirements-core.txt -r requirements-dev.txt
+
+# Run lightweight backend tests
+.venv/bin/python -m pytest backend/tests/
+```
+
+Install heavier feature groups only when needed:
+
+```bash
+# Trading / Freqtrade pipeline features
+# TA-Lib system dependencies are required before requirements-trading.txt.
 # Ubuntu/Debian
 sudo apt-get install -y build-essential wget
 wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
@@ -56,11 +71,24 @@ make
 sudo make install
 cd ..
 
-# Install Python dependencies
-pip install -r requirements.txt
+# Freqtrade, TA-Lib, vectorbt
+.venv/bin/python -m pip install -r requirements-trading.txt
 
+# AI/ML features
+.venv/bin/python -m pip install -r requirements-ai.txt
+
+# Reinforcement learning features only when explicitly needed
+.venv/bin/python -m pip install -r requirements-rl.txt
+
+# Full install aggregator, for machines intended to run every feature group
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+Start the backend:
+
+```bash
 # Start backend server
-uvicorn server:app --reload --port 8000
+.venv/bin/python -m uvicorn server:app --reload --port 8000
 ```
 
 ### Frontend Setup
@@ -74,17 +102,17 @@ npm run dev
 
 **Backend Tests:**
 ```bash
-# All backend tests
-pytest backend/tests/
+# Lightweight/core backend tests
+.venv/bin/python -m pytest backend/tests/
 
 # Unit tests only
-pytest backend/tests/test_*.py
+.venv/bin/python -m pytest backend/tests/test_*.py
 
 # Integration tests
-pytest backend/tests/integration/
+.venv/bin/python -m pytest backend/tests/integration/
 
 # Router tests
-pytest backend/tests/test_api.py
+.venv/bin/python -m pytest backend/tests/test_api.py
 ```
 
 **Frontend Tests:**

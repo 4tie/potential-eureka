@@ -4,6 +4,7 @@ import useAutoQuantForm from "./hooks/useAutoQuantForm";
 import useAutoQuantUI from "./hooks/useAutoQuantUI";
 import useAutoQuantScreening from "./hooks/useAutoQuantScreening";
 import useAutoQuantStrategyGen from "./hooks/useAutoQuantStrategyGen";
+import useAutoQuantPipeline from "./hooks/useAutoQuantPipeline";
 
 // Mock the API
 jest.mock("./api", () => ({
@@ -19,6 +20,23 @@ jest.mock("./api", () => ({
 
 jest.mock("./utils", () => ({
   normalizeStrategies: jest.fn((strategies) => strategies),
+  playChime: jest.fn(),
+}));
+
+jest.mock("../../services/api", () => ({
+  __esModule: true,
+  default: {
+    autoquant: {
+      startRun: jest.fn(() => Promise.resolve({ run_id: "run-1" })),
+      getStatus: jest.fn(() => Promise.resolve({ run_id: "run-1", status: "running", stages: [] })),
+      getReport: jest.fn(() => Promise.resolve({ run_id: "run-1" })),
+      resumeRun: jest.fn(() => Promise.resolve({ run_id: "run-1", status: "running" })),
+      cancelRun: jest.fn(() => Promise.resolve({ ok: true })),
+      connectWebSocket: jest.fn(() => ({
+        close: jest.fn(),
+      })),
+    },
+  },
 }));
 
 describe("AutoQuant Hooks Integration Tests", () => {
@@ -211,6 +229,21 @@ describe("AutoQuant Hooks Integration Tests", () => {
     expect(formResult.current.showAdvanced).toBe(false); // showAdvanced is in form hook
     expect(uiResult.current.showHyperopt).toBe(false); // UI hook has showHyperopt
 
+    consoleSpy.mockRestore();
+  });
+
+  test("useAutoQuantPipeline exposes failed start errors", async () => {
+    const api = (await import("../../services/api")).default;
+    api.autoquant.startRun.mockRejectedValueOnce(new Error("Backend unavailable"));
+    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    const { result } = renderHook(() => useAutoQuantPipeline());
+
+    await act(async () => {
+      await expect(result.current.startPipeline({ strategy: "TestStrategy" })).rejects.toThrow("Backend unavailable");
+    });
+
+    expect(result.current.pipelineError).toMatch("Failed to start AutoQuant");
+    expect(result.current.pipelineError).toMatch("Backend unavailable");
     consoleSpy.mockRestore();
   });
 

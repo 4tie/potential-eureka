@@ -241,7 +241,20 @@ def _resolve_or_create_config(
     files = report.get("files") if isinstance(report.get("files"), dict) else {}
     config_path = _first_existing_artifact(state, run_dir, [files.get("config"), "config.json"], "config")
     if config_path is not None:
-        return config_path
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            warnings.append(f"Could not read export config: {exc}. A minimal dry-run config was generated.")
+            config = {}
+        if not isinstance(config, dict):
+            warnings.append("Export config was not a JSON object; a minimal dry-run config was generated.")
+            config = {}
+        if config.get("dry_run") is False:
+            warnings.append("Source config had dry_run=false; exported config was forced to dry_run=true.")
+        config["dry_run"] = True
+        sanitized_path = run_dir / "config.json"
+        sanitized_path.write_text(json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8")
+        return sanitized_path
 
     config: dict[str, Any] = {}
     source_config = Path(getattr(state, "config_file", "") or "")
@@ -254,7 +267,10 @@ def _resolve_or_create_config(
     if not config:
         warnings.append("Config artifact was missing; generated a minimal dry-run config that must be reviewed.")
 
-    config.setdefault("dry_run", True)
+    source_was_live = config.get("dry_run") is False
+    config["dry_run"] = True
+    if source_was_live:
+        warnings.append("Source config had dry_run=false; exported config was forced to dry_run=true.")
     if getattr(state, "timeframe", None):
         config["timeframe"] = state.timeframe
     if getattr(state, "exchange", None):
@@ -316,7 +332,7 @@ def _validation_warnings(state: Any, report: dict[str, Any]) -> list[str]:
 
     config = report.get("config") if isinstance(report.get("config"), dict) else {}
     if config.get("dry_run") is False:
-        warnings.append("Report/config indicates dry_run=false. Confirm manually before any live trading.")
+        warnings.append("Report/config indicates dry_run=false; exported bundle will force dry_run=true.")
 
     return warnings
 

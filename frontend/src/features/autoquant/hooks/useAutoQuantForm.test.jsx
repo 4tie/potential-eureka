@@ -172,6 +172,7 @@ describe("useAutoQuantForm", () => {
     });
 
     expect(consoleSpy).toHaveBeenCalledWith("Failed to load saved options:", expect.any(Error));
+    expect(result.current.formError).toMatch("Failed to load saved AutoQuant options");
 
     consoleSpy.mockRestore();
   });
@@ -199,14 +200,13 @@ describe("useAutoQuantForm", () => {
     });
 
     expect(consoleSpy).toHaveBeenCalledWith("Failed to save options:", expect.any(Error));
+    expect(result.current.formError).toMatch("Failed to save AutoQuant options");
 
     consoleSpy.mockRestore();
   });
 
   test("handles timeframe thresholds error gracefully", async () => {
     const { loadTimeframeThresholds } = await import("../api");
-    loadTimeframeThresholds.mockRejectedValueOnce(new Error("Thresholds failed"));
-
     const consoleSpy = jest.spyOn(console, "debug").mockImplementation();
 
     const { result } = renderHook(() => useAutoQuantForm());
@@ -214,6 +214,11 @@ describe("useAutoQuantForm", () => {
     await waitFor(() => {
       expect(result.current.optionsLoaded).toBe(true);
     });
+    await waitFor(() => {
+      expect(loadTimeframeThresholds).toHaveBeenCalled();
+    });
+
+    loadTimeframeThresholds.mockRejectedValueOnce(new Error("Thresholds failed"));
 
     act(() => {
       result.current.updateField("timeframe", "15m");
@@ -224,6 +229,7 @@ describe("useAutoQuantForm", () => {
     });
 
     expect(consoleSpy).toHaveBeenCalledWith("Failed to apply timeframe thresholds:", expect.any(Error));
+    expect(result.current.formError).toMatch("Failed to load thresholds for 15m");
 
     consoleSpy.mockRestore();
   });

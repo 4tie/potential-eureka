@@ -1,14 +1,13 @@
 """Auto-Quant Pipeline Module.
 
 This module provides the automated strategy optimization pipeline for Freqtrade.
-The pipeline runs 7 stages sequentially:
-1. Sanity Backtest
-2. Hyperopt Execution (with WFO support)
-3. Auto-Patching
-4. Out-of-Sample Validation
-5. Multi-Pair Stress Test
-6. Risk Assessment (with Monte Carlo simulation)
-7. Delivery (strategy + config generation)
+The pipeline runs 6 stages sequentially:
+1. Pre-Flight Filtering
+2. Portfolio Baseline Backtest
+3. WFA Hyperopt
+4. Robustness & Feature Injection
+5. Portfolio Competition
+6. Delivery
 
 The pipeline includes self-healing retry logic for overfitting detection.
 """

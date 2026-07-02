@@ -203,14 +203,25 @@ def create_app(root_dir: Path | None = None) -> FastAPI:
     # Replace only the legacy AutoQuant export handler. All other AutoQuant
     # routes remain owned by auto_quant.py, while export QA lives in a focused
     # audited router.
-    app.router.routes[:] = [
-        route
-        for route in app.router.routes
-        if not (
+    def _is_legacy_autoquant_export_route(route) -> bool:
+        return (
             getattr(route, "path", None) == "/api/auto-quant/export/{run_id}"
             and "POST" in getattr(route, "methods", set())
         )
+
+    app.router.routes[:] = [
+        route
+        for route in app.router.routes
+        if not _is_legacy_autoquant_export_route(route)
     ]
+    for route in app.router.routes:
+        original_router = getattr(route, "original_router", None)
+        if original_router is not None and hasattr(original_router, "routes"):
+            original_router.routes[:] = [
+                nested
+                for nested in original_router.routes
+                if not _is_legacy_autoquant_export_route(nested)
+            ]
     app.include_router(auto_quant_export.router)
     app.include_router(ai_agent.router)
     app.include_router(candidate.router)

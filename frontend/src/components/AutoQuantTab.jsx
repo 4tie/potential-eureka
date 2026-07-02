@@ -5,6 +5,7 @@ import { parsePairUniverse } from "../features/autoquant/utils";
 import { getProgressPercent, getRunStatusFlags } from "../features/autoquant/viewModel";
 import AutoQuantConfigPanel from "../features/autoquant/components/AutoQuantConfigPanel";
 import AutoQuantRunDashboard from "../features/autoquant/components/AutoQuantRunDashboard";
+import ErrorDisplay from "./shared/ErrorDisplay";
 import useAutoQuantForm from "../features/autoquant/hooks/useAutoQuantForm";
 import useAutoQuantPipeline from "../features/autoquant/hooks/useAutoQuantPipeline";
 import useAutoQuantScreening from "../features/autoquant/hooks/useAutoQuantScreening";
@@ -182,8 +183,8 @@ export default function AutoQuantTab({
                 </span>
               </div>
               <p className="mt-1 max-w-3xl text-sm leading-relaxed text-base-content/60">
-                Dense validation cockpit for seven-stage strategy optimization: sanity backtest,
-                hyperopt, parameter injection, OOS validation, stress test, risk assessment, and delivery.
+                Dense validation cockpit for the current 6-step workflow: pre-flight filtering,
+                portfolio baseline, WFA hyperopt, robustness, portfolio competition, and delivery.
               </p>
             </div>
           </div>
@@ -225,6 +226,30 @@ export default function AutoQuantTab({
           />
         )}
       </div>
+
+      {formState.formError && (
+        <ErrorDisplay
+          title="AutoQuant Settings Error"
+          reason={formState.formError}
+          severity="medium"
+          suggestedAction="Review the message, then retry loading or saving AutoQuant settings."
+          onNextAction={formState.clearFormError}
+          nextActionLabel="Dismiss"
+          showRetryHistory={false}
+        />
+      )}
+
+      {pipeline.pipelineError && (
+        <ErrorDisplay
+          title="AutoQuant Run Error"
+          reason={pipeline.pipelineError}
+          severity="high"
+          suggestedAction="Check backend availability, the selected strategy, and the run status before retrying."
+          onNextAction={pipeline.clearPipelineError}
+          nextActionLabel="Dismiss"
+          showRetryHistory={false}
+        />
+      )}
 
       {!hasActiveRun && (
         <AutoQuantConfigPanel

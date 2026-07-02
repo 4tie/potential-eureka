@@ -9,14 +9,6 @@ import useAutoQuantStrategyGen from "../features/autoquant/hooks/useAutoQuantStr
 import useAutoQuantUI from "../features/autoquant/hooks/useAutoQuantUI";
 import { parsePairUniverse } from "../features/autoquant/utils";
 
-const AGENT_COLORS = {
-  Orchestrator: "#A78BFA",
-  Scout: "#7DD3FC",
-  Scribe: "#F472B6",
-  Reach: "#E879F9",
-  Dev: "#A78BFA",
-};
-
 function Eyebrow({ isRunning }) {
   return (
     <div className="flex items-center gap-3 mb-6">

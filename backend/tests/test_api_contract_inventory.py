@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi.routing import APIRoute, APIWebSocketRoute
 
 from backend.api.app import create_app
+from backend.api.routers import auto_quant_export
 
 
 def _iter_registered_routes(app):
@@ -74,6 +75,12 @@ def test_frontend_tab_http_contract_routes_are_registered():
         ("GET", "/api/optimizer/session/{optimizer_session_id}"),
         ("POST", "/api/optimizer/cancel/{optimizer_session_id}"),
         ("POST", "/api/optimizer/apply-trial"),
+        ("GET", "/api/optimizer/session/{session_id}/best-trial/params"),
+        ("GET", "/api/optimizer/session/{session_id}/trial/{trial_number}/params"),
+        ("GET", "/api/optimizer/session/{session_id}/best-trial/preview-application"),
+        ("GET", "/api/optimizer/session/{session_id}/trial/{trial_number}/preview-application"),
+        ("POST", "/api/optimizer/session/{session_id}/best-trial/promote-candidate"),
+        ("POST", "/api/optimizer/session/{session_id}/trial/{trial_number}/promote-candidate"),
         ("POST", "/api/optimizer/export-trials"),
         ("GET", "/api/optimizer/exported-trials"),
         ("GET", "/api/strategy/pair-explorer"),
@@ -84,6 +91,7 @@ def test_frontend_tab_http_contract_routes_are_registered():
         ("POST", "/api/auto-quant/options"),
         ("GET", "/api/auto-quant/timeframe-thresholds/{timeframe}"),
         ("POST", "/api/auto-quant/generate-template"),
+        ("POST", "/api/auto-quant/generate-strategy-spec"),
         ("POST", "/api/auto-quant/screen-pairs"),
         ("POST", "/api/auto-quant/start"),
         ("POST", "/api/auto-quant/runs"),
@@ -119,6 +127,20 @@ def test_frontend_tab_http_contract_routes_are_registered():
 
     missing = sorted(expected - routes)
     assert missing == []
+
+
+def test_autoquant_export_route_is_owned_by_audited_router():
+    app = create_app()
+    matches = [
+        route
+        for route in _iter_registered_routes(app)
+        if isinstance(route, APIRoute)
+        and route.path == "/api/auto-quant/export/{run_id}"
+        and "POST" in (route.methods or set())
+    ]
+
+    assert len(matches) == 1
+    assert matches[0].endpoint is auto_quant_export.export_pipeline
 
 
 def test_request_object_is_not_exposed_as_query_parameter():

@@ -115,7 +115,7 @@ class TestApiEndpoints:
         body = resp.json()
         assert body["run_id"] == run_id
         assert body["strategy"] == "StatusTest"
-        assert len(body["stages"]) == 7
+        assert len(body["stages"]) == len(pl.STAGE_NAMES)
 
     def test_status_404_for_unknown_run(self, app_client):
         """GET /status for an unknown run_id must return 404."""

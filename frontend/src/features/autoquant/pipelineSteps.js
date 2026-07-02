@@ -115,10 +115,6 @@ export const LEGACY_STAGE_MAP = {
 
   // Backend stage names (from backend/services/auto_quant/pipeline_modules/config.py)
   "Pre-Flight Filtering": "preflight",
-  "Portfolio Baseline Backtest": "baseline",
-  "WFA Hyperopt": "hyperopt",
-  "Robustness & Feature Injection": "robustness",
-  "Portfolio Competition": "competition",
   "Delivery": "delivery",
 
   // Legacy UI stage names (for backward compatibility)

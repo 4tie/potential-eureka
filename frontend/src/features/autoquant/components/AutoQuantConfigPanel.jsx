@@ -238,8 +238,7 @@ export default function AutoQuantConfigPanel({
   onLoadRun,
 }) {
   const { form, updateField, toggleSpace, timeframeProfile, showAdvanced, setShowAdvanced } = formState;
-  const { generateStatus, isGenerating, templateType, setTemplateType, strategyList, handleGenerateTemplate } =
-    strategyGen;
+  const { strategyList } = strategyGen;
   const {
     showScreener,
     setShowScreener,
@@ -249,22 +248,10 @@ export default function AutoQuantConfigPanel({
     screenResults,
     screenError,
     selectedPair,
-    setSelectedPair,
     handleScreenPairs,
   } = screening;
   const { showHyperopt, setShowHyperopt, showWfo, setShowWfo, showEnsemble, setShowEnsemble } = uiState;
   const [showRisk, setShowRisk] = useState(true);
-  const [strategySource, setStrategySource] = useState("existing");
-  const [hermesForm, setHermesForm] = useState({
-    trading_style: "swing",
-    direction: "both",
-    risk_profile: "balanced",
-    timeframe_preference: "5m",
-    user_notes: "",
-  });
-  const [hermesSpec, setHermesSpec] = useState(null);
-  const [isGeneratingSpec, setIsGeneratingSpec] = useState(false);
-  const [hermesError, setHermesError] = useState(null);
   const [selectedScreenedPairs, setSelectedScreenedPairs] = useState([]);
   const wfoSummary = form.wfo_enabled ? getWfoWindowSummary(form) : null;
   const pairCount = useMemo(() => countPairs(form.pair_universe), [form.pair_universe]);
@@ -284,69 +271,6 @@ export default function AutoQuantConfigPanel({
   const copySelectedPairs = () => {
     if (selectedScreenedPairs.length > 0) {
       updateField("pair_universe", selectedScreenedPairs.join(","));
-    }
-  };
-
-  const selectScreenedPair = (pair) => {
-    setSelectedPair(pair);
-    updateField("pair_universe", pair);
-  };
-
-  const handleGenerateStrategySpec = async () => {
-    setIsGeneratingSpec(true);
-    setHermesError(null);
-    try {
-      const response = await fetch("/api/auto-quant/generate-strategy-spec", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(hermesForm),
-      });
-      const data = await response.json();
-      if (data.errors && data.errors.length > 0) {
-        setHermesError(data.errors.join(", "));
-        setHermesSpec(null);
-      } else if (data.spec) {
-        setHermesSpec(data.spec);
-        setHermesError(null);
-      } else {
-        setHermesError("Failed to generate strategy spec");
-        setHermesSpec(null);
-      }
-    } catch (err) {
-      setHermesError(err.message || "Network error while generating strategy spec");
-      setHermesSpec(null);
-    } finally {
-      setIsGeneratingSpec(false);
-    }
-  };
-
-  const handleConfirmAndStart = async () => {
-    if (!hermesSpec) return;
-    // Generate strategy file from spec using template generation endpoint
-    try {
-      const response = await fetch("/api/auto-quant/generate-template", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          strategy_name: hermesSpec.name || "HermesStrategy",
-          adaptive: hermesSpec.trading_style === "adaptive",
-          ensemble: hermesSpec.trading_style === "ensemble",
-          momentum: hermesSpec.trading_style === "momentum",
-          omni: true,
-          timeframe: hermesSpec.timeframe || "5m",
-        }),
-      });
-      const data = await response.json();
-      if (data.strategy_name) {
-        updateField("strategy", data.strategy_name);
-        updateField("strategy_source", "generated");
-        updateField("generated_by", "hermes");
-        updateField("trading_style", hermesForm.trading_style);
-        updateField("risk_profile", hermesForm.risk_profile);
-        onStart();
-      }
-    } catch (err) {
-      setHermesError(err.message || "Failed to generate strategy file");
     }
   };
 
