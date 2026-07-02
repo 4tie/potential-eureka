@@ -1,4 +1,3 @@
-/* global describe, beforeEach, afterEach, test, expect, jest */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import PairExplorerTab from "./PairExplorerTab";
 import { LAST_USED_PAIR_PRESET_STORAGE_KEY } from "../features/pairExplorer/constants";

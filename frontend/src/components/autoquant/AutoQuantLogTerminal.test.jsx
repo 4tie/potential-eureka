@@ -1,4 +1,3 @@
-/* global describe, expect, test */
 import { render } from "@testing-library/react";
 import AutoQuantLogTerminal from "./AutoQuantLogTerminal";
 

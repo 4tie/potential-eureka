@@ -1,5 +1,3 @@
-/* global describe, expect, jest, test, beforeEach, global */
-
 // Mock WebSocket
 class MockWebSocket {
   constructor(url) {
@@ -57,15 +55,15 @@ class MockWebSocket {
   }
 }
 
-global.WebSocket = MockWebSocket;
+globalThis.WebSocket = MockWebSocket;
 
 // Mock fetch
-global.fetch = jest.fn();
+globalThis.fetch = jest.fn();
 
 describe('WebSocket Connection', () => {
   beforeEach(() => {
-    fetch.mockClear();
-    fetch.mockResolvedValue({
+    globalThis.fetch.mockClear();
+    globalThis.fetch.mockResolvedValue({
       ok: true,
       json: async () => ({ status: 'running' }),
     });

@@ -5,11 +5,11 @@
 import { api } from "./api.js";
 
 // Mock fetch globally
-global.fetch = jest.fn();
+globalThis.fetch = jest.fn();
 
 describe("API Client - AutoQuant", () => {
   beforeEach(() => {
-    fetch.mockClear();
+    globalThis.fetch.mockClear();
   });
 
   describe("generateStrategySpec", () => {
@@ -96,7 +96,7 @@ describe("API Client - AutoQuant", () => {
     });
 
     it("should handle network errors", async () => {
-      fetch.mockRejectedValueOnce(new Error("Network error"));
+      globalThis.fetch.mockRejectedValueOnce(new Error("Network error"));
 
       const payload = {
         trading_style: "momentum",

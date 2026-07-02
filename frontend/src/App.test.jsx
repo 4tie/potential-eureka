@@ -1,4 +1,3 @@
-/* global jest, global, describe, beforeEach, afterEach, test, expect */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App.jsx';
 
@@ -112,14 +111,14 @@ jest.mock('./components/appShell/TabContentRenderer.jsx', () => ({ activeTab, ta
 });
 
 function agentPosts() {
-  return global.fetch.mock.calls
+  return globalThis.fetch.mock.calls
     .filter(([url]) => url === '/api/agent/ui-state')
     .map(([, options]) => JSON.parse(options.body));
 }
 
 describe('App agent heartbeat', () => {
   beforeEach(() => {
-    global.fetch = jest.fn(async () => ({
+    globalThis.fetch = jest.fn(async () => ({
       ok: true,
       json: async () => ({}),
     }));

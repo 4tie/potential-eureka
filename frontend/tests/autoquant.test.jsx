@@ -5,8 +5,6 @@
  * robustness-first settings and advanced settings collapsible section.
  */
 
-/* global describe, it, expect */
-
 describe('AutoQuant Simplified Workflow', () => {
   describe('Robustness-First Settings', () => {
     it('should have trading_style field with default value', () => {

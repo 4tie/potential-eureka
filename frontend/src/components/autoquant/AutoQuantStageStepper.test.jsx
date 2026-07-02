@@ -1,4 +1,3 @@
-/* global describe, expect, test, jest */
 import { render } from "@testing-library/react";
 import AutoQuantStageStepper from "./AutoQuantStageStepper";
 

@@ -1,13 +1,12 @@
-/* global jest, global, describe, beforeEach, afterEach, test, expect */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AssistantChatPanel from './AssistantChatPanel.jsx';
 
 // Mock the clipboard API
-global.navigator.clipboard = {
+globalThis.navigator.clipboard = {
   writeText: jest.fn().mockResolvedValue(undefined),
 };
 
-global.TextDecoder = global.TextDecoder || class {
+globalThis.TextDecoder = globalThis.TextDecoder || class {
   decode(value) {
     return Array.from(value || []).map(code => String.fromCharCode(code)).join('');
   }
@@ -69,7 +68,7 @@ function mockAssistantFetch({
 
 describe('AssistantChatPanel', () => {
   beforeEach(() => {
-    global.fetch = mockAssistantFetch({ models: ['llama3', 'mistral'] });
+    globalThis.fetch = mockAssistantFetch({ models: ['llama3', 'mistral'] });
   });
 
   afterEach(() => {
@@ -106,7 +105,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('shows Ollama Offline status when model is unreachable', async () => {
-    global.fetch = mockAssistantFetch({
+    globalThis.fetch = mockAssistantFetch({
       health: { reachable: false, error: 'Could not connect to Ollama' },
       models: [],
     });
@@ -119,7 +118,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('renders empty state with context chips and quick questions', async () => {
-    global.fetch = mockAssistantFetch({
+    globalThis.fetch = mockAssistantFetch({
       context: {
         active: {
           strategy_name: 'DemoStrategy',
@@ -140,7 +139,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('shows warning when no active context', async () => {
-    global.fetch = mockAssistantFetch({
+    globalThis.fetch = mockAssistantFetch({
       context: {
         active: {},
         warnings: ['No active run or optimizer session is selected.'],
@@ -155,7 +154,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('shows unavailable message when Ollama is offline', async () => {
-    global.fetch = mockAssistantFetch({
+    globalThis.fetch = mockAssistantFetch({
       health: { reachable: false, error: 'Ollama not configured' },
       models: [],
     });
@@ -169,7 +168,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('sends message when user submits form', async () => {
-    global.fetch = mockAssistantFetch();
+    globalThis.fetch = mockAssistantFetch();
 
     render(<AssistantChatPanel mode="page" />);
 
@@ -184,12 +183,12 @@ describe('AssistantChatPanel', () => {
     fireEvent.click(sendButton);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai/chat/stream', expect.any(Object));
+      expect(globalThis.fetch).toHaveBeenCalledWith('/api/ai/chat/stream', expect.any(Object));
     });
   });
 
   test('does not send empty message', async () => {
-    global.fetch = mockAssistantFetch();
+    globalThis.fetch = mockAssistantFetch();
 
     render(<AssistantChatPanel mode="page" />);
 
@@ -202,7 +201,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('sends message on Enter key press', async () => {
-    global.fetch = mockAssistantFetch();
+    globalThis.fetch = mockAssistantFetch();
 
     render(<AssistantChatPanel mode="page" />);
 
@@ -215,12 +214,12 @@ describe('AssistantChatPanel', () => {
     fireEvent.keyDown(textarea, { key: 'Enter' });
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai/chat/stream', expect.any(Object));
+      expect(globalThis.fetch).toHaveBeenCalledWith('/api/ai/chat/stream', expect.any(Object));
     });
   });
 
   test('does not send message on Shift+Enter', async () => {
-    global.fetch = mockAssistantFetch();
+    globalThis.fetch = mockAssistantFetch();
 
     render(<AssistantChatPanel mode="page" />);
 
@@ -233,11 +232,11 @@ describe('AssistantChatPanel', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true });
 
     // Should not have called the chat endpoint
-    expect(global.fetch).not.toHaveBeenCalledWith('/api/ai/chat/stream', expect.any(Object));
+    expect(globalThis.fetch).not.toHaveBeenCalledWith('/api/ai/chat/stream', expect.any(Object));
   });
 
   test('quick prompt buttons send expected messages', async () => {
-    global.fetch = mockAssistantFetch({
+    globalThis.fetch = mockAssistantFetch({
       context: {
         active: {
           strategy_name: 'DemoStrategy',
@@ -256,12 +255,12 @@ describe('AssistantChatPanel', () => {
     fireEvent.click(quickPromptButton);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai/chat/stream', expect.any(Object));
+      expect(globalThis.fetch).toHaveBeenCalledWith('/api/ai/chat/stream', expect.any(Object));
     });
   });
 
   test('renders code blocks with copy button', async () => {
-    global.fetch = mockAssistantFetch({
+    globalThis.fetch = mockAssistantFetch({
       stream: () => streamResponse('event: token\ndata: {"content":"```python\\nprint(\\"hello\\")\\n```"}\n\n'),
     });
 
@@ -281,7 +280,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('copy button copies code to clipboard', async () => {
-    global.fetch = mockAssistantFetch({
+    globalThis.fetch = mockAssistantFetch({
       stream: () => streamResponse('event: token\ndata: {"content":"```python\\nprint(\\"hello\\")\\n```"}\n\n'),
     });
 
@@ -299,12 +298,12 @@ describe('AssistantChatPanel', () => {
     fireEvent.click(copyButton);
 
     await waitFor(() => {
-      expect(global.navigator.clipboard.writeText).toHaveBeenCalledWith('print("hello")');
+      expect(globalThis.navigator.clipboard.writeText).toHaveBeenCalledWith('print("hello")');
     });
   });
 
   test('shows error message when backend request fails', async () => {
-    global.fetch = mockAssistantFetch({ streamError: new Error('Network error') });
+    globalThis.fetch = mockAssistantFetch({ streamError: new Error('Network error') });
 
     render(<AssistantChatPanel mode="page" />);
 
@@ -324,7 +323,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('model selector is populated when models are available', async () => {
-    global.fetch = mockAssistantFetch({ models: ['llama3', 'mistral', 'codellama'] });
+    globalThis.fetch = mockAssistantFetch({ models: ['llama3', 'mistral', 'codellama'] });
 
     render(<AssistantChatPanel mode="page" />);
 
@@ -337,7 +336,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('model selector is hidden when no models are available', async () => {
-    global.fetch = mockAssistantFetch({ models: [] });
+    globalThis.fetch = mockAssistantFetch({ models: [] });
 
     render(<AssistantChatPanel mode="page" />);
 
@@ -349,7 +348,7 @@ describe('AssistantChatPanel', () => {
   });
 
   test('context refresh button calls context endpoint', async () => {
-    global.fetch = mockAssistantFetch();
+    globalThis.fetch = mockAssistantFetch();
 
     render(<AssistantChatPanel mode="page" />);
 
@@ -361,7 +360,7 @@ describe('AssistantChatPanel', () => {
     fireEvent.click(refreshButton);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/agent/context'));
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/agent/context'));
     });
   });
 });

@@ -1,4 +1,3 @@
-/* global describe, expect, jest, test, beforeEach, afterEach */
 import { renderHook, act, waitFor } from "@testing-library/react";
 import useAutoQuantForm from "./hooks/useAutoQuantForm";
 import useAutoQuantUI from "./hooks/useAutoQuantUI";

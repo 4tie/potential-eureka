@@ -1,4 +1,3 @@
-/* global describe, expect, jest, test, beforeEach */
 import api from "../../services/api";
 
 // Mock fetch for API calls

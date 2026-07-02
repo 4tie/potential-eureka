@@ -1,4 +1,3 @@
-/* global jest, describe, beforeEach, afterEach, test, expect */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import StrategyLabTab from './StrategyLabTab.jsx';
 

@@ -34,6 +34,12 @@ async def client():
     """Create a test client for the FastAPI app."""
     app = FastAPI()
     app.include_router(candidate_router.router)
+    # Set up app.state.services to satisfy dependency injection
+    from types import SimpleNamespace
+    app.state.services = SimpleNamespace(
+        data_download_runner=None,
+        settings_store=None,
+    )
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
         base_url="http://testserver",

@@ -1,4 +1,3 @@
-/* global jest, global, describe, beforeEach, afterEach, test, expect */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import OptimizerTab from './OptimizerTab.jsx';
 
@@ -29,7 +28,7 @@ class MockEventSource {
   }
 }
 
-global.EventSource = MockEventSource;
+globalThis.EventSource = MockEventSource;
 
 const strategies = [{ strategy_name: 'DemoStrategy' }];
 
@@ -78,7 +77,7 @@ function mockFetch({ completed = false, spaces = null, sessionOverride = null } 
     },
   ];
   const completedSession = sessionOverride || completedOptimizerSession();
-  global.fetch = jest.fn(async url => {
+  globalThis.fetch = jest.fn(async url => {
     const text = String(url);
     if (text.includes('/api/optimizer/search-spaces/')) {
       return {

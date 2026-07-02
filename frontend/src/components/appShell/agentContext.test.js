@@ -1,4 +1,3 @@
-/* global describe, expect, test */
 import { buildAgentContext } from "./agentContext.js";
 
 describe("buildAgentContext", () => {

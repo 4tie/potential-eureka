@@ -1,4 +1,3 @@
-/* global beforeEach, describe, expect, jest, test */
 import { fireEvent, render, screen } from "@testing-library/react";
 import TabContentRenderer from "./TabContentRenderer.jsx";
 

@@ -1,4 +1,3 @@
-/* global describe, expect, jest, test, beforeEach */
 import { render, screen } from "@testing-library/react";
 import AutoQuantFinalReport from "./AutoQuantFinalReport";
 

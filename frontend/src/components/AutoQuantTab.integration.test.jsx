@@ -1,4 +1,3 @@
-/* global describe, expect, jest, test, beforeEach, global */
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import AutoQuantTab from "./AutoQuantTab";
 
@@ -32,7 +31,7 @@ jest.mock("../services/api", () => ({
 }));
 
 // Mock the WebSocket
-global.WebSocket = class MockWebSocket {
+globalThis.WebSocket = class MockWebSocket {
   constructor(url) {
     this.url = url;
     this.onopen = null;

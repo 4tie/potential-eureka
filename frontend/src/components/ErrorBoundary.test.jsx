@@ -1,4 +1,3 @@
-/* global describe, beforeEach, jest, afterEach, test, expect */
 import { fireEvent, render, screen } from '@testing-library/react';
 import ErrorBoundary from './ErrorBoundary';
 

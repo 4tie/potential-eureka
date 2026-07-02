@@ -41,6 +41,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # agent_tools module was removed - skip this test file for now
+pytestmark = pytest.mark.skip(reason="agent_tools module was removed during refactoring")
+
 # from backend.services.ai.agent_tools import (
 #     AGENT_TOOLS,
 #     AgentToolExecutor,

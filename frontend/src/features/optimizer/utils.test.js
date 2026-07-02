@@ -1,4 +1,3 @@
-/* global describe, expect, test */
 import {
   autoSafeSpaces,
   buildOptimizerRunPayload,

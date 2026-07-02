@@ -1,4 +1,3 @@
-/* global describe, test, expect */
 import {
   datePreset,
   fmtRelTime,

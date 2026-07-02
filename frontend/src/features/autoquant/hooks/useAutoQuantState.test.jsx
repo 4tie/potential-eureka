@@ -1,4 +1,3 @@
-/* global describe, expect, jest, test, beforeEach */
 import { renderHook, act } from "@testing-library/react";
 import { useAutoQuantState } from "./useAutoQuantState";
 
