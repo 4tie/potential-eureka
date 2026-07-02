@@ -67,8 +67,27 @@ def compute_score(
     policy = load_policy()
     style = str(getattr(state, "trading_style", "swing") or "swing")
     risk_profile = str(getattr(state, "risk_profile", "balanced") or "balanced")
-    validation_gates = dict(policy.thresholds_for(style, risk_profile, "validation"))
-    elite_gates = dict(policy.thresholds_for(style, risk_profile, "elite_validation"))
+    validation_timerange = str(
+        getattr(state, "out_sample_range", None)
+        or getattr(state, "in_sample_range", None)
+        or ""
+    )
+    validation_gates = dict(
+        policy.thresholds_for(
+            style,
+            risk_profile,
+            "validation",
+            timerange=validation_timerange,
+        )
+    )
+    elite_gates = dict(
+        policy.thresholds_for(
+            style,
+            risk_profile,
+            "elite_validation",
+            timerange=validation_timerange,
+        )
+    )
     weights = _score_weights(policy.score_weights)
 
     normalized = _normalize_metrics(state, metrics, validation_gates)
@@ -93,11 +112,11 @@ def compute_score(
             "latest_complete_day": latest_complete_day().strftime("%Y-%m-%d"),
         },
         "trade_activity_gate": {
-            "required_oos_trades": normalized.get("required_oos_trades", 0),
+            "required_oos_trades": normalized.get("min_trades_required", 0),
             "actual_oos_trades": normalized.get("oos_total_trades") if normalized.get("oos_total_trades") is not None else normalized.get("total_trades", 0),
             "in_sample_trades": normalized.get("in_sample_total_trades"),
             "portfolio_trades": normalized.get("portfolio_total_trades"),
-            "basis": f"{normalized.get('min_trades_per_year', 0)} trades/year × {normalized.get('oos_years', 1.0)} OOS years",
+            "basis": "Duration-adjusted policy min_trades resolved from JSON thresholds.",
         },
         "formulas": {
             "profit_factor": "70 points at validation min PF; 100 points at elite min PF.",
@@ -107,7 +126,7 @@ def compute_score(
             "oos": "OOS retention or explicit OOS pass/fail when available; missing OOS caps the tier below Validated.",
             "walk_forward": "Walk-forward pass-rate score when WFO windows are available; otherwise marked unavailable.",
             "pair_consistency": "Multi-pair pass rate when per-pair results exist, otherwise selected-pair coverage versus policy target.",
-            "trade_quality": f"Trade-count score versus OOS-based requirement (min_trades_per_year × oos_years).",
+            "trade_quality": "Trade-count score versus duration-adjusted policy min_trades.",
         },
         "thresholds": _threshold_summary(validation_gates, elite_gates, normalized),
         "components": components,
@@ -155,8 +174,27 @@ def determine_validation_status(
     policy = load_policy()
     style = str(getattr(state, "trading_style", "swing") or "swing")
     risk_profile = str(getattr(state, "risk_profile", "balanced") or "balanced")
-    gates = dict(policy.thresholds_for(style, risk_profile, "validation"))
-    elite_gates = dict(policy.thresholds_for(style, risk_profile, "elite_validation"))
+    validation_timerange = str(
+        getattr(state, "out_sample_range", None)
+        or getattr(state, "in_sample_range", None)
+        or ""
+    )
+    gates = dict(
+        policy.thresholds_for(
+            style,
+            risk_profile,
+            "validation",
+            timerange=validation_timerange,
+        )
+    )
+    elite_gates = dict(
+        policy.thresholds_for(
+            style,
+            risk_profile,
+            "elite_validation",
+            timerange=validation_timerange,
+        )
+    )
     normalized = _normalize_metrics(state, metrics, gates)
     checks = _build_gate_checks(state, normalized, gates, elite_gates)
     return _classify_tier(score, checks, normalized, gates, elite_gates)["validation_status"]
@@ -191,13 +229,7 @@ def _normalize_metrics(state: Any, metrics: dict[str, Any], gates: dict[str, Any
     oos_range = str(getattr(state, "out_sample_range", "") or "")
     oos_years = _calculate_oos_years(oos_range)
 
-    # Calculate required trades based on per-year requirement
-    min_trades_per_year = _min_trades_per_year_for_timeframe(timeframe)
-    required_oos_trades = max(1, int(min_trades_per_year * oos_years))
-
-    # Use the stricter of policy min_trades and OOS-based requirement
-    policy_min_trades = int(gates.get("min_trades") or 1)
-    min_trades = max(policy_min_trades, required_oos_trades)
+    min_trades = max(1, int(gates.get("min_trades") or 1))
 
     expectancy = _first_decimal_metric(
         metrics,
@@ -243,8 +275,10 @@ def _normalize_metrics(state: Any, metrics: dict[str, Any], gates: dict[str, Any
         "timeframe": timeframe,
         "min_trades_required": min_trades,
         "oos_years": oos_years,
-        "required_oos_trades": required_oos_trades,
-        "min_trades_per_year": min_trades_per_year,
+        "required_oos_trades": min_trades,
+        "min_trades_per_year": gates.get("min_trades_per_year"),
+        "min_trades_floor": gates.get("min_trades_floor"),
+        "min_trades_cap": gates.get("min_trades_cap"),
         "expectancy": expectancy,
         "expectancy_display_pct": _display_pct(expectancy),
         "profit_factor": profit_factor,
@@ -538,6 +572,9 @@ def _threshold_summary(gates: dict[str, Any], elite_gates: dict[str, Any], norma
             "max_drawdown": gates.get("max_drawdown"),
             "max_drawdown_display_pct": _display_pct(gates.get("max_drawdown")),
             "min_trades": normalized.get("min_trades_required"),
+            "min_trades_per_year": normalized.get("min_trades_per_year"),
+            "min_trades_floor": normalized.get("min_trades_floor"),
+            "min_trades_cap": normalized.get("min_trades_cap"),
             "min_pair_pass_rate": gates.get("min_pair_pass_rate"),
             "min_pair_pass_rate_display_pct": _display_pct(gates.get("min_pair_pass_rate")),
             "min_oos_retention": gates.get("min_oos_retention"),
@@ -553,12 +590,6 @@ def _threshold_summary(gates: dict[str, Any], elite_gates: dict[str, Any], norma
             "min_walk_forward_pass_rate_display_pct": _display_pct(elite_gates.get("min_walk_forward_pass_rate")),
             "min_robustness_score": elite_gates.get("min_robustness_score"),
             "min_robustness_score_display_pct": _display_pct(elite_gates.get("min_robustness_score")),
-        },
-        "timeframe_min_trades": {
-            "1m/3m/5m": 500,
-            "15m/30m/1h": 250,
-            "2h/4h/6h/8h/12h": 120,
-            "1d/3d/1w": 30,
         },
     }
 

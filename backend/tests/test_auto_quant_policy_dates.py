@@ -17,6 +17,7 @@ from __future__ import annotations
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -26,10 +27,15 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from backend.services.auto_quant.policy import (
+    build_run_config,
     date_ranges_for_depth,
     latest_complete_day,
+    thresholds_for,
     walk_forward_windows_for_depth,
 )
+from backend.services.auto_quant import policy as policy_module
+from backend.config.adaptive_thresholds import AdaptiveThresholdConfig
+from backend.services.auto_quant.pipeline_modules.scoring import compute_score
 from backend.services.auto_quant.pipeline_modules.scoring import (
     _calculate_oos_years,
     _min_trades_per_year_for_timeframe,
@@ -237,3 +243,116 @@ class TestMinTradesPerYearForTimeframe:
         """Timeframe lookup should be case-insensitive."""
         assert _min_trades_per_year_for_timeframe("1H") == 250
         assert _min_trades_per_year_for_timeframe("5M") == 500
+
+
+class TestDurationAwareThresholds:
+    """Tests for JSON-backed duration-aware policy thresholds."""
+
+    def test_position_validation_30_day_timerange_uses_floor(self):
+        gates = thresholds_for(
+            "position",
+            "balanced",
+            "validation",
+            timerange="20240101-20240131",
+        )
+        assert gates["min_trades"] == 8
+
+    def test_position_validation_two_year_timerange_scales_to_sixty(self):
+        gates = thresholds_for(
+            "position",
+            "balanced",
+            "validation",
+            timerange="20220101-20240101",
+        )
+        assert gates["min_trades"] == 60
+
+    def test_scalping_discovery_one_year_timerange_scales_to_five_hundred(self):
+        gates = thresholds_for(
+            "scalping",
+            "balanced",
+            "discovery",
+            timerange="20230101-20240101",
+        )
+        assert gates["min_trades"] == 500
+
+    def test_invalid_timerange_falls_back_without_crashing(self):
+        gates = thresholds_for(
+            "position",
+            "balanced",
+            "validation",
+            timerange="invalid",
+        )
+        assert gates["min_trades"] == 8
+
+    def test_existing_thresholds_for_call_remains_backward_compatible(self):
+        gates = thresholds_for("swing", "balanced", "validation")
+        assert gates["min_trades"] == 30
+        assert gates["min_trades_per_year"] == 100
+
+    def test_module_level_thresholds_for_is_exported(self):
+        assert "thresholds_for" in policy_module.__all__
+        gates = policy_module.thresholds_for(
+            "position",
+            "balanced",
+            "validation",
+            timerange="20240101-20240131",
+        )
+        assert gates["min_trades"] == 8
+
+    def test_build_run_config_includes_duration_aware_tier_gates(self):
+        config = build_run_config(
+            {
+                "trading_style": "position",
+                "risk_profile": "balanced",
+                "advanced_overrides": {
+                    "in_sample_range": "20240101-20240131",
+                    "out_sample_range": "20220101-20240101",
+                },
+            }
+        )
+
+        assert config["thresholds"]["min_trades"] == 60
+        assert config["thresholds_by_tier"]["discovery"]["min_trades"] == 8
+        assert config["thresholds_by_tier"]["validation"]["min_trades"] == 60
+        assert config["thresholds_by_tier"]["elite_validation"]["min_trades"] == 80
+
+    def test_legacy_adaptive_threshold_config_delegates_to_policy(self):
+        config = AdaptiveThresholdConfig("position")
+        thresholds = config.get_thresholds(
+            "validation",
+            timerange="20240101-20240131",
+        )
+        assert thresholds.min_trades == 8
+        assert thresholds.min_profit_factor == 1.35
+
+    def test_compute_score_uses_duration_aware_policy_trade_gate(self):
+        state = SimpleNamespace(
+            trading_style="position",
+            risk_profile="balanced",
+            timeframe="1d",
+            selected_timeframe="1d",
+            in_sample_range="20230101-20240101",
+            out_sample_range="20240101-20240131",
+        )
+        result = compute_score(
+            "duration-aware-threshold-test",
+            state,
+            {
+                "profit_factor": 1.4,
+                "expectancy": 0.002,
+                "max_drawdown": 0.10,
+                "total_trades": 8,
+                "oos_passed": True,
+                "pair_pass_rate": 0.8,
+                "wfo_pass_rate": 0.7,
+                "robustness_score": 0.8,
+            },
+        )
+
+        explanation = result["score_explanation"]
+        assert explanation["raw_metrics_normalized"]["min_trades_required"] == 8
+        min_trades_gate = next(
+            gate for gate in explanation["gate_checks"] if gate["name"] == "min_trades"
+        )
+        assert min_trades_gate["threshold"] == 8
+        assert min_trades_gate["passed"] is True

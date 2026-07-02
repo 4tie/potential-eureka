@@ -160,9 +160,14 @@ async def _stage_pre_flight_filtering(
     max_baseline_retries = 3
     baseline_attempt = 0
     policy = load_policy()
-    discovery_gates = policy.thresholds_for(state.trading_style, state.risk_profile, "discovery")
-    min_discovery_trades = int(discovery_gates.get("min_trades") or 15)
-    min_discovery_pf = float(discovery_gates.get("min_profit_factor") or 1.0)
+    discovery_gates = policy.thresholds_for(
+        state.trading_style,
+        state.risk_profile,
+        "discovery",
+        timerange=state.in_sample_range,
+    )
+    min_discovery_trades = int(discovery_gates["min_trades"])
+    min_discovery_pf = float(discovery_gates["min_profit_factor"])
     min_pairs_required = min(3, max(1, len(surviving_pairs)))
     
     while baseline_attempt <= max_baseline_retries:

@@ -306,6 +306,7 @@ async def _start_pipeline_from_body(
             "planned_wfo_windows": normalized.get("planned_wfo_windows", []),
         },
         "thresholds": thresholds,
+        "thresholds_by_tier": normalized.get("thresholds_by_tier", {}),
         "exchange": normalized["exchange"],
         "advanced_overrides": normalized["advanced_overrides"],
     }

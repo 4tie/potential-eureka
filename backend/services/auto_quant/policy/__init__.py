@@ -121,6 +121,62 @@ def _valid_choice(value: Any, choices: set[str], default: str) -> str:
     return text if text in choices else default
 
 
+def _parse_timerange_days(timerange: str | None) -> int | None:
+    if not timerange or "-" not in timerange:
+        return None
+
+    start_raw, end_raw = timerange.split("-", 1)
+    if not start_raw or not end_raw:
+        return None
+
+    try:
+        start = datetime.strptime(start_raw[:8], "%Y%m%d")
+        end = datetime.strptime(end_raw[:8], "%Y%m%d")
+    except ValueError:
+        return None
+
+    days = (end - start).days
+    return days if days > 0 else None
+
+
+def _adaptive_min_trades(
+    *,
+    min_trades_per_year: int | float | None,
+    min_trades_floor: int | None,
+    min_trades_cap: int | None,
+    timerange_days: int | None,
+    fallback_min_trades: int | None = None,
+) -> int:
+    floor = int(min_trades_floor or fallback_min_trades or 1)
+    cap = int(min_trades_cap or max(floor, fallback_min_trades or floor))
+    per_year = float(min_trades_per_year or fallback_min_trades or floor)
+
+    if not timerange_days:
+        fallback = int(round(fallback_min_trades or floor))
+        return max(floor, min(cap, fallback))
+
+    scaled = int(round(per_year * (timerange_days / 365.0)))
+    return max(floor, min(cap, scaled))
+
+
+def _resolve_dynamic_thresholds(gates: dict[str, Any], timerange_days: int | None) -> dict[str, Any]:
+    resolved = dict(gates)
+    fallback_raw = resolved.get("min_trades")
+    try:
+        fallback_min_trades = int(fallback_raw) if fallback_raw is not None else None
+    except (TypeError, ValueError):
+        fallback_min_trades = None
+
+    resolved["min_trades"] = _adaptive_min_trades(
+        min_trades_per_year=resolved.get("min_trades_per_year"),
+        min_trades_floor=resolved.get("min_trades_floor"),
+        min_trades_cap=resolved.get("min_trades_cap"),
+        timerange_days=timerange_days,
+        fallback_min_trades=fallback_min_trades,
+    )
+    return resolved
+
+
 def normalize_decimal(value: Any, default: float = 0.0) -> float:
     try:
         numeric = float(value)
@@ -325,6 +381,9 @@ class Policy:
         style: str,
         risk_profile: str = "balanced",
         tier: str = "validation",
+        *,
+        timerange: str | None = None,
+        timerange_days: int | None = None,
     ) -> dict[str, Any]:
         style_thresholds = self.thresholds.get(style) or self.thresholds.get("swing", {})
         raw = dict(style_thresholds.get(tier) or style_thresholds.get("validation") or {})
@@ -342,7 +401,8 @@ class Policy:
             raw["min_profit_factor"] = max(float(floor), adjusted) if floor is not None else adjusted
         if "min_oos_profit" in raw:
             raw["min_oos_profit"] = _as_decimal(raw["min_oos_profit"])
-        return raw
+        resolved_days = timerange_days if timerange_days is not None else _parse_timerange_days(timerange)
+        return _resolve_dynamic_thresholds(raw, resolved_days)
 
     def discovery_timeframe_gates(self, style: str, risk_profile: str = "balanced") -> dict[str, Any]:
         """Return permissive discovery gates for timeframe testing.
@@ -534,7 +594,28 @@ class Policy:
             pair_universe = [p.strip() for p in pair_universe.split(",") if p.strip()]
         selected_pairs = self.default_pair_universe(style, risk, pair_universe)
 
-        thresholds = self.thresholds_for(style, risk, "validation")
+        in_sample_range = advanced.get("in_sample_range") or payload.get("in_sample_range") or default_is
+        out_sample_range = advanced.get("out_sample_range") or payload.get("out_sample_range") or default_oos
+        validation_timerange = out_sample_range or in_sample_range
+
+        discovery_gates = self.thresholds_for(
+            style,
+            risk,
+            "discovery",
+            timerange=in_sample_range,
+        )
+        thresholds = self.thresholds_for(
+            style,
+            risk,
+            "validation",
+            timerange=validation_timerange,
+        )
+        elite_gates = self.thresholds_for(
+            style,
+            risk,
+            "elite_validation",
+            timerange=validation_timerange,
+        )
         thresholds["max_drawdown"] = normalize_decimal(
             payload.get("max_drawdown_threshold", advanced.get("max_drawdown_threshold", thresholds.get("max_drawdown"))),
             normalize_decimal(thresholds.get("max_drawdown"), 0.30),
@@ -557,6 +638,11 @@ class Policy:
             payload.get("monte_carlo_threshold", advanced.get("monte_carlo_threshold", 0.35)),
             0.35,
         )
+        thresholds_by_tier = {
+            "discovery": discovery_gates,
+            "validation": dict(thresholds),
+            "elite_validation": elite_gates,
+        }
 
         hyperopt_spaces = payload.get("hyperopt_spaces", advanced.get("hyperopt_spaces", ["stoploss", "roi"]))
         if isinstance(hyperopt_spaces, str):
@@ -574,14 +660,15 @@ class Policy:
             "timeframe": selected_timeframe,
             "configured_timeframes": configured_timeframes,
             "unsupported_timeframes": unsupported_configured,
-            "in_sample_range": advanced.get("in_sample_range") or payload.get("in_sample_range") or default_is,
-            "out_sample_range": advanced.get("out_sample_range") or payload.get("out_sample_range") or default_oos,
+            "in_sample_range": in_sample_range,
+            "out_sample_range": out_sample_range,
             "exchange": payload.get("exchange") or advanced.get("exchange") or "binance",
             "config_file": payload.get("config_file") or advanced.get("config_file"),
             "pair": payload.get("pair") or advanced.get("pair"),
             "pair_universe": selected_pairs,
             "selected_pair_universe": selected_pairs,
             "thresholds": thresholds,
+            "thresholds_by_tier": thresholds_by_tier,
             "hyperopt_loss": payload.get("hyperopt_loss") or advanced.get("hyperopt_loss") or "ProfitLockinHyperOptLoss",
             "hyperopt_spaces": hyperopt_spaces,
             "hyperopt_epochs": int(
@@ -679,6 +766,23 @@ def build_run_config(payload: dict[str, Any], settings: Any | None = None) -> di
     return load_policy().build_run_config(payload=payload, settings=settings)
 
 
+def thresholds_for(
+    style: str,
+    risk_profile: str = "balanced",
+    tier: str = "validation",
+    *,
+    timerange: str | None = None,
+    timerange_days: int | None = None,
+) -> dict[str, Any]:
+    return load_policy().thresholds_for(
+        style,
+        risk_profile,
+        tier,
+        timerange=timerange,
+        timerange_days=timerange_days,
+    )
+
+
 def get_public_timeframe_thresholds(timeframe: str) -> dict[str, Any]:
     return load_policy().public_timeframe_thresholds(timeframe)
 
@@ -688,6 +792,7 @@ __all__ = [
     "load_policy",
     "get_policy_versions",
     "build_run_config",
+    "thresholds_for",
     "get_public_timeframe_thresholds",
     "normalize_decimal",
     "normalize_percent",

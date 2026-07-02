@@ -68,7 +68,12 @@ async def run_discovery(
         supported_timeframes = ["1h"]
     
     # Get discovery gates (permissive thresholds)
-    discovery_gates = policy.thresholds_for(state.trading_style, state.risk_profile, "discovery")
+    discovery_gates = policy.thresholds_for(
+        state.trading_style,
+        state.risk_profile,
+        "discovery",
+        timerange=state.in_sample_range,
+    )
     
     # Get pair universe to test
     pair_universe = state.pair_universe or policy.default_pair_universe(
@@ -109,8 +114,8 @@ async def run_discovery(
             per_pair = _extract_per_pair_results(result_data, state.strategy)
             
             # Filter pairs using permissive discovery gates
-            min_trades = int(discovery_gates.get("min_trades") or 15)
-            min_profit_factor = float(discovery_gates.get("min_profit_factor") or 1.0)
+            min_trades = int(discovery_gates["min_trades"])
+            min_profit_factor = float(discovery_gates["min_profit_factor"])
             
             for pair_data in per_pair:
                 pair_key = pair_data.get("key", "")
