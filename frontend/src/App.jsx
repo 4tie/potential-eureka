@@ -21,6 +21,7 @@ function App() {
   const [agentTabContext, setAgentTabContext] = useState({});
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantContext, setAssistantContext] = useState({});
+  const [strategyEditorDirty, setStrategyEditorDirty] = useState(false);
 
   useTheme();
   const syncAgentUiState = useAgentUiState();
@@ -62,15 +63,20 @@ function App() {
   }, [currentAgentOverrides, syncAgentUiState]);
 
   const handleNavTabChange = useCallback((navTab) => {
+    if (navTab !== activeTab && activeTab === "strategy-editor" && strategyEditorDirty) {
+      setPendingTab(navTab);
+      return;
+    }
     setActiveNavTab(navTab);
     // With flat navigation, navTab and activeTab are the same
     setActiveTab(navTab);
-  }, []);
+  }, [activeTab, strategyEditorDirty]);
 
   const confirmLeave = () => {
     const dest = pendingTab;
     setPendingTab(null);
     setAgentTabContext({});
+    setStrategyEditorDirty(false);
     setActiveTab(dest);
     setActiveNavTab(dest); // With flat navigation, navTab equals tabId
     if (dest !== "results") setActiveResult(null);
@@ -111,6 +117,7 @@ function App() {
                 clearActiveResult,
                 handleLoadResult,
                 onAgentContextChange: setAgentTabContext,
+                onDirtyChange: setStrategyEditorDirty,
                 onAskAi: openAssistant,
               }}
             />

@@ -2,17 +2,27 @@
 
 from __future__ import annotations
 
-import pytest
-
 from fastapi.routing import APIRoute, APIWebSocketRoute
 
 from backend.api.app import create_app
 
 
+def _iter_registered_routes(app):
+    """FastAPI stores included routers as private _IncludedRouter wrappers."""
+    for route in app.routes:
+        yield route
+        original_router = getattr(route, "original_router", None)
+        if original_router is not None:
+            yield from original_router.routes
+        nested_routes = getattr(route, "routes", None)
+        if nested_routes:
+            yield from nested_routes
+
+
 def _http_routes() -> set[tuple[str, str]]:
     app = create_app()
     routes: set[tuple[str, str]] = set()
-    for route in app.routes:
+    for route in _iter_registered_routes(app):
         if isinstance(route, APIRoute):
             for method in route.methods or set():
                 routes.add((method, route.path))
@@ -23,12 +33,11 @@ def _websocket_routes() -> set[str]:
     app = create_app()
     return {
         route.path
-        for route in app.routes
+        for route in _iter_registered_routes(app)
         if isinstance(route, APIWebSocketRoute)
     }
 
 
-@pytest.mark.skip("Route registration depends on FastAPI lifespan context which may not run fully in test environment")
 def test_frontend_tab_http_contract_routes_are_registered():
     routes = _http_routes()
 
@@ -119,7 +128,7 @@ def test_request_object_is_not_exposed_as_query_parameter():
     checked = set()
 
     seen = set()
-    for route in app.routes:
+    for route in _iter_registered_routes(app):
         if not isinstance(route, APIRoute):
             continue
         for method in route.methods or set():
@@ -129,17 +138,11 @@ def test_request_object_is_not_exposed_as_query_parameter():
             assert "request" not in query_names, f"{method} {route.path} exposes request as a query param"
             seen.add(key)
 
-    # If no routes were found (lifespan not run), skip the assertion
-    if not seen:
-        pytest.skip("Routes not loaded - lifespan not executed")
+    assert seen, "No API routes were discovered"
 
 
 def test_frontend_tab_websocket_contract_routes_are_registered():
     routes = _websocket_routes()
-
-    # If no routes were found (lifespan not run), skip the assertion
-    if not routes:
-        pytest.skip("WebSocket routes not loaded - lifespan not executed")
 
     expected = {
         "/api/auto-quant/ws/{run_id}",

@@ -96,9 +96,16 @@ describe("AutoQuantTab Integration Tests", () => {
     expect(screenerButton).toBeInTheDocument();
   });
 
-  test("integrates useAutoQuantStrategyGen hook for strategy generation", async () => {
-    // UI structure may have changed - skip this test
-    expect(true).toBe(true);
+  test("uses strategy generation hook data to render normalized strategy choices", async () => {
+    render(<AutoQuantTab strategies={[
+      { strategy_name: "BackendStrategy" },
+      { name: "FrontendStrategy" },
+    ]} />);
+
+    const strategySelect = await screen.findByLabelText("Strategy");
+    expect(strategySelect).toHaveValue("");
+    expect(screen.getByRole("option", { name: "BackendStrategy" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "FrontendStrategy" })).toBeInTheDocument();
   });
 
   test("integrates useAutoQuantPipeline hook for pipeline management", async () => {
@@ -136,14 +143,35 @@ describe("AutoQuantTab Integration Tests", () => {
     jest.useRealTimers();
   });
 
-  test("strategy generation integrates with form state", async () => {
-    // Integration test behavior may have changed - skip for now
-    expect(true).toBe(true);
+  test("strategy selection integrates with form state and enables pipeline start", async () => {
+    render(<AutoQuantTab strategies={[{ strategy_name: "TestStrategy" }]} />);
+
+    const strategySelect = await screen.findByLabelText("Strategy");
+    const startButton = screen.getByRole("button", { name: /start auto-quant/i });
+
+    expect(startButton).toBeDisabled();
+    fireEvent.change(strategySelect, { target: { value: "TestStrategy" } });
+    expect(strategySelect).toHaveValue("TestStrategy");
+    expect(startButton).not.toBeDisabled();
   });
 
   test("pipeline start integrates with form and strategy selection", async () => {
-    // Integration test behavior may have changed - skip for now
-    expect(true).toBe(true);
+    const api = (await import("../services/api")).default;
+    render(<AutoQuantTab strategies={[{ strategy_name: "TestStrategy" }]} />);
+
+    fireEvent.change(await screen.findByLabelText("Strategy"), {
+      target: { value: "TestStrategy" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /start auto-quant/i }));
+
+    await waitFor(() => {
+      expect(api.autoquant.startRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          strategy: "TestStrategy",
+          pair_universe: null,
+        })
+      );
+    });
   });
 
   test("components render with correct data flow from hooks", async () => {

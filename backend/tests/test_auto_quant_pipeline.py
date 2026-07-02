@@ -16,12 +16,9 @@ from __future__ import annotations
 
 import asyncio
 import sys
-import tempfile
 import uuid
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, call, patch
-
-import pytest
+from unittest.mock import AsyncMock, patch
 
 # ── Make project root importable ──────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -30,7 +27,6 @@ if str(ROOT) not in sys.path:
 
 import backend.services.auto_quant.pipeline as pipeline
 from backend.services.auto_quant.pipeline import (
-    MIN_OOS_PROFIT,
     PipelineState,
     StageState,
     STAGE_NAMES,
@@ -189,309 +185,91 @@ class TestStageOosValidationUnit:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# INTEGRATION TESTS — run_pipeline retry loop
+# INTEGRATION TESTS — AI approval retry loop
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@pytest.mark.skip("Retry loop implementation has changed - tests need update")
-class TestRunPipelineRetryLoop:
-    """Integration tests for the Stages 2-4 self-healing retry loop in run_pipeline."""
+class TestAiApprovalRetryLoop:
+    """Current retry behavior: AI suggestions pause until approved."""
 
-    MOD = "backend.services.auto_quant.pipeline"
+    def test_pending_suggestion_does_not_increment_retry_count(self, tmp_path):
+        from backend.services.auto_quant.ai_suggestions import create_pending_suggestion
 
-    def _run_with_mocks(
-        self,
-        state: PipelineState,
-        tmp_path: Path,
-        *,
-        oos_side_effect,
-    ) -> MagicMock:
-        """
-        Run run_pipeline with all stages mocked except the retry logic itself.
+        state = _make_state(str(tmp_path), retry_count=0, hyperopt_epochs=100)
+        suggestion = create_pending_suggestion(
+            state=state,
+            trigger="wfo_pass_rate",
+            failure_reason="segment_pass_rate_below_50%",
+            retry_attempt=1,
+            source="deterministic",
+        )
 
-        oos_side_effect: list of return values for successive _stage_oos_validation calls.
-        Returns the mock for _fail_stage so callers can assert on it.
-        """
-        opt_path = _fake_optimized_path(str(tmp_path))
-        sanity_summary = {"profit_total_abs": 1.0, "max_drawdown_account": 0.05}
-        best_params = {"loss": -0.5, "params_dict": {"stoploss": -0.05, "roi_t1": 0.02}}
-        stress_result = {"profit_total": 0.1, "per_pair": [], "passing_pairs": [], "failing_pairs": []}
-        risk_result = {"win_rate": 55.0, "profit_factor": 1.5, "sharpe": 0.8}
-
-        fail_stage_mock = MagicMock()
-
-        with (
-            patch(f"{self.MOD}._stage_sanity_backtest",
-                  new=AsyncMock(return_value=sanity_summary)),
-            patch(f"{self.MOD}._stage_hyperopt",
-                  new=AsyncMock(return_value=best_params)),
-            patch(f"{self.MOD}._stage_patch",
-                  new=AsyncMock(return_value=opt_path)),
-            patch(f"{self.MOD}._stage_oos_validation",
-                  new=AsyncMock(side_effect=oos_side_effect)),
-            patch(f"{self.MOD}._stage_stress_test",
-                  new=AsyncMock(return_value=stress_result)),
-            patch(f"{self.MOD}._stage_risk_assessment",
-                  new=AsyncMock(return_value=risk_result)),
-            patch(f"{self.MOD}._stage_delivery", new=AsyncMock()),
-            patch(f"{self.MOD}._fail_stage", fail_stage_mock),
-            patch(f"{self.MOD}._save_state_to_disk"),
-            patch(f"{self.MOD}._emit"),
-        ):
-            _run(pipeline.run_pipeline(state.run_id))
-
-        return fail_stage_mock
-
-    # ── retry_count increments ─────────────────────────────────────────────────
-
-    def test_retry_count_zero_on_first_pass(self, tmp_path):
-        """retry_count stays 0 when OOS passes on the first try."""
-        state = _make_state(str(tmp_path))
-        oos_result = {"profit_total": 0.05, "max_drawdown_account": 0.10}
-        self._run_with_mocks(state, tmp_path, oos_side_effect=[oos_result])
+        assert state.pending_ai_suggestion_id == suggestion["id"]
         assert state.retry_count == 0
+        assert state.hyperopt_epochs == 100
+        assert suggestion["original_config"]["hyperopt_epochs"] == 100
 
-    def test_retry_count_increments_on_each_retry(self, tmp_path):
-        """retry_count should equal the number of 'retry' signals received."""
-        state = _make_state(str(tmp_path))
-        oos_result = {"profit_total": 0.05, "max_drawdown_account": 0.10}
-        # Two retries, then pass
-        self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=["retry", "retry", oos_result],
-        )
-        assert state.retry_count == 2
-
-    def test_retry_count_reaches_max_then_fail_stage_called(self, tmp_path):
-        """After 3 retries (> max_retries=3), _fail_stage must be called."""
-        state = _make_state(str(tmp_path))
-        # 4 consecutive "retry" returns → retry_count hits 4 > max_retries=3
-        fail_mock = self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=["retry", "retry", "retry", "retry"],
-        )
-        assert fail_mock.called, "_fail_stage was not called after max retries"
-        assert state.retry_count > state.max_retries
-
-    # ── _fail_stage message ────────────────────────────────────────────────────
-
-    def test_fail_stage_message_after_max_retries(self, tmp_path):
-        """_fail_stage must be called for stage 4 with the exhaustion message."""
-        state = _make_state(str(tmp_path))
-        fail_mock = self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=["retry", "retry", "retry", "retry"],
-        )
-        # Should be called exactly once for the retry exhaustion
-        assert fail_mock.call_count >= 1
-        # Positional args: (run_id, state, stage_idx, message[, data])
-        call_args = fail_mock.call_args_list[0]
-        pos = call_args.args
-        run_id_arg, state_arg, stage_idx_arg, msg_arg = pos[0], pos[1], pos[2], pos[3]
-        assert run_id_arg == state.run_id
-        assert stage_idx_arg == 4
-        assert "3" in msg_arg or "manual" in msg_arg.lower(), (
-            f"Exhaustion message does not mention '3' or 'manual': {msg_arg!r}"
+    def test_approved_suggestion_resolves_stage_by_name_and_records_retry(self, tmp_path):
+        from backend.services.auto_quant.ai_suggestions import (
+            approve_suggestion,
+            create_pending_suggestion,
+            optimization_stage_index,
         )
 
-    # ── Per-retry parameter overrides ──────────────────────────────────────────
-
-    def test_retry1_switches_hyperopt_loss(self, tmp_path):
-        """Retry 1 must set hyperopt_loss → SharpeHyperOptLoss."""
-        initial_loss = "CalmarHyperOptLoss"
-        state = _make_state(str(tmp_path), hyperopt_loss=initial_loss)
-        oos_result = {"profit_total": 0.05, "max_drawdown_account": 0.10}
-        self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=["retry", oos_result],
-        )
-        assert state.hyperopt_loss == "SharpeHyperOptLoss", (
-            f"Expected SharpeHyperOptLoss after retry 1, got {state.hyperopt_loss!r}"
-        )
-
-    def test_retry2_narrows_hyperopt_spaces(self, tmp_path):
-        """Retry 2 must set hyperopt_spaces → ['roi', 'stoploss']."""
-        state = _make_state(str(tmp_path),
-                            hyperopt_spaces=["buy", "sell", "roi", "stoploss"])
-        oos_result = {"profit_total": 0.05, "max_drawdown_account": 0.10}
-        self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=["retry", "retry", oos_result],
-        )
-        assert state.hyperopt_spaces == ["roi", "stoploss"], (
-            f"Expected ['roi', 'stoploss'] after retry 2, got {state.hyperopt_spaces!r}"
-        )
-
-    def test_retry3_increases_hyperopt_epochs(self, tmp_path):
-        """Retry 3 must increase hyperopt_epochs by 1.5×."""
-        original_epochs = 100
-        state = _make_state(str(tmp_path), hyperopt_epochs=original_epochs)
-        oos_result = {"profit_total": 0.05, "max_drawdown_account": 0.10}
-        self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=["retry", "retry", "retry", oos_result],
-        )
-        expected = int(original_epochs * 1.5)
-        assert state.hyperopt_epochs == expected, (
-            f"Expected epochs={expected} after retry 3, got {state.hyperopt_epochs}"
-        )
-
-    def test_overrides_applied_in_order(self, tmp_path):
-        """All three per-retry overrides must accumulate by retry 3."""
         state = _make_state(
             str(tmp_path),
-            hyperopt_loss="OnlyProfitHyperOptLoss",
-            hyperopt_spaces=["buy", "sell"],
-            hyperopt_epochs=80,
+            current_stage=6,
+            retry_count=0,
+            hyperopt_loss="ProfitLockinHyperOptLoss",
+            hyperopt_spaces=["buy", "stoploss", "roi"],
+            hyperopt_epochs=100,
         )
-        oos_result = {"profit_total": 0.05, "max_drawdown_account": 0.10}
-        self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=["retry", "retry", "retry", oos_result],
+        for stage in state.stages:
+            stage.status = "passed"
+        suggestion = create_pending_suggestion(
+            state=state,
+            trigger="wfo_pass_rate",
+            failure_reason="segment_pass_rate_below_50%",
+            retry_attempt=1,
+            source="deterministic",
+            proposed_changes={
+                "hyperopt_loss": "SharpeHyperOptLoss",
+                "hyperopt_spaces": ["roi", "stoploss"],
+                "hyperopt_epochs": 150,
+            },
         )
-        # All three overrides must have fired
+
+        approve_suggestion(state, suggestion["id"])
+
+        assert state.current_stage == optimization_stage_index()
+        assert state.stages[optimization_stage_index() - 1].name == "WFA Hyperopt"
+        assert state.retry_count == 1
+        assert state.retry_history[-1]["ai_suggestion_id"] == suggestion["id"]
         assert state.hyperopt_loss == "SharpeHyperOptLoss"
         assert state.hyperopt_spaces == ["roi", "stoploss"]
-        assert state.hyperopt_epochs == int(80 * 1.5)
+        assert state.hyperopt_epochs == 150
 
-    # ── Stage status reset on retry ────────────────────────────────────────────
+    def test_rejected_suggestion_keeps_retry_configuration_unchanged(self, tmp_path):
+        from backend.services.auto_quant.ai_suggestions import create_pending_suggestion, reject_suggestion
 
-    def test_stages_2_3_4_reset_to_pending_on_retry(self, tmp_path):
-        """On a retry, stages 2/3/4 must be reset to 'pending' before re-running."""
-        state = _make_state(str(tmp_path))
-        # Pre-mark stages as passed to confirm they get reset
-        for idx in (2, 3, 4):
-            state.stages[idx - 1].status = "passed"
-            state.stages[idx - 1].message = "previous run"
-
-        oos_result = {"profit_total": 0.05, "max_drawdown_account": 0.10}
-        captured_statuses: list[list[str]] = []
-
-        real_hyperopt = pipeline._stage_hyperopt
-
-        async def capturing_hyperopt(run_id, s, out_dir):
-            # Record stage statuses at the point Stage 2 is entered on each attempt
-            captured_statuses.append([s.stages[i - 1].status for i in (2, 3, 4)])
-            return {"loss": -0.5, "params_dict": {}}
-
-        opt_path = _fake_optimized_path(str(tmp_path))
-        sanity_summary = {"profit_total_abs": 1.0, "max_drawdown_account": 0.05}
-
-        with (
-            patch(f"{self.MOD}._stage_sanity_backtest",
-                  new=AsyncMock(return_value=sanity_summary)),
-            patch(f"{self.MOD}._stage_hyperopt",
-                  new=AsyncMock(side_effect=capturing_hyperopt)),
-            patch(f"{self.MOD}._stage_patch",
-                  new=AsyncMock(return_value=opt_path)),
-            patch(f"{self.MOD}._stage_oos_validation",
-                  new=AsyncMock(side_effect=["retry", oos_result])),
-            patch(f"{self.MOD}._stage_stress_test",
-                  new=AsyncMock(return_value={})),
-            patch(f"{self.MOD}._stage_risk_assessment",
-                  new=AsyncMock(return_value={})),
-            patch(f"{self.MOD}._stage_delivery", new=AsyncMock()),
-            patch(f"{self.MOD}._fail_stage"),
-            patch(f"{self.MOD}._save_state_to_disk"),
-            patch(f"{self.MOD}._emit"),
-        ):
-            _run(pipeline.run_pipeline(state.run_id))
-
-        assert len(captured_statuses) == 2, (
-            f"Expected Stage 2 entered twice (initial + 1 retry), "
-            f"got {len(captured_statuses)} calls"
+        state = _make_state(
+            str(tmp_path),
+            retry_count=0,
+            hyperopt_loss="ProfitLockinHyperOptLoss",
+            hyperopt_spaces=["buy", "stoploss", "roi"],
+            hyperopt_epochs=100,
         )
-        # On the second entry (after retry), all three stages must be pending
-        retry_statuses = captured_statuses[1]
-        assert retry_statuses == ["pending", "pending", "pending"], (
-            f"Stages 2/3/4 not reset on retry: {retry_statuses}"
+        suggestion = create_pending_suggestion(
+            state=state,
+            trigger="sharp_peak",
+            failure_reason="FAIL_SHARP_PEAK",
+            retry_attempt=1,
+            source="deterministic",
         )
 
-    # ── Pipeline completes successfully after recovery ─────────────────────────
+        reject_suggestion(state, suggestion["id"])
 
-    def test_pipeline_completes_after_one_retry(self, tmp_path):
-        """Pipeline status must be 'completed' when OOS passes on second attempt."""
-        state = _make_state(str(tmp_path))
-        oos_result = {"profit_total": 0.05, "max_drawdown_account": 0.10}
-        self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=["retry", oos_result],
-        )
-        assert state.status == "completed", (
-            f"Expected 'completed' after one retry, got {state.status!r}"
-        )
-
-    def test_pipeline_halts_on_oos_hard_failure(self, tmp_path):
-        """When OOS returns None (hard failure), pipeline must NOT retry."""
-        state = _make_state(str(tmp_path))
-        fail_mock = self._run_with_mocks(
-            state, tmp_path,
-            oos_side_effect=[None],  # hard failure, not overfitting
-        )
-        assert state.retry_count == 0, (
-            "retry_count must not increment on a hard OOS failure (None)"
-        )
-        assert state.status != "completed"
-
-    # ── Stale artifact cleanup ─────────────────────────────────────────────────
-
-    def test_stale_artifacts_deleted_on_retry(self, tmp_path):
-        """
-        On retry entry into Stage 2, hyperopt_best.json and stage4_result.json
-        must be deleted if they exist.
-        """
-        out_dir = tmp_path / "auto_quant" / "test_run"
-        out_dir.mkdir(parents=True)
-
-        # Create stale artifacts
-        stale_hyperopt = out_dir / "hyperopt_best.json"
-        stale_stage4 = out_dir / "stage4_result.json"
-        stale_hyperopt.write_text('{"stale": true}', encoding="utf-8")
-        stale_stage4.write_text('{"stale": true}', encoding="utf-8")
-
-        state = _make_state(str(tmp_path), retry_count=1)
-
-        # Call _stage_hyperopt directly with retry_count=1 to test cleanup
-        with (
-            patch(f"{self.MOD}._start_stage"),
-            patch(f"{self.MOD}._cancelled", return_value=False),
-            patch(f"{self.MOD}._run_subprocess",
-                  new=AsyncMock(return_value=(0, "", ""))),
-            patch(f"{self.MOD}._extract_hyperopt_best",
-                  new=AsyncMock(return_value={"loss": -0.5, "params_dict": {}})),
-            patch(f"{self.MOD}._pass_stage"),
-            patch(f"{self.MOD}._fail_stage"),
-        ):
-            _run(pipeline._stage_hyperopt(state.run_id, state, out_dir))
-
-        assert not stale_hyperopt.exists(), (
-            "hyperopt_best.json was NOT deleted on retry re-entry"
-        )
-        assert not stale_stage4.exists(), (
-            "stage4_result.json was NOT deleted on retry re-entry"
-        )
-
-    def test_no_cleanup_on_first_run(self, tmp_path):
-        """On the first run (retry_count=0), existing artifacts must NOT be deleted."""
-        out_dir = tmp_path / "auto_quant" / "first_run"
-        out_dir.mkdir(parents=True)
-
-        artifact = out_dir / "hyperopt_best.json"
-        artifact.write_text('{"valid": true}', encoding="utf-8")
-
-        state = _make_state(str(tmp_path), retry_count=0)
-
-        with (
-            patch(f"{self.MOD}._start_stage"),
-            patch(f"{self.MOD}._cancelled", return_value=False),
-            patch(f"{self.MOD}._run_subprocess",
-                  new=AsyncMock(return_value=(0, "", ""))),
-            patch(f"{self.MOD}._extract_hyperopt_best",
-                  new=AsyncMock(return_value={"loss": -0.5, "params_dict": {}})),
-            patch(f"{self.MOD}._pass_stage"),
-            patch(f"{self.MOD}._fail_stage"),
-        ):
-            _run(pipeline._stage_hyperopt(state.run_id, state, out_dir))
-
-        assert artifact.exists(), (
-            "hyperopt_best.json was deleted on first run (retry_count=0) — should not be"
-        )
+        assert state.pending_ai_suggestion_id is None
+        assert state.retry_count == 0
+        assert state.hyperopt_loss == "ProfitLockinHyperOptLoss"
+        assert state.hyperopt_spaces == ["buy", "stoploss", "roi"]
+        assert state.hyperopt_epochs == 100

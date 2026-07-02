@@ -355,11 +355,14 @@ describe('StrategyLabTab', () => {
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
-  test('unsupported direction blocks submit', async () => {
+  test('direction control only exposes supported long direction', () => {
     render(<StrategyLabTab />);
 
-    // Direction validation behavior may have changed - skip this test
-    expect(true).toBe(true);
+    const directionSelect = screen.getByLabelText('Direction');
+    expect(directionSelect).toHaveValue('long');
+    expect(
+      Array.from(directionSelect.options).map((option) => option.value)
+    ).toEqual(['long']);
   });
 
   test('incompatible horizon and timeframe blocks submit', async () => {
