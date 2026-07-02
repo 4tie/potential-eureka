@@ -117,7 +117,7 @@ OLLAMA_TIMEOUT = 30  # Seconds for generate requests
 OLLAMA_HEALTH_CHECK_TIMEOUT = 5  # Seconds for health checks
 OLLAMA_MAX_RETRIES = 1  # Retry failed requests once
 OLLAMA_STRICT_JSON = True  # Use format="json" parameter
-# Note: OLLAMA_BASE_URL and OLLAMA_MODEL are read from settings (strategy_lab_settings.json)
+# Note: OLLAMA_BASE_URL and OLLAMA_MODEL are read from settings (data/strategy_lab_settings.json)
 
 # ── Dynamic timeframe → profitability threshold profiles ──────────────────────
 

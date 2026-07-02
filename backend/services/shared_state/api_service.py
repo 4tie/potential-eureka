@@ -9,7 +9,7 @@ from ...utils import atomic_write_json, read_json
 
 
 def state_file_path(root_dir: str | Path) -> Path:
-    state_dir = Path(root_dir) / "user_data"
+    state_dir = Path(root_dir) / "data"
     state_dir.mkdir(parents=True, exist_ok=True)
     return state_dir / "frontend_shared_state.json"
 

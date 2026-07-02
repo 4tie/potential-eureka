@@ -138,7 +138,7 @@ class AgentContextService:
 
     @property
     def ui_state_path(self) -> Path:
-        state_dir = self.root_dir / "user_data"
+        state_dir = self.root_dir / "data"
         state_dir.mkdir(parents=True, exist_ok=True)
         return state_dir / "agent_ui_state.json"
 

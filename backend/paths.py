@@ -31,7 +31,7 @@ def build_local_paths(root_dir: Path, settings: SettingsModel) -> LocalPaths:
     ensure_directory(backups_root)
     return LocalPaths(
         root_dir=root_dir,
-        settings_file=user_data_dir / "strategy_lab_settings.json",
+        settings_file=root_dir / "data" / "strategy_lab_settings.json",
         app_log_file=root_dir / "data" / "app.log",
         data_downloads_root=data_downloads_root,
         strategies_dir=strategies_dir,

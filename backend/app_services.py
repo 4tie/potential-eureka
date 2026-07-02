@@ -125,7 +125,7 @@ class AppServices:
         )
         self.optimizer_store = OptimizerStore(self.paths.optimizer_root)
         self.exported_trial_store = ExportedTrialStore(
-            Path(self.settings.user_data_directory_path) / "exported_optimizer_runs.json"
+            self.paths.root_dir / "data" / "exported_optimizer_runs.json"
         )
         self.vectorbt_screener = VectorBTParameterScreener(
             settings_store=self.settings_store,

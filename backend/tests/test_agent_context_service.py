@@ -65,7 +65,7 @@ def test_agent_context_service_ui_state_path():
         settings_store=mock_settings_store,
     )
     
-    expected_path = Path('/tmp/test/user_data/agent_ui_state.json')
+    expected_path = Path('/tmp/test/data/agent_ui_state.json')
     assert service.ui_state_path == expected_path
 
 

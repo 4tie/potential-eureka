@@ -18,17 +18,17 @@ test-results/
 # Logs
 *.log
 
+# Data Folder - Application data (non-Freqtrade)
+data/
+
 # User Data - Sensitive Settings (API keys, tokens)
-user_data/strategy_lab_settings.json
 user_data/config.json
 
-# User Data - Heavy Results and Data
+# User Data - Heavy Results and Data (Freqtrade-specific)
 user_data/backtest_results/
 user_data/hyperopt_results/
-user_data/data/
 user_data/data_downloads/
 
 # User Data - Specific Patterns
 user_data/auto_quant/*/state.json
-user_data/data/binance/*.feather
 user_data/strategies/rendered/

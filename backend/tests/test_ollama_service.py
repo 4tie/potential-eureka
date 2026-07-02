@@ -28,7 +28,11 @@ def temp_user_data_dir(tmp_path: Path) -> Path:
     user_data = tmp_path / "user_data"
     user_data.mkdir(parents=True, exist_ok=True)
 
-    settings_file = user_data / "strategy_lab_settings.json"
+    # Create data directory for settings
+    data_dir = tmp_path / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    settings_file = data_dir / "strategy_lab_settings.json"
     settings_file.write_text(
         """{
     "ollama_api_url": "http://localhost:11434",
@@ -261,7 +265,7 @@ def test_create_ollama_client_from_settings_missing_file(tmp_path: Path):
 
 def test_create_ollama_client_from_settings_missing_model(temp_user_data_dir: Path):
     """Test client creation with missing model in settings."""
-    settings_file = temp_user_data_dir / "strategy_lab_settings.json"
+    settings_file = temp_user_data_dir.parent / "data" / "strategy_lab_settings.json"
     settings_file.write_text(
         """{
     "ollama_api_url": "http://localhost:11434",

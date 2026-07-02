@@ -103,7 +103,7 @@ def config_from_user_data_dir(
     log_dir: str | None = None,
     require_model: bool = True,
 ) -> OllamaConfig | None:
-    """Build an OllamaConfig from user_data/strategy_lab_settings.json."""
+    """Build an OllamaConfig from data/strategy_lab_settings.json."""
     settings = load_settings_dict(user_data_dir)
     if settings is None:
         return None

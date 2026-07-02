@@ -51,7 +51,7 @@ def load_options_data(user_data_dir: str | Path) -> dict[str, Any]:
     The router owns Pydantic validation so this helper can stay independent of
     HTTP-layer models and avoid circular imports.
     """
-    options_file = Path(user_data_dir) / "auto_quant_options.json"
+    options_file = Path(user_data_dir).parent / "data" / "auto_quant_options.json"
     if not options_file.exists():
         return {}
     try:
@@ -67,7 +67,7 @@ def load_options_data(user_data_dir: str | Path) -> dict[str, Any]:
 
 def save_options_data(user_data_dir: str | Path, data: dict[str, Any]) -> dict[str, str]:
     """Persist AutoQuant form options and return the existing success payload."""
-    options_file = Path(user_data_dir) / "auto_quant_options.json"
+    options_file = Path(user_data_dir).parent / "data" / "auto_quant_options.json"
     try:
         options_file.parent.mkdir(parents=True, exist_ok=True)
         options_file.write_text(json.dumps(data, indent=2), encoding="utf-8")

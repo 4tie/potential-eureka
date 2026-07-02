@@ -1,6 +1,6 @@
 """services/storage/exported_trial_store.py — persistence for exported optimizer trials.
 
-Wraps user_data/exported_optimizer_runs.json with load / append / list helpers.
+Wraps data/exported_optimizer_runs.json with load / append / list helpers.
 Thread-safety is not required: the temporal stress lab router calls this only from
 a single background task coroutine at a time, and the export endpoints are
 fire-and-forget writes.

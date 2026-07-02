@@ -181,7 +181,7 @@ The frontend uses custom hooks for state management:
 
 ## Configuration
 
-Settings are persisted in `user_data/strategy_lab_settings.json` using Pydantic models for validation.
+Settings are persisted in `data/strategy_lab_settings.json` using Pydantic models for validation.
 
 ## Contributing
 

@@ -381,7 +381,7 @@ def create_ollama_client_from_settings(
     """Create OllamaClient instance by reading from settings file.
     
     This helper function reads Ollama configuration from the settings file
-    (strategy_lab_settings.json) and creates an OllamaClient instance.
+    (data/strategy_lab_settings.json) and creates an OllamaClient instance.
     
     Args:
         user_data_dir: Path to user_data directory containing settings file

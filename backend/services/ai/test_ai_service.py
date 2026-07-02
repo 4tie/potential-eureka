@@ -17,8 +17,12 @@ def temp_user_data_dir(tmp_path: Path) -> Path:
     user_data = tmp_path / "user_data"
     user_data.mkdir(parents=True, exist_ok=True)
     
+    # Create data directory for settings
+    data_dir = tmp_path / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    
     # Create minimal settings file
-    settings_file = user_data / "strategy_lab_settings.json"
+    settings_file = data_dir / "strategy_lab_settings.json"
     settings_file.write_text("""{
     "ollama_api_url": "http://localhost:11434",
     "ollama_model": "test-model",

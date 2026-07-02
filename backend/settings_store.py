@@ -14,7 +14,7 @@ class SettingsStore(ISettingsStore):
     """SettingsStore contains class-level backend logic."""
     def __init__(self, root_dir: Path) -> None:
         self.root_dir = root_dir
-        self.settings_file = root_dir / "user_data" / "strategy_lab_settings.json"
+        self.settings_file = root_dir / "data" / "strategy_lab_settings.json"
 
     def defaults(self) -> SettingsModel:
         preferred_freqtrade = self.root_dir / ".venv" / "bin" / "freqtrade"

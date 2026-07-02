@@ -1,7 +1,7 @@
 """Router: GET /api/settings  &  POST /api/settings
 
 Read and update the application configuration stored in
-``user_data/strategy_lab_settings.json``.
+``data/strategy_lab_settings.json``.
 
 GET  — returns the current effective settings as a validated JSON object.
 POST — validates the full payload (path existence, allowlists), persists it,

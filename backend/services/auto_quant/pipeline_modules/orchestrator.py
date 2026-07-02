@@ -328,7 +328,7 @@ async def run_pipeline(run_id: str) -> None:
                 ollama_suggestions = None
                 try:
                     import json
-                    settings_file = Path(state.user_data_dir) / "strategy_lab_settings.json"
+                    settings_file = Path(state.user_data_dir).parent / "data" / "strategy_lab_settings.json"
                     if settings_file.exists():
                         with open(settings_file, "r", encoding="utf-8") as f:
                             settings = json.load(f)
