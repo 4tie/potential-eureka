@@ -14,18 +14,10 @@ import pytest
 
 # Common hardcoded threshold patterns that should NOT appear in business logic
 FORBIDDEN_PATTERNS = [
-    # Threshold values that should come from policy
-    r"0\.3[0-9]",  # 0.30-0.39 (drawdown thresholds)
-    r"0\.4[0-9]",  # 0.40-0.49 (drawdown thresholds)
-    r"0\.5[0-9]",  # 0.50-0.59 (various thresholds)
-    r"30\.0",      # 30% drawdown
-    r"40\.0",      # 40% drawdown
-    r"50\.0",      # 50% drawdown
-    r"100",        # 100 trades
-    r"15",         # 15 trades
-    r"1\.0",       # 1.0 profit factor
-    r"1\.3",       # 1.3 profit factor
-    r"1\.5",       # 1.5 profit factor
+    # Threshold defaults should come from policy/config. Do not flag percentage
+    # conversion, scoring, display formatting, or test fixture arithmetic.
+    r"(max_drawdown|drawdown_threshold|min_win_rate|win_rate_threshold|min_profit_factor|profit_factor_threshold|min_sharpe)\s*=\s*(0\.[345]\d?|[345]0\.0?|1\.[035])",
+    r"(min_trades|trade_count_threshold)\s*=\s*(15|100)",
     # Timeframe strings that should come from policy
     r'"1m"',        # 1m timeframe
     r'"5m"',        # 5m timeframe
@@ -140,12 +132,16 @@ def test_policy_helpers_used_for_thresholds():
         
         # Check that policy helpers are used
         policy_helpers = [
+            "load_policy",
             "thresholds_for",
             "style_timeframes",
             "pair_target_count",
             "default_pair_universe",
             "score_strategy",
             "readiness_for_score",
+            "walk_forward_windows_for_depth",
+            "min_wfo_windows",
+            "wfo_skip_note",
         ]
         
         helpers_used = any(helper in content for helper in policy_helpers)

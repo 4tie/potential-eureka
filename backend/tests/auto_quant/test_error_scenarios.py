@@ -30,7 +30,7 @@ class TestInvalidConfigurations:
         assert response.status_code in (400, 422)
 
     def test_missing_timeframe_field(self, app_with_service):
-        """Verify missing 'timeframe' field returns error."""
+        """Verify missing 'timeframe' uses policy defaults."""
         client, tmp_path, settings = app_with_service
 
         payload = {
@@ -44,10 +44,10 @@ class TestInvalidConfigurations:
 
         response = client.post("/api/auto-quant/start", json=payload)
 
-        assert response.status_code in (400, 422)
+        assert response.status_code == 202
 
     def test_missing_date_range_fields(self, app_with_service):
-        """Verify missing date range fields returns error."""
+        """Verify missing date range fields use policy defaults."""
         client, tmp_path, settings = app_with_service
 
         payload = {
@@ -61,7 +61,7 @@ class TestInvalidConfigurations:
 
         response = client.post("/api/auto-quant/start", json=payload)
 
-        assert response.status_code in (400, 422)
+        assert response.status_code == 202
 
     def test_invalid_date_range_format(self, app_with_service):
         """Verify invalid date format returns error."""
@@ -108,7 +108,7 @@ class TestInvalidConfigurations:
             "timeframe": "5m",
             "in_sample_range": "20230101-20240101",
             "out_sample_range": "20240101-20240601",
-            "pairs": [],  # Empty
+            "pair_universe": [],  # Empty
             "hyperopt_epochs": 10,
         }
 
@@ -240,7 +240,7 @@ class TestTypeErrors:
             "timeframe": "5m",
             "in_sample_range": "20230101-20240101",
             "out_sample_range": "20240101-20240601",
-            "pairs": "BTC/USDT",  # String instead of list
+            "pair_universe": "BTC/USDT",  # String instead of list
             "hyperopt_epochs": 10,
         }
 

@@ -20,8 +20,9 @@ from .stages_optimization import _stage_hyperopt, _stage_patch
 from .stages_genetic import _stage_genetic_evolution
 from .stages_regime import _stage_regime_detection
 from .stages_rl import _stage_rl_deployment, _stage_rl_training
-from .stages_validation import _stage_portfolio_baseline, _stage_robustness_feature_injection, _stage_pre_flight_filtering, _stage_pre_selection, _stage_sanity_backtest, _stage_stress_test
+from .stages_validation import _stage_oos_validation, _stage_portfolio_baseline, _stage_robustness_feature_injection, _stage_pre_flight_filtering, _stage_pre_selection, _stage_sanity_backtest, _stage_stress_test
 from .helpers import _fail_stage, _pass_stage
+from .stage_runtime import ensure_validation_attempt, is_validate_existing, update_validation_attempt
 from .state import (
     PipelineState,
     _Cancelled,
@@ -83,6 +84,12 @@ async def run_pipeline(run_id: str) -> None:
 
     policy = load_policy()
     ensure_working_copy(state, out_dir)
+    if is_validate_existing(state):
+        ensure_validation_attempt(
+            state,
+            reason="initial" if state.retry_count == 0 else "approved_ai_retry",
+            trigger="approved_ai_retry" if state.retry_count else "initial",
+        )
     state.selected_timeframe = state.selected_timeframe or state.timeframe
     state.selected_pair_universe = state.selected_pair_universe or state.pair_universe
     state.policy_versions = state.policy_versions or policy.versions
@@ -411,6 +418,99 @@ async def run_pipeline(run_id: str) -> None:
                 _rlog(run_id, 3, logging.ERROR, "Auto-Patching FAILED — pipeline halted.")
                 return
 
+            if is_validate_existing(state):
+                _rlog(run_id, 4, logging.INFO, "── Validate Existing Gate: OOS Validation ──")
+                _emit(run_id, 4, "running", "Running required out-of-sample validation gate...", 52)
+                oos_gate_result = await _stage_oos_validation(
+                    run_id,
+                    state,
+                    out_dir,
+                    optimized_path,
+                    record_stage=False,
+                    stage_idx=4,
+                )
+                if oos_gate_result is None:
+                    msg = "OOS validation failed before robustness checks could continue."
+                    update_validation_attempt(
+                        state,
+                        status="rejected",
+                        stage_idx=4,
+                        reason=msg,
+                        metrics=(state.generalization_failure or {}),
+                    )
+                    _fail_stage(run_id, state, 4, msg, state.generalization_failure or {})
+                    return
+
+                if oos_gate_result == "retry":
+                    failure = state.generalization_failure or {}
+                    failed_metrics = failure.get("failed_metrics", {})
+                    update_validation_attempt(
+                        state,
+                        status="awaiting_retry",
+                        stage_idx=4,
+                        reason=f"OOS validation did not pass: {failed_metrics.get('reason', 'unknown')}",
+                        metrics=failed_metrics,
+                    )
+                    if state.retry_count >= state.max_retries:
+                        msg = (
+                            "Selected strategy failed OOS validation after "
+                            f"{state.max_attempts} full validation attempt(s)."
+                        )
+                        _rlog(run_id, 4, logging.ERROR, "Validate Existing | %s", msg)
+                        _fail_stage(run_id, state, 4, msg, failure)
+                        return
+
+                    suggestion = create_pending_suggestion(
+                        state=state,
+                        trigger="oos_validation",
+                        failure_reason=failed_metrics.get("reason") or "oos_validation",
+                        retry_attempt=state.retry_count + 1,
+                        source="deterministic",
+                        proposed_changes=None,
+                        summary="OOS validation failed; review a safer retry configuration.",
+                        explanation=(
+                            "The strategy did not pass the out-of-sample gate. "
+                            "Approval schedules another full validation attempt through the existing AutoQuant flow."
+                        ),
+                        evidence={"oos_validation": failure},
+                    )
+                    state.status = "awaiting_user_approval"
+                    state.current_stage = optimization_stage_index()
+                    stage_idx = optimization_stage_index()
+                    if 0 < stage_idx <= len(state.stages):
+                        state.stages[stage_idx - 1].status = "warning"
+                        state.stages[stage_idx - 1].message = suggestion["summary"]
+                        state.stages[stage_idx - 1].data = {
+                            **(state.stages[stage_idx - 1].data or {}),
+                            "ai_suggestion_id": suggestion["id"],
+                            "oos_validation": failure,
+                        }
+                    _emit(
+                        run_id,
+                        stage_idx,
+                        "awaiting_user_approval",
+                        suggestion["summary"],
+                        -1,
+                        {"suggestion": suggestion},
+                        msg_type="ai_suggestion_ready",
+                    )
+                    _save_state_to_disk(state)
+                    return
+
+                oos_result = oos_gate_result
+                update_validation_attempt(
+                    state,
+                    status="running",
+                    stage_idx=4,
+                    reason="OOS validation passed; continuing robustness and portfolio gates.",
+                    metrics={
+                        "oos_profit": oos_result.get("profit_total"),
+                        "oos_total_trades": oos_result.get("total_trades"),
+                        "oos_drawdown": oos_result.get("max_drawdown_account"),
+                        "profit_factor": oos_result.get("profit_factor"),
+                    },
+                )
+
             # Stage 3 complete — exit the retry loop and continue to Stage 4
             break
 
@@ -501,11 +601,14 @@ async def run_pipeline(run_id: str) -> None:
             _fail_stage(run_id, state, 6, "optimized_path is None - cannot run delivery")
             return
         
+        delivery_oos_result = oos_result if is_validate_existing(state) else (stage4_result or {})
         await _stage_delivery(run_id, state, out_dir, optimized_path, best_params,
-                              s1_result, stage4_result or {}, stage4_result or {}, portfolio_result)
+                              s1_result, delivery_oos_result or {}, stage4_result or {}, portfolio_result)
 
         state.status = "completed"
         state.completed_at = _now()
+        if is_validate_existing(state) and state.final_verdict == "rejected":
+            state.status = "failed"
         _save_state_to_disk(state)
         _rlog(run_id, 6, logging.INFO,
               f"══ PIPELINE COMPLETED SUCCESSFULLY ══  run={run_id}  "

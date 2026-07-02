@@ -301,7 +301,8 @@ def _validation_warnings(state: Any, report: dict[str, Any]) -> list[str]:
     validation_status = str(report.get("validation_status") or getattr(state, "validation_status", "") or "").lower()
     readiness_label = str(report.get("readiness_label") or getattr(state, "readiness_label", "") or "").lower()
 
-    validated = validation_status in {"passed", "accepted", "validated", "dry_run_ready"}
+    validated = validation_status in {"passed", "accepted", "validated", "dry_run_ready", "validated_candidate"}
+    validated = validated or str(report.get("final_verdict") or "").lower() == "validated_candidate"
     ready = "ready" in readiness_label and "not" not in readiness_label
     if not (validated or ready):
         warnings.append(

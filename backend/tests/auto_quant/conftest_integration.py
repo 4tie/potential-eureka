@@ -89,8 +89,8 @@ def app_with_service(tmp_path, mock_freqtrade_subprocess):
     app.include_router(router)
 
     # Create real temporary directories
-    strategies_dir = tmp_path / "strategies"
     user_data_dir = tmp_path / "user_data"
+    strategies_dir = user_data_dir / "strategies"
     strategies_dir.mkdir(parents=True, exist_ok=True)
     user_data_dir.mkdir(parents=True, exist_ok=True)
 

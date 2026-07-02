@@ -8,25 +8,27 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from unittest.mock import Mock, patch
+from types import SimpleNamespace
 
 import pytest
 
 from backend.services.auto_quant.pipeline_modules.state import PipelineState
 
 
-def test_original_strategy_hash_stored():
+def test_original_strategy_hash_stored(tmp_path):
     """Test that original strategy hash is stored when working copy is created."""
-    mock_state = Mock()
-    mock_state.strategy = "TestStrategy"
-    mock_state.original_strategy = None
-    mock_state.user_data_dir = "/tmp/test_user_data"
-    mock_state.original_strategy_hash = None
-    mock_state.strategy_runtime_dir = None
-    mock_state.strategy_variants = []
+    user_data = tmp_path / "user_data"
+    mock_state = SimpleNamespace(
+        strategy="TestStrategy",
+        original_strategy=None,
+        user_data_dir=str(user_data),
+        original_strategy_hash=None,
+        strategy_runtime_dir=None,
+        strategy_variants=[],
+    )
     
     # Create a temporary strategy file
-    strategies_dir = Path("/tmp/test_user_data/strategies")
+    strategies_dir = user_data / "strategies"
     strategies_dir.mkdir(parents=True, exist_ok=True)
     strategy_file = strategies_dir / "TestStrategy.py"
     strategy_content = "# Test Strategy\nclass TestStrategy:\n    pass\n"
@@ -38,22 +40,18 @@ def test_original_strategy_hash_stored():
     # Import and call ensure_working_copy
     from backend.services.auto_quant.variants import ensure_working_copy
     
-    out_dir = Path("/tmp/test_auto_quant/test_run")
+    out_dir = tmp_path / "auto_quant" / "test_run"
     result = ensure_working_copy(mock_state, out_dir)
     
     # Verify hash was stored
     assert mock_state.original_strategy_hash == expected_hash
     assert mock_state.original_strategy == "TestStrategy"
     
-    # Cleanup
-    strategy_file.unlink()
-    strategies_dir.rmdir()
 
-
-def test_original_strategy_file_not_modified():
+def test_original_strategy_file_not_modified(tmp_path):
     """Test that original strategy file is not modified during pipeline."""
     # Create a temporary strategy file
-    strategies_dir = Path("/tmp/test_user_data/strategies")
+    strategies_dir = tmp_path / "user_data" / "strategies"
     strategies_dir.mkdir(parents=True, exist_ok=True)
     strategy_file = strategies_dir / "TestStrategy.py"
     original_content = "# Test Strategy\nclass TestStrategy:\n    pass\n"
@@ -71,21 +69,20 @@ def test_original_strategy_file_not_modified():
     assert current_content == original_content
     assert current_hash == original_hash
     
-    # Cleanup
-    strategy_file.unlink()
-    strategies_dir.rmdir()
 
-
-def test_variants_written_to_run_local_dir():
+def test_variants_written_to_run_local_dir(tmp_path):
     """Test that strategy variants are written to run-local directory, not original."""
-    mock_state = Mock()
-    mock_state.strategy = "TestStrategy"
-    mock_state.user_data_dir = "/tmp/test_user_data"
-    mock_state.strategy_runtime_dir = "/tmp/test_auto_quant/test_run/strategies"
-    mock_state.strategy_variants = []
+    runtime_dir = tmp_path / "auto_quant" / "test_run" / "strategies"
+    mock_state = SimpleNamespace(
+        strategy="TestStrategy",
+        user_data_dir=str(tmp_path / "user_data"),
+        strategy_runtime_dir=str(runtime_dir),
+        strategy_variants=[],
+        original_strategy=None,
+        original_strategy_hash=None,
+    )
     
     # Create run-local directory
-    runtime_dir = Path("/tmp/test_auto_quant/test_run/strategies")
     runtime_dir.mkdir(parents=True, exist_ok=True)
     
     # Create a variant
@@ -106,19 +103,19 @@ def test_variants_written_to_run_local_dir():
     # Verify original strategy file (if it existed) is not in run-local dir
     # (This is conceptual - in real scenario, original is in user_data/strategies)
     
-    # Cleanup
-    variant_path.unlink()
-    runtime_dir.rmdir()
 
-
-def test_variant_versioning():
+def test_variant_versioning(tmp_path):
     """Test that strategy variants are versioned with role and version number."""
-    mock_state = Mock()
-    mock_state.strategy = "TestStrategy"
-    mock_state.strategy_runtime_dir = "/tmp/test_auto_quant/test_run/strategies"
-    mock_state.strategy_variants = []
+    runtime_dir = tmp_path / "auto_quant" / "test_run" / "strategies"
+    mock_state = SimpleNamespace(
+        strategy="TestStrategy",
+        strategy_runtime_dir=str(runtime_dir),
+        strategy_variants=[],
+        user_data_dir=str(tmp_path / "user_data"),
+        original_strategy=None,
+        original_strategy_hash=None,
+    )
     
-    runtime_dir = Path("/tmp/test_auto_quant/test_run/strategies")
     runtime_dir.mkdir(parents=True, exist_ok=True)
     
     from backend.services.auto_quant.variants import create_variant
@@ -147,24 +144,21 @@ def test_variant_versioning():
     assert (runtime_dir / "TestStrategy_mutation_v1.py").exists()
     assert (runtime_dir / "TestStrategy_mutation_v2.py").exists()
     
-    # Cleanup
-    for f in runtime_dir.glob("TestStrategy_*.py"):
-        f.unlink()
-    runtime_dir.rmdir()
 
-
-def test_working_copy_isolated_from_original():
+def test_working_copy_isolated_from_original(tmp_path):
     """Test that working copy is isolated from original strategy."""
-    mock_state = Mock()
-    mock_state.strategy = "TestStrategy"
-    mock_state.original_strategy = None
-    mock_state.user_data_dir = "/tmp/test_user_data"
-    mock_state.original_strategy_hash = None
-    mock_state.strategy_runtime_dir = None
-    mock_state.strategy_variants = []
+    user_data = tmp_path / "user_data"
+    mock_state = SimpleNamespace(
+        strategy="TestStrategy",
+        original_strategy=None,
+        user_data_dir=str(user_data),
+        original_strategy_hash=None,
+        strategy_runtime_dir=None,
+        strategy_variants=[],
+    )
     
     # Create original strategy
-    strategies_dir = Path("/tmp/test_user_data/strategies")
+    strategies_dir = user_data / "strategies"
     strategies_dir.mkdir(parents=True, exist_ok=True)
     original_file = strategies_dir / "TestStrategy.py"
     original_content = "# Original\nclass TestStrategy:\n    pass\n"
@@ -174,7 +168,7 @@ def test_working_copy_isolated_from_original():
     # Create working copy
     from backend.services.auto_quant.variants import ensure_working_copy
     
-    out_dir = Path("/tmp/test_auto_quant/test_run")
+    out_dir = tmp_path / "auto_quant" / "test_run"
     working_path = ensure_working_copy(mock_state, out_dir)
     
     # Modify working copy
@@ -189,12 +183,6 @@ def test_working_copy_isolated_from_original():
     assert current_original_hash == original_hash
     assert mock_state.original_strategy_hash == original_hash
     
-    # Cleanup
-    working_path.unlink()
-    original_file.unlink()
-    strategies_dir.rmdir()
-    out_dir.rmdir()
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -26,7 +26,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, Response
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...services.auto_quant import pipeline as _pl
 from ...services.auto_quant.generator import (
@@ -95,7 +95,7 @@ class StartAutoQuantRequest(BaseModel):
     # Optional single-pair override selected from the Pair Screener
     pair: str | None = Field(None, description="Target pair override (e.g. 'BTC/USDT'); passed as --pairs to Stage 1 & 4 backtests")
     # Dynamic Pair-list Whitelisting
-    pair_universe: list[str] | None = Field(None, description="Custom pair universe for multi-pair backtesting (default: Top 50 by volume)")
+    pair_universe: list[str] | None = Field(None, min_length=1, description="Custom pair universe for multi-pair backtesting (default: Top 50 by volume)")
     # Robustness-first workflow fields
     strategy_source: str | None = Field(None, description="Source mode: existing, uploaded, generated, or template")
     trading_style: str | None = Field(None, description="Trading style: scalping, intraday, swing, position")
@@ -104,6 +104,39 @@ class StartAutoQuantRequest(BaseModel):
     uploaded_strategy_id: str | None = Field(None, description="Uploaded/generated strategy identifier")
     generated_by: str | None = Field(None, description="AI provider that generated the strategy (e.g., 'hermes')")
     advanced_overrides: dict[str, Any] | None = Field(default_factory=dict, description="Advanced compatibility overrides")
+    workflow_mode: str = Field("auto_quant", description="Workflow mode: auto_quant or validate_existing")
+    max_attempts: int = Field(3, ge=1, le=10, description="User-facing full validation attempts for validate_existing mode")
+
+    @field_validator("in_sample_range", "out_sample_range")
+    @classmethod
+    def _validate_timerange(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        parts = value.split("-", 1)
+        if len(parts) != 2 or any(len(part) != 8 for part in parts):
+            raise ValueError("timerange must use YYYYMMDD-YYYYMMDD format")
+        try:
+            start = datetime.strptime(parts[0], "%Y%m%d")
+            end = datetime.strptime(parts[1], "%Y%m%d")
+        except ValueError as exc:
+            raise ValueError("timerange must use valid YYYYMMDD dates") from exc
+        if end <= start:
+            raise ValueError("timerange end must be after start")
+        return value
+
+    @field_validator("hyperopt_epochs")
+    @classmethod
+    def _validate_hyperopt_epochs(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("hyperopt_epochs must be greater than zero")
+        return value
+
+    @field_validator("wfo_enabled", "ensemble_enabled", mode="before")
+    @classmethod
+    def _validate_bool(cls, value: Any) -> Any:
+        if not isinstance(value, bool):
+            raise ValueError("value must be a boolean")
+        return value
 
 
 class StartAutoQuantResponse(BaseModel):
@@ -182,6 +215,8 @@ class AutoQuantOptions(BaseModel):
     analysis_depth: str = Field("deep", description="Analysis depth")
     uploaded_strategy_id: str | None = Field(None, description="Uploaded strategy id")
     advanced_overrides: dict[str, Any] = Field(default_factory=dict, description="Advanced overrides")
+    workflow_mode: str = Field("auto_quant", description="Workflow mode")
+    max_attempts: int = Field(3, description="User-facing full validation attempts for validate_existing mode")
     timeframe: str = Field("5m", description="Candle timeframe")
     in_sample_range: str = Field("20230101-20240101", description="In-sample timerange")
     out_sample_range: str = Field("20240101-20241201", description="Out-of-sample timerange")
@@ -282,6 +317,8 @@ async def _start_pipeline_from_body(
         "policy_versions": normalized["policy_versions"],
         "strategy": strategy_name,
         "strategy_source": normalized["strategy_source"],
+        "workflow_mode": normalized["workflow_mode"],
+        "max_attempts": normalized["max_attempts"],
         "uploaded_strategy_id": normalized.get("uploaded_strategy_id"),
         "generated_by": normalized.get("generated_by"),
         "trading_style": normalized["trading_style"],
@@ -350,6 +387,8 @@ async def _start_pipeline_from_body(
         policy_versions=normalized["policy_versions"],
         selected_timeframe=normalized["timeframe"],
         selected_pair_universe=normalized["selected_pair_universe"],
+        workflow_mode=normalized["workflow_mode"],
+        max_attempts=normalized["max_attempts"],
     )
 
     asyncio.create_task(_pl.run_pipeline(run_id))

@@ -269,6 +269,7 @@ export default function AutoQuantConfigPanel({
   const wfoSummary = form.wfo_enabled ? getWfoWindowSummary(form) : null;
   const pairCount = useMemo(() => countPairs(form.pair_universe), [form.pair_universe]);
   const searchSpaceLabel = form.hyperopt_spaces.length ? form.hyperopt_spaces.join(", ") : "none";
+  const validateExistingMode = form.workflow_mode === "validate_existing";
 
   const toggleScreenedPair = (pair) => {
     setSelectedScreenedPairs(prev => {
@@ -374,11 +375,12 @@ export default function AutoQuantConfigPanel({
                 title={!form.strategy ? "Select a strategy first" : ""}
               >
                 {isConnecting ? <span className="loading loading-spinner loading-xs" /> : <PlayIcon className="h-4 w-4" />}
-                Start Auto-Quant
+                {validateExistingMode ? "Validate Strategy" : "Start Auto-Quant"}
               </button>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5">
+              <MetricPill label="Mode" value={validateExistingMode ? "Validate" : "Factory"} tone={validateExistingMode ? "warning" : "base"} />
               <MetricPill label="Timeframe" value={form.timeframe} tone="success" />
               <MetricPill label="Pairs" value={pairCount || "Default"} />
               <MetricPill label="Epochs" value={form.hyperopt_epochs} />
@@ -422,6 +424,43 @@ export default function AutoQuantConfigPanel({
                     </select>
                   </label>
                 )}
+              </div>
+              <div className="grid gap-3 rounded-lg border border-base-300 bg-base-300/30 p-3 sm:grid-cols-[minmax(0,1fr)_8rem]">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="toggle toggle-sm toggle-primary mt-0.5"
+                    checked={validateExistingMode}
+                    onChange={(e) => {
+                      updateField("workflow_mode", e.target.checked ? "validate_existing" : "auto_quant");
+                      if (e.target.checked) {
+                        updateField("strategy_source", "existing");
+                      }
+                    }}
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-xs font-semibold text-base-content">Validate Existing Strategy</span>
+                    <span className="mt-1 block text-[11px] leading-relaxed text-base-content/55">
+                      Use the selected strategy file and stop at Validated Candidate or Rejected with reasons.
+                    </span>
+                  </span>
+                </label>
+                <label className="form-control">
+                  <span className="label py-0 pb-1">
+                    <span className="label-text text-[10px] font-semibold uppercase tracking-widest text-base-content/40">
+                      Attempts
+                    </span>
+                  </span>
+                  <input
+                    type="number"
+                    className="input input-bordered input-xs"
+                    min={1}
+                    max={10}
+                    value={form.max_attempts || 3}
+                    disabled={!validateExistingMode}
+                    onChange={(e) => updateField("max_attempts", Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 3)))}
+                  />
+                </label>
               </div>
             </div>
 

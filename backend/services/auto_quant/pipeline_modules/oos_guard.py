@@ -64,14 +64,14 @@ def check_timerange_overlap(is_range: str, oos_range: str) -> dict[str, Any]:
         }
     
     # Check for overlap
-    has_overlap = not (is_end < oos_start or oos_end < is_start)
+    has_overlap = not (is_end <= oos_start or oos_end <= is_start)
     
     # Calculate overlap days
     overlap_days = 0
     if has_overlap:
         overlap_start = max(is_start, oos_start)
         overlap_end = min(is_end, oos_end)
-        overlap_days = (overlap_end - overlap_start).days + 1
+        overlap_days = max(0, (overlap_end - overlap_start).days)
     
     return {
         "has_overlap": has_overlap,

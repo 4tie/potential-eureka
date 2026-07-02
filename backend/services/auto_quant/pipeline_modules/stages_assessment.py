@@ -28,6 +28,7 @@ from .helpers import (
 )
 from .logging import _rlog, logger
 from .scoring import aggregate_validation_notes, compute_score
+from .stage_runtime import is_validate_existing, update_validation_attempt
 from .state import (
     PipelineState,
     _Cancelled,
@@ -85,6 +86,151 @@ def _extract_oos_profit_ratios(out_dir: Path, strategy_name: str) -> list[float]
         if pr is not None:
             ratios.append(float(pr))
     return ratios
+
+
+def _validate_existing_gate_summary(
+    state: PipelineState,
+    *,
+    oos_result: dict,
+    portfolio_result: dict,
+    score_result: dict,
+) -> dict:
+    portfolio_metrics = portfolio_result.get("portfolio_metrics", {}) if isinstance(portfolio_result, dict) else {}
+    oos = oos_result or {}
+    sensitivity = state.sensitivity or {}
+    monte_carlo = portfolio_result.get("monte_carlo", {}) if isinstance(portfolio_result, dict) else {}
+    profit_giveback = portfolio_result.get("profit_giveback", {}) if isinstance(portfolio_result, dict) else {}
+    per_pair = portfolio_result.get("per_pair_metrics", []) if isinstance(portfolio_result, dict) else []
+
+    net_profit = _first_float(portfolio_metrics, "profit_total", "profit_total_abs")
+    if net_profit is None:
+        net_profit = _first_float(oos, "profit_total", "profit_total_abs")
+    expectancy = _first_float(portfolio_metrics, "expectancy", "profit_mean", "profit_mean_pct")
+    if expectancy is None:
+        expectancy = _first_float(oos, "expectancy", "profit_mean", "profit_mean_pct")
+    profit_factor = _first_float(portfolio_metrics, "profit_factor")
+    if profit_factor is None:
+        profit_factor = _first_float(oos, "profit_factor")
+    max_drawdown = _first_float(portfolio_metrics, "max_drawdown_account")
+    if max_drawdown is None:
+        max_drawdown = _first_float(oos, "max_drawdown_account")
+    trade_count = int(_first_float(portfolio_metrics, "total_trades") or _first_float(oos, "total_trades") or 0)
+
+    wfo_passed = True
+    wfo_reason = "WFO disabled"
+    if state.wfo_enabled:
+        if state.wfo_windows:
+            failed_windows = [w for w in state.wfo_windows if not w.get("passed")]
+            wfo_passed = not failed_windows
+            wfo_reason = "All WFO windows passed" if wfo_passed else f"{len(failed_windows)} WFO window(s) failed"
+        else:
+            wfo_passed = False
+            wfo_reason = state.wfo_skip_reason or "WFO enabled but no WFO windows were recorded"
+
+    sensitivity_label = str(sensitivity.get("label", "") or "")
+    sensitivity_passed = bool(sensitivity.get("passed")) and "sharp peak" not in sensitivity_label.lower()
+    oos_profit = _first_float(oos, "profit_total")
+    oos_trades = int(_first_float(oos, "total_trades") or 0)
+    score_explanation = score_result.get("score_explanation", {}) if isinstance(score_result, dict) else {}
+    trade_gate = score_explanation.get("trade_activity_gate", {}) if isinstance(score_explanation, dict) else {}
+    required_trades = int(trade_gate.get("required_oos_trades") or 1)
+    actual_trades_for_gate = int(trade_gate.get("actual_oos_trades") or trade_count or 0)
+
+    checks = [
+        {
+            "name": "positive_net_profit",
+            "passed": (net_profit or 0.0) > 0,
+            "value": net_profit,
+            "reason": "Final portfolio or OOS net profit must be positive.",
+        },
+        {
+            "name": "positive_expectancy",
+            "passed": (expectancy or 0.0) > 0,
+            "value": expectancy,
+            "reason": "Per-trade expectancy must be positive.",
+        },
+        {
+            "name": "profit_factor",
+            "passed": profit_factor is not None and profit_factor >= state.min_profit_factor,
+            "value": profit_factor,
+            "threshold": state.min_profit_factor,
+            "reason": "Profit factor must pass configured threshold.",
+        },
+        {
+            "name": "max_drawdown",
+            "passed": max_drawdown is not None and max_drawdown <= state.max_drawdown_threshold,
+            "value": max_drawdown,
+            "threshold": state.max_drawdown_threshold,
+            "reason": "Max drawdown must stay below configured threshold.",
+        },
+        {
+            "name": "minimum_trade_count",
+            "passed": actual_trades_for_gate >= required_trades,
+            "value": actual_trades_for_gate,
+            "threshold": required_trades,
+            "reason": "Trade count must satisfy policy minimum for the selected timeframe.",
+        },
+        {
+            "name": "oos_validation",
+            "passed": oos_trades > 0 and oos_profit is not None and oos_profit >= state.min_oos_profit,
+            "value": {"profit_total": oos_profit, "total_trades": oos_trades},
+            "threshold": {"min_oos_profit": state.min_oos_profit},
+            "reason": "Out-of-sample validation must pass.",
+        },
+        {
+            "name": "wfo_consistency",
+            "passed": wfo_passed,
+            "value": {"enabled": state.wfo_enabled, "windows": len(state.wfo_windows or [])},
+            "reason": wfo_reason,
+        },
+        {
+            "name": "sensitivity",
+            "passed": sensitivity_passed,
+            "value": sensitivity,
+            "reason": "Sensitivity must pass without Sharp Peak behavior.",
+        },
+        {
+            "name": "portfolio_multi_pair",
+            "passed": bool(per_pair) and bool(monte_carlo.get("passed", True)) and not profit_giveback.get("peak_to_loss_count"),
+            "value": {
+                "pairs": len(per_pair),
+                "monte_carlo_passed": monte_carlo.get("passed"),
+                "profit_giveback": profit_giveback,
+            },
+            "reason": "Portfolio or multi-pair validation must pass.",
+        },
+        {
+            "name": "readiness_scoring",
+            "passed": bool(score_result.get("accepted")),
+            "value": {
+                "validation_status": score_result.get("validation_status"),
+                "readiness_label": score_result.get("readiness_label"),
+                "score": score_result.get("score"),
+            },
+            "reason": "Validation-first scoring must accept the candidate.",
+        },
+    ]
+    failed = [check for check in checks if not check["passed"]]
+    return {
+        "schema_version": "validate_existing_gate_summary_v1",
+        "passed": not failed,
+        "checks": checks,
+        "failed_checks": failed,
+        "why_it_passed": [
+            "The selected strategy passed OOS, robustness, portfolio, risk, and scoring gates."
+        ] if not failed else [],
+    }
+
+
+def _first_float(data: dict, *keys: str) -> float | None:
+    for key in keys:
+        if key not in data:
+            continue
+        try:
+            return float(data[key])
+        except (TypeError, ValueError):
+            continue
+    return None
 
 
 async def _stage_risk_assessment(
@@ -601,11 +747,19 @@ async def _stage_delivery(
         pair_consistency = min(100.0, len(state.selected_pairs or []) / target_pairs * 100.0) / 100.0
         
         # Build metrics for scoring
+        oos_total_trades = oos_result.get("total_trades")
+        if oos_total_trades is None:
+            oos_total_trades = oos_result.get("trades")
         scoring_metrics = {
             "expectancy": metrics.get("profit_mean_pct", 0.0),
             "profit_factor": metrics.get("profit_factor", 1.0),
             "max_drawdown": metrics.get("max_drawdown_account", 0.0),
             "robustness_score": robustness_score,
+            "oos_profit": oos_result.get("profit_total"),
+            "oos_passed": bool(oos_result) and oos_result.get("profit_total", 0.0) >= state.min_oos_profit,
+            "oos_total_trades": oos_total_trades,
+            "in_sample_total_trades": s1_result.get("total_trades") if isinstance(s1_result, dict) else None,
+            "portfolio_total_trades": metrics.get("total_trades"),
             "oos_retention": metrics.get("oos_profit_retention", 0.5),
             "walk_forward_score": wfo_pass_rate / 100.0 if wfo_pass_rate else 0.5,
             "pair_consistency": pair_consistency,
@@ -618,6 +772,77 @@ async def _stage_delivery(
         state.validation_status = score_result["validation_status"]
         state.readiness_label = score_result["readiness_label"]
         state.score_explanation = score_result["score_explanation"]
+
+        validate_existing_gates = None
+        if is_validate_existing(state):
+            validate_existing_gates = _validate_existing_gate_summary(
+                state,
+                oos_result=oos_result or {},
+                portfolio_result=risk_result or {},
+                score_result=score_result,
+            )
+            if validate_existing_gates["passed"]:
+                state.final_verdict = "validated_candidate"
+                state.candidate_label = "Validated Candidate"
+                update_validation_attempt(
+                    state,
+                    status="passed",
+                    stage_idx=6,
+                    reason="All Validate Existing Strategy gates passed.",
+                    metrics={
+                        "score": state.score,
+                        "profit_factor": scoring_metrics.get("profit_factor"),
+                        "expectancy": scoring_metrics.get("expectancy"),
+                        "oos_profit": scoring_metrics.get("oos_profit"),
+                        "portfolio_total_trades": scoring_metrics.get("portfolio_total_trades"),
+                    },
+                )
+            else:
+                state.final_verdict = "rejected"
+                state.candidate_label = "Rejected"
+                state.validation_status = "Rejected"
+                state.readiness_label = "Rejected"
+                reason = (
+                    "Validation gates failed: "
+                    + ", ".join(check["name"] for check in validate_existing_gates["failed_checks"])
+                )
+                update_validation_attempt(
+                    state,
+                    status="rejected",
+                    stage_idx=6,
+                    reason=reason,
+                    metrics={
+                        "score": state.score,
+                        "profit_factor": scoring_metrics.get("profit_factor"),
+                        "expectancy": scoring_metrics.get("expectancy"),
+                        "oos_profit": scoring_metrics.get("oos_profit"),
+                        "portfolio_total_trades": scoring_metrics.get("portfolio_total_trades"),
+                    },
+                )
+                state.rejection_report = {
+                    "schema_version": "validate_existing_rejection_v1",
+                    "final_verdict": "rejected",
+                    "candidate_label": "Rejected",
+                    "reason": reason,
+                    "failed_stages": [],
+                    "failed_gates": validate_existing_gates["failed_checks"],
+                    "repairs_attempted": {
+                        "validation_attempts": state.validation_attempts,
+                        "internal_baseline_heal_attempts": state.phase1_heal_attempts,
+                        "approved_retry_history": state.retry_history,
+                        "strategy_variants": state.strategy_variants,
+                    },
+                    "ai_suggestions": {
+                        "approved": [s for s in state.ai_suggestions if s.get("status") == "approved"],
+                        "rejected": [s for s in state.ai_suggestions if s.get("status") == "rejected"],
+                        "pending": [s for s in state.ai_suggestions if s.get("status") == "pending"],
+                    },
+                    "best_observed_result": state.best_observed_result,
+                    "recommended_next_experiment": (
+                        "Start a new validation run with a different timeframe, risk profile, "
+                        "pair universe, or base strategy logic before increasing optimization budget."
+                    ),
+                }
         
         # Aggregate validation notes
         state.validation_notes = aggregate_validation_notes(state)
@@ -628,6 +853,7 @@ async def _stage_delivery(
         state.readiness_label = "Not Ready"
         state.score_explanation = {"error": str(exc)}
         state.validation_notes.append(f"Score calculation failed: {exc}. Review raw validation metrics.")
+        validate_existing_gates = None
         import traceback
         _rlog(run_id, 6, logging.ERROR, traceback.format_exc())
 
@@ -638,6 +864,9 @@ async def _stage_delivery(
         "original_strategy_hash": state.original_strategy_hash,
         "optimized_strategy": optimized_path.stem,
         "strategy_source": state.strategy_source,
+        "workflow_mode": state.workflow_mode,
+        "final_verdict": state.final_verdict,
+        "candidate_label": state.candidate_label,
         "trading_style": state.trading_style,
         "risk_profile": state.risk_profile,
         "analysis_depth": state.analysis_depth,
@@ -663,6 +892,10 @@ async def _stage_delivery(
         "validation_status": state.validation_status,
         "readiness_label": state.readiness_label,
         "score_explanation": state.score_explanation,
+        "validate_existing_gates": validate_existing_gates,
+        "validation_attempts": state.validation_attempts,
+        "best_observed_result": state.best_observed_result,
+        "rejection_report": state.rejection_report,
         "sanity_backtest": s1_result,
         "oos_validation": oos_result,
         "stress_test": {

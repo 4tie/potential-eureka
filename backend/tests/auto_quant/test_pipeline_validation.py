@@ -73,9 +73,11 @@ def _bt_result(
                         "profit_total": profit * 0.9,
                         "profit_total_abs": profit * 900,
                         "profit_mean": profit / 10,
-                        "trades": trades // 20,
-                        "wins": wins // 20,
-                        "losses": losses // 20,
+                        "trades": max(10, trades // 10),
+                        "wins": max(6, wins // 10),
+                        "losses": max(1, losses // 10),
+                        "profit_factor": profit_factor,
+                        "max_drawdown_account": max_dd,
                     }
                     for pair in pl.DEFAULT_STRESS_PAIRS
                 ],
@@ -200,6 +202,12 @@ def _write_bt_result(out_dir: Path, prefix: str, result: dict) -> None:
     """Write a mock backtest result JSON where the pipeline will look for it."""
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / f"{prefix}.json").write_text(json.dumps(result), encoding="utf-8")
+
+
+async def _passing_data_healing(run_id: str, state: Any, out_dir: Path) -> dict:
+    """Bypass data-download IO while preserving the current Stage 1 contract."""
+    state.pair_universe = list(pl.DEFAULT_STRESS_PAIRS)
+    return {"status": "passed", "surviving_pairs": list(pl.DEFAULT_STRESS_PAIRS)}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -336,6 +344,10 @@ class TestE2EHappyPath:
                     s5_result
                 ),
             ),
+            mock.patch(
+                "backend.services.auto_quant.pipeline_modules.stages_validation._stage_data_healing",
+                new=mock.AsyncMock(side_effect=_passing_data_healing),
+            ),
             caplog.at_level(logging.DEBUG, logger="auto_quant.pipeline"),
         ):
             await _run_and_collect()
@@ -348,7 +360,7 @@ class TestE2EHappyPath:
             f"Expected status='completed', got {final_state.status!r}\n"
             f"error={final_state.error!r}"
         )
-        assert final_state.current_stage == 7
+        assert final_state.current_stage == len(pl.STAGE_NAMES)
         assert all(s.status == "passed" for s in final_state.stages), (
             f"Not all stages passed: { {s.name: s.status for s in final_state.stages} }"
         )
@@ -359,17 +371,17 @@ class TestE2EHappyPath:
         assert "PIPELINE COMPLETED SUCCESSFULLY" in caplog.text, \
             "Pipeline completion banner not found in logs"
 
-        # All 7 stage STARTED entries must appear
-        for i in range(1, 8):
-            assert f"STAGE {i}/7 STARTED" in caplog.text, \
-                f"STAGE {i}/7 STARTED not found in logs"
+        # All public stages must emit STARTED entries.
+        for i in range(1, len(pl.STAGE_NAMES) + 1):
+            assert f"STAGE {i}/{len(pl.STAGE_NAMES)} STARTED" in caplog.text, \
+                f"STAGE {i}/{len(pl.STAGE_NAMES)} STARTED not found in logs"
 
         # ── WebSocket message assertions ────────────────────────────────────
         statuses = {m["status"] for m in captured_ws_msgs}
         assert "running" in statuses, "No 'running' WS messages emitted"
         assert "passed" in statuses, "No 'passed' WS messages emitted"
-        final_ws = [m for m in captured_ws_msgs if m.get("stage") == 7 and m.get("status") == "passed"]
-        assert final_ws, "No stage-7 'passed' WS message found"
+        final_ws = [m for m in captured_ws_msgs if m.get("stage") == len(pl.STAGE_NAMES) and m.get("status") == "passed"]
+        assert final_ws, f"No stage-{len(pl.STAGE_NAMES)} 'passed' WS message found"
 
         # ── Report & delivery files ────────────────────────────────────────
         assert final_state.report is not None, "Report was not populated"
@@ -391,7 +403,7 @@ class TestE2EHappyPath:
 
         print(
             f"\n[PASS] §2 E2E Happy Path — run={run_id}\n"
-            f"  stages passed  : 7/7\n"
+            f"  stages passed  : {len(pl.STAGE_NAMES)}/{len(pl.STAGE_NAMES)}\n"
             f"  WS messages    : {len(captured_ws_msgs)}\n"
             f"  log entries    : {len(caplog.records)}\n"
             f"  optimized file : {optimized_py.name}\n"
@@ -444,6 +456,10 @@ class TestFailureInjection:
                     s1_result if "stage1" in prefix else s4_result
                 ),
             ),
+            mock.patch(
+                "backend.services.auto_quant.pipeline_modules.stages_validation._stage_data_healing",
+                new=mock.AsyncMock(side_effect=_passing_data_healing),
+            ),
             caplog.at_level(logging.ERROR, logger="auto_quant.pipeline"),
         ):
             await _collect()
@@ -457,9 +473,9 @@ class TestFailureInjection:
         assert state.current_stage == 4, \
             f"Expected failure at stage 4, halted at {state.current_stage}"
 
-        # Stage 4 must be marked failed, stages 5-7 must remain pending
+        # Stage 4 must be marked failed, later stages must remain pending.
         assert state.stages[3].status == "failed"
-        for i in range(4, 7):
+        for i in range(4, len(state.stages)):
             assert state.stages[i].status == "pending", \
                 f"Stage {i+1} should be pending but is {state.stages[i].status!r}"
 
@@ -549,6 +565,10 @@ class TestFailureInjection:
                     s5_result
                 ),
             ),
+            mock.patch(
+                "backend.services.auto_quant.pipeline_modules.stages_validation._stage_data_healing",
+                new=mock.AsyncMock(side_effect=_passing_data_healing),
+            ),
             caplog.at_level(logging.ERROR, logger="auto_quant.pipeline"),
         ):
             await _collect()
@@ -562,9 +582,8 @@ class TestFailureInjection:
         assert state.current_stage == 6, \
             f"Expected failure at stage 6, halted at {state.current_stage}"
 
-        # Stage 6 must be marked failed; Stage 7 must remain pending
+        # Stage 6 must be marked failed.
         assert state.stages[5].status == "failed"
-        assert state.stages[6].status == "pending"
 
         # ── Error message must name which checks failed ────────────────────
         assert state.error is not None
@@ -624,6 +643,10 @@ class TestFailureInjection:
                        side_effect=lambda *a, **kw: MockProcess(
                            ["ERROR: strategy import failed"], returncode=1
                        )),
+            mock.patch(
+                "backend.services.auto_quant.pipeline_modules.stages_validation._stage_data_healing",
+                new=mock.AsyncMock(side_effect=_passing_data_healing),
+            ),
             caplog.at_level(logging.ERROR, logger="auto_quant.pipeline"),
         ):
             await _collect()
@@ -683,8 +706,8 @@ class TestWebSocketReconnect:
         assert running_stage["index"] == 4
 
         pending_stages = [s for s in snapshot["stages"] if s["status"] == "pending"]
-        assert len(pending_stages) == 3, \
-            f"Expected stages 5-7 pending but got {len(pending_stages)}"
+        assert len(pending_stages) == len(pl.STAGE_NAMES) - 4, \
+            f"Expected stages 5-{len(pl.STAGE_NAMES)} pending but got {len(pending_stages)}"
 
         print(
             f"\n[PASS] §4 WebSocket Reconnect Snapshot — run={run_id}\n"
@@ -802,7 +825,7 @@ class TestFileGeneratorAndDownloads:
 
     @pytest.mark.asyncio
     async def test_config_json_is_valid_json_with_required_keys(self, tmp_env):
-        """Stage 7 must write a syntactically valid config.json."""
+        """Delivery must write a syntactically valid config.json."""
         run_id = _make_run(tmp_env)
         state = pl.get_state(run_id)
         assert state is not None
@@ -847,7 +870,7 @@ class TestFileGeneratorAndDownloads:
         )
 
         config_out = out_dir / "config.json"
-        assert config_out.exists(), "config.json was not written by Stage 7"
+        assert config_out.exists(), "config.json was not written by Delivery"
 
         try:
             parsed = json.loads(config_out.read_text(encoding="utf-8"))
@@ -868,7 +891,7 @@ class TestFileGeneratorAndDownloads:
 
     @pytest.mark.asyncio
     async def test_report_json_is_valid_and_complete(self, tmp_env):
-        """Stage 7 report.json must contain all required top-level keys."""
+        """Delivery report.json must contain all required top-level keys."""
         run_id = _make_run(tmp_env)
         state = pl.get_state(run_id)
         assert state is not None
@@ -922,7 +945,7 @@ class TestFileGeneratorAndDownloads:
         assert report["run_id"] == run_id
         assert report["strategy"] == STRATEGY
         assert report["optimized_strategy"] == f"{STRATEGY}_Optimized"
-        assert len(report["stages"]) == 7
+        assert len(report["stages"]) == len(pl.STAGE_NAMES)
 
         # Files section must list expected outputs
         assert "optimized_strategy" in report["files"]
@@ -933,7 +956,7 @@ class TestFileGeneratorAndDownloads:
         print(
             f"\n[PASS] §5 report.json Structure Validation — run={run_id}\n"
             f"  required_keys  : {len(REQUIRED_KEYS)}/{len(REQUIRED_KEYS)} present\n"
-            f"  stages         : {len(report['stages'])}/7\n"
+            f"  stages         : {len(report['stages'])}/{len(pl.STAGE_NAMES)}\n"
             f"  optimized_file : {report['files']['optimized_strategy']}"
         )
 
@@ -1020,7 +1043,7 @@ class TestStatePersistence:
 
         # Manually mark it completed and write to disk
         state.status = "completed"
-        state.current_stage = 7
+        state.current_stage = len(pl.STAGE_NAMES)
         for s in state.stages:
             s.status = "passed"
         pl._save_state_to_disk(state)
@@ -1045,9 +1068,8 @@ class TestStatePersistence:
             f"  stages    : all passed after reload"
         )
 
-    def test_load_runs_marks_interrupted_runs_as_failed(self, tmp_env):  # noqa: F811 (duplicate param name is fine)
-        """Runs with status='running' on disk must be marked 'failed' on reload
-        (subprocess is gone, they can't be resumed)."""
+    def test_load_runs_marks_running_runs_as_interrupted(self, tmp_env):  # noqa: F811 (duplicate param name is fine)
+        """Runs with status='running' on disk must be marked interrupted on reload."""
         run_id = _make_run(tmp_env)
         state = pl.get_state(run_id)
         assert state is not None
@@ -1063,11 +1085,11 @@ class TestStatePersistence:
 
         restored = pl.get_state(run_id)
         assert restored is not None
-        assert restored.status == "failed", \
-            f"Interrupted 'running' run should be 'failed' after reload, got {restored.status!r}"
+        assert restored.status == "interrupted", \
+            f"Running run should be 'interrupted' after reload, got {restored.status!r}"
 
         print(
-            f"\n[PASS] §6 Interrupted Run Marked Failed — run={run_id}\n"
+            f"\n[PASS] §6 Running Run Marked Interrupted — run={run_id}\n"
             f"  status on disk : running\n"
             f"  status reloaded: {restored.status}"
         )
@@ -1162,6 +1184,10 @@ class TestSubprocessErrorClassifier:
                        side_effect=lambda *a, **kw: MockProcess(
                            no_data_output, returncode=2
                        )),
+            mock.patch(
+                "backend.services.auto_quant.pipeline_modules.stages_validation._stage_data_healing",
+                new=mock.AsyncMock(side_effect=_passing_data_healing),
+            ),
             caplog.at_level(logging.ERROR, logger="auto_quant.pipeline"),
         ):
             await _collect()

@@ -168,6 +168,16 @@ class PipelineState:
     rl_model_path: str = None  # Path to trained RL model
     rl_performance: dict = field(default_factory=dict)  # RL performance metrics
     rl_trades: list = field(default_factory=list)  # RL agent trades
+    # Validate Existing Strategy workflow. These fields are additive; default
+    # AutoQuant runs keep their existing semantics.
+    workflow_mode: str = "auto_quant"  # auto_quant | validate_existing
+    max_attempts: int = 3  # User-facing full validation attempts
+    validation_attempts: list = field(default_factory=list)
+    oos_validation_result: dict = field(default_factory=dict)
+    final_verdict: str | None = None  # validated_candidate | dry_run_candidate | rejected
+    candidate_label: str | None = None  # Validated Candidate | Dry-run Candidate | Rejected
+    rejection_report: dict = field(default_factory=dict)
+    best_observed_result: dict = field(default_factory=dict)
 
 
 # ── Global in-memory registry ─────────────────────────────────────────────────
@@ -219,11 +229,17 @@ def _write_versioned_json(
     legacy_name: str | None = None,
 ) -> dict[str, str]:
     run_dir.mkdir(parents=True, exist_ok=True)
-    versioned = run_dir / f"{stem}_v1.json"
+    existing_versions = []
+    for path in run_dir.glob(f"{stem}_v*.json"):
+        suffix = path.stem.removeprefix(f"{stem}_v")
+        if suffix.isdigit():
+            existing_versions.append(int(suffix))
+    next_version = max(existing_versions, default=0) + 1
+    versioned = run_dir / f"{stem}_v{next_version}.json"
     latest = run_dir / f"{stem}_latest.json"
     versioned.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
     latest.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
-    artifacts = {f"{stem}_v1": versioned.name, f"{stem}_latest": latest.name}
+    artifacts = {f"{stem}_v{next_version}": versioned.name, f"{stem}_latest": latest.name}
     if legacy_name:
         legacy = run_dir / legacy_name
         legacy.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
@@ -329,6 +345,14 @@ def _save_state_to_disk(state: PipelineState) -> None:
             "artifact_versions": state.artifact_versions,
             "user_approved_pairs": state.user_approved_pairs,
             "portfolio_baseline_result": state.portfolio_baseline_result,
+            "workflow_mode": state.workflow_mode,
+            "max_attempts": state.max_attempts,
+            "validation_attempts": state.validation_attempts,
+            "oos_validation_result": state.oos_validation_result,
+            "final_verdict": state.final_verdict,
+            "candidate_label": state.candidate_label,
+            "rejection_report": state.rejection_report,
+            "best_observed_result": state.best_observed_result,
         }
         state.artifact_versions.update(
             _write_versioned_json(run_dir, "state", payload, legacy_name="state.json")
@@ -475,6 +499,14 @@ def load_runs_from_disk(user_data_dir: str) -> None:
                 artifact_versions=data.get("artifact_versions", {}),
                 user_approved_pairs=data.get("user_approved_pairs", []),
                 portfolio_baseline_result=data.get("portfolio_baseline_result", {}),
+                workflow_mode=data.get("workflow_mode", "auto_quant"),
+                max_attempts=max(1, min(int(data.get("max_attempts", 3) or 3), 10)),
+                validation_attempts=data.get("validation_attempts", []),
+                oos_validation_result=data.get("oos_validation_result", {}),
+                final_verdict=data.get("final_verdict"),
+                candidate_label=data.get("candidate_label"),
+                rejection_report=data.get("rejection_report", {}),
+                best_observed_result=data.get("best_observed_result", {}),
             )
             _states[run_id] = state
             _queues[run_id] = []
@@ -603,6 +635,8 @@ def create_run(
     policy_versions: dict | None = None,
     selected_timeframe: str | None = None,
     selected_pair_universe: list | None = None,
+    workflow_mode: str = "auto_quant",
+    max_attempts: int = 3,
 ) -> str:
     import uuid
     run_id = str(uuid.uuid4())
@@ -654,7 +688,12 @@ def create_run(
         policy_versions=policy_versions or get_policy_versions(),
         selected_timeframe=selected_timeframe or timeframe,
         selected_pair_universe=selected_pair_universe or (pair_universe if pair_universe is not None else BROAD_UNIVERSE_PAIRS),
+        workflow_mode=workflow_mode,
+        max_attempts=max(1, min(int(max_attempts or 3), 10)),
     )
+    if state.workflow_mode == "validate_existing":
+        state.strategy_source = "existing"
+        state.max_retries = max(0, state.max_attempts - 1)
     _states[run_id] = state
     _queues[run_id] = []
     _cancel_flags[run_id] = False
@@ -834,6 +873,14 @@ def _state_snapshot(state: PipelineState) -> dict:
         "strategy_runtime_dir": state.strategy_runtime_dir,
         "strategy_variants": state.strategy_variants,
         "artifact_versions": state.artifact_versions,
+        "workflow_mode": state.workflow_mode,
+        "max_attempts": state.max_attempts,
+        "validation_attempts": state.validation_attempts,
+        "oos_validation_result": state.oos_validation_result,
+        "final_verdict": state.final_verdict,
+        "candidate_label": state.candidate_label,
+        "rejection_report": state.rejection_report,
+        "best_observed_result": state.best_observed_result,
     }
 
 

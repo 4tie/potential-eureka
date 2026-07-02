@@ -14,9 +14,9 @@ import pytest
 from backend.services.auto_quant.pipeline_modules.state import _write_versioned_json
 
 
-def test_write_versioned_json_creates_versioned_files():
+def test_write_versioned_json_creates_versioned_files(tmp_path):
     """Test that _write_versioned_json creates versioned and latest files."""
-    test_dir = Path("/tmp/test_versioned_artifacts")
+    test_dir = tmp_path / "test_versioned_artifacts"
     test_dir.mkdir(parents=True, exist_ok=True)
     
     test_payload = {"key": "value", "number": 42}
@@ -49,16 +49,11 @@ def test_write_versioned_json_creates_versioned_files():
     assert "test_latest" in artifacts
     assert "test" in artifacts
     
-    # Cleanup
-    versioned_file.unlink()
-    latest_file.unlink()
-    legacy_file.unlink()
-    test_dir.rmdir()
 
 
-def test_write_versioned_json_without_legacy():
+def test_write_versioned_json_without_legacy(tmp_path):
     """Test that _write_versioned_json works without legacy name."""
-    test_dir = Path("/tmp/test_versioned_artifacts_no_legacy")
+    test_dir = tmp_path / "test_versioned_artifacts_no_legacy"
     test_dir.mkdir(parents=True, exist_ok=True)
     
     test_payload = {"key": "value"}
@@ -77,15 +72,11 @@ def test_write_versioned_json_without_legacy():
     assert "test_latest" in artifacts
     assert "test" not in artifacts
     
-    # Cleanup
-    (test_dir / "test_v1.json").unlink()
-    (test_dir / "test_latest.json").unlink()
-    test_dir.rmdir()
 
 
-def test_write_versioned_json_overwrites_latest():
+def test_write_versioned_json_overwrites_latest(tmp_path):
     """Test that _write_versioned_json overwrites latest but keeps versioned."""
-    test_dir = Path("/tmp/test_versioned_artifacts_overwrite")
+    test_dir = tmp_path / "test_versioned_artifacts_overwrite"
     test_dir.mkdir(parents=True, exist_ok=True)
     
     # First write
@@ -100,6 +91,10 @@ def test_write_versioned_json_overwrites_latest():
     v1_content = json.loads((test_dir / "test_v1.json").read_text(encoding="utf-8"))
     assert v1_content == payload1
     
+    # Verify v2 has the new versioned content
+    v2_content = json.loads((test_dir / "test_v2.json").read_text(encoding="utf-8"))
+    assert v2_content == payload2
+    
     # Verify latest has new content
     latest_content = json.loads((test_dir / "test_latest.json").read_text(encoding="utf-8"))
     assert latest_content == payload2
@@ -108,16 +103,11 @@ def test_write_versioned_json_overwrites_latest():
     legacy_content = json.loads((test_dir / "test.json").read_text(encoding="utf-8"))
     assert legacy_content == payload2
     
-    # Cleanup
-    (test_dir / "test_v1.json").unlink()
-    (test_dir / "test_latest.json").unlink()
-    (test_dir / "test.json").unlink()
-    test_dir.rmdir()
 
 
-def test_versioned_files_have_correct_naming():
+def test_versioned_files_have_correct_naming(tmp_path):
     """Test that versioned files follow correct naming convention."""
-    test_dir = Path("/tmp/test_versioned_artifacts_naming")
+    test_dir = tmp_path / "test_versioned_artifacts_naming"
     test_dir.mkdir(parents=True, exist_ok=True)
     
     test_payload = {"test": "data"}
@@ -139,15 +129,11 @@ def test_versioned_files_have_correct_naming():
     assert (test_dir / "config_latest.json").exists()
     assert (test_dir / "config.json").exists()
     
-    # Cleanup
-    for f in test_dir.glob("*.json"):
-        f.unlink()
-    test_dir.rmdir()
 
 
-def test_artifacts_dict_returned():
+def test_artifacts_dict_returned(tmp_path):
     """Test that _write_versioned_json returns correct artifacts dict."""
-    test_dir = Path("/tmp/test_versioned_artifacts_dict")
+    test_dir = tmp_path / "test_versioned_artifacts_dict"
     test_dir.mkdir(parents=True, exist_ok=True)
     
     test_payload = {"test": "data"}
@@ -161,11 +147,6 @@ def test_artifacts_dict_returned():
     assert artifacts["test_latest"] == "test_latest.json"
     assert artifacts["test"] == "test.json"
     
-    # Cleanup
-    for f in test_dir.glob("*.json"):
-        f.unlink()
-    test_dir.rmdir()
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -99,6 +99,7 @@ def _sync_facade_patches() -> None:
     _orchestrator._pass_stage = _pass_stage
     _orchestrator._fail_stage = _fail_stage
     _orchestrator._emit = _emit
+    _orchestrator._stage_oos_validation = _stage_oos_validation
 
     for module in (_optimization, _validation, _assessment):
         if hasattr(module, "_run_subprocess"):

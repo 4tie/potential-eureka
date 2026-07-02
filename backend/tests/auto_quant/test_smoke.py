@@ -46,8 +46,16 @@ def test_websocket_endpoint_registered(app_with_service):
     app = client.app
 
     # Check that WebSocket endpoint is in routes
-    routes = {route.path for route in app.routes}
-    ws_route_found = any("/ws/" in route for route in routes)
+    routes = {route.path for route in app.routes if hasattr(route, "path")}
+    for route in app.routes:
+        original_router = getattr(route, "original_router", None)
+        if original_router is not None:
+            routes.update(
+                subroute.path
+                for subroute in getattr(original_router, "routes", [])
+                if hasattr(subroute, "path")
+            )
+    ws_route_found = any(route.endswith("/ws/{run_id}") for route in routes)
     assert ws_route_found, "WebSocket endpoint not found in app routes"
 
 

@@ -648,10 +648,23 @@ class Policy:
         if isinstance(hyperopt_spaces, str):
             hyperopt_spaces = [s.strip() for s in hyperopt_spaces.split(",") if s.strip()]
 
+        workflow_mode = str(
+            payload.get("workflow_mode") or advanced.get("workflow_mode") or "auto_quant"
+        ).strip().lower()
+        if workflow_mode not in {"auto_quant", "validate_existing"}:
+            workflow_mode = "auto_quant"
+        try:
+            max_attempts = int(payload.get("max_attempts", advanced.get("max_attempts", 3)))
+        except (TypeError, ValueError):
+            max_attempts = 3
+        max_attempts = max(1, min(max_attempts, 10))
+
         strategy = payload.get("strategy") or payload.get("uploaded_strategy_id") or advanced.get("strategy") or ""
         return {
             "strategy": strategy,
-            "strategy_source": payload.get("strategy_source") or advanced.get("strategy_source") or "existing",
+            "strategy_source": "existing" if workflow_mode == "validate_existing" else payload.get("strategy_source") or advanced.get("strategy_source") or "existing",
+            "workflow_mode": workflow_mode,
+            "max_attempts": max_attempts,
             "trading_style": style,
             "risk_profile": risk,
             "analysis_depth": depth,

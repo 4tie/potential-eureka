@@ -25,6 +25,8 @@ export const LEGAL_STATUS_TRANSITIONS = {
 
 export const DEFAULT_AUTOQUANT_FORM = {
   strategy: "",
+  workflow_mode: "auto_quant",
+  max_attempts: 3,
   trading_style: "swing",
   risk_profile: "balanced",
   analysis_depth: "standard",

@@ -90,6 +90,9 @@ def validate_websocket_message(msg: dict[str, Any]) -> bool:
         TypeError: If field type is incorrect
         KeyError: If required field is missing
     """
+    if "type" not in msg:
+        raise KeyError("Missing required field: type")
+
     msg_type = msg.get("type")
     if msg_type not in MESSAGE_SCHEMA:
         raise ValueError(f"Unknown message type: {msg_type}")
@@ -104,6 +107,10 @@ def validate_websocket_message(msg: dict[str, Any]) -> bool:
         if expected_type == dict and not isinstance(actual_value, dict):
             raise TypeError(
                 f"Field '{field}' should be dict, got {type(actual_value).__name__}"
+            )
+        elif field == "progress" and not isinstance(actual_value, expected_type):
+            raise ValueError(
+                f"Progress must be int in range [0, 100], got {actual_value}"
             )
         elif expected_type != dict and not isinstance(actual_value, expected_type):
             raise TypeError(
