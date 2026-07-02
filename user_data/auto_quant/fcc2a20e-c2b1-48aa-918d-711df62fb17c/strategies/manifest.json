@@ -1,0 +1,32 @@
+{
+  "original_strategy": "AIStrategy",
+  "original_strategy_hash": "dcf0b8aefd26a0974d3b9bd1d6969874a8050e74c3fd554bd39e3d53a000a7f3",
+  "variants": [
+    {
+      "role": "working",
+      "strategy_name": "AIStrategy",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/fcc2a20e-c2b1-48aa-918d-711df62fb17c/strategies/AIStrategy.py",
+      "source": "/home/mohs/Desktop/fortiesr/user_data/strategies/AIStrategy.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/fcc2a20e-c2b1-48aa-918d-711df62fb17c/strategies/AIStrategy_BaselineMutation1_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/fcc2a20e-c2b1-48aa-918d-711df62fb17c/strategies/AIStrategy_BaselineMutation1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/fcc2a20e-c2b1-48aa-918d-711df62fb17c/strategies/AIStrategy_BaselineMutation2_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "AIStrategy_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/fcc2a20e-c2b1-48aa-918d-711df62fb17c/strategies/AIStrategy_BaselineMutation2.py"
+    }
+  ]
+}

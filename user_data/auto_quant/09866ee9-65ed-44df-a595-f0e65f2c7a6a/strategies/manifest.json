@@ -1,0 +1,32 @@
+{
+  "original_strategy": "MultiMa_v3",
+  "original_strategy_hash": "88bdc542b6f5465587260207de6ef4cff6b1d3271ac74371ac120b11fb93e9e3",
+  "variants": [
+    {
+      "role": "working",
+      "strategy_name": "MultiMa_v3",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3.py",
+      "source": "/home/mohs/Desktop/fortiesr/user_data/strategies/MultiMa_v3.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MultiMa_v3_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3_BaselineMutation1_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MultiMa_v3_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3_BaselineMutation1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MultiMa_v3_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3_BaselineMutation2_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MultiMa_v3_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3_BaselineMutation2.py"
+    }
+  ]
+}

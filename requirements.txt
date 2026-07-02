@@ -1,47 +1,17 @@
-# Split Requirements for Easier Installation
-# ============================================
+# Complete Requirements - All Dependencies
+# ========================================
 #
-# Dependencies have been split into modular files to make installation easier,
-# especially on low-resource machines. Install only what you need.
-#
-# QUICK INSTALL (Interactive):
-#    python install.py
-#    or
-#    ./install.sh
-#    This will prompt you to select which modules to install.
-#    Options: core, trading (or 't'), ai, rl, dev
-#    Press Enter without selection to install all modules.
-#
-# MANUAL INSTALLATION OPTIONS:
-#
-# 1. Minimal (Core only - for basic API functionality):
-#    pip install -r requirements-core.txt
-#
-# 2. Full Trading (Core + Trading):
-#    pip install -r requirements-core.txt
-#    pip install -r requirements-trading.txt
-#
-# 3. With AI/ML Optimization (Core + Trading + AI):
-#    pip install -r requirements-core.txt
-#    pip install -r requirements-trading.txt
-#    pip install -r requirements-ai.txt
-#
-# 4. Complete with Reinforcement Learning (All dependencies):
-#    pip install -r requirements-core.txt
-#    pip install -r requirements-trading.txt
-#    pip install -r requirements-ai.txt
-#    pip install -r requirements-rl.txt
-#
-# 5. Development (Core + Dev tools):
-#    pip install -r requirements-core.txt
-#    pip install -r requirements-dev.txt
-#
-# File Descriptions:
-# - requirements-core.txt: Essential dependencies (FastAPI, pandas, numpy, etc.)
-# - requirements-trading.txt: Freqtrade, TA-Lib, vectorbt (heavy)
-# - requirements-ai.txt: Optuna, scikit-learn, genetic algorithms
-# - requirements-rl.txt: stable-baselines3, gymnasium (very heavy - install only if needed)
-# - requirements-dev.txt: pytest, pytest-asyncio (for testing)
-#
-# Note: discord.py was removed as it's optional and can be installed separately if needed.
+# This file installs all dependencies from all modules.
+# For modular installation, use the individual requirements files:
+# - requirements-core.txt: Essential dependencies
+# - requirements-trading.txt: Freqtrade, TA-Lib, vectorbt
+# - requirements-ai.txt: AI/ML optimization
+# - requirements-rl.txt: Reinforcement learning (very heavy)
+# - requirements-dev.txt: Development tools
 
+discord
+-r requirements-dev.txt
+-r requirements-core.txt
+-r requirements-trading.txt
+-r requirements-ai.txt
+-r requirements-rl.txt

@@ -1,0 +1,12 @@
+{
+  "original_strategy": "AIStrategy",
+  "original_strategy_hash": "dcf0b8aefd26a0974d3b9bd1d6969874a8050e74c3fd554bd39e3d53a000a7f3",
+  "variants": [
+    {
+      "role": "working",
+      "strategy_name": "AIStrategy",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/70c65fea-2d3c-4cf1-b7f6-4ce5a484a95c/strategies/AIStrategy.py",
+      "source": "/home/mohs/Desktop/fortiesr/user_data/strategies/AIStrategy.py"
+    }
+  ]
+}

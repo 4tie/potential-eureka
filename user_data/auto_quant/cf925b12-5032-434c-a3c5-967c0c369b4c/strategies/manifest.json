@@ -1,0 +1,32 @@
+{
+  "original_strategy": "MohsBaseline",
+  "original_strategy_hash": "c8e23a3874ee5b5c81ff33aa0a79cde7fe00df9c5aaaf21ee3af16b62539e798",
+  "variants": [
+    {
+      "role": "working",
+      "strategy_name": "MohsBaseline",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/cf925b12-5032-434c-a3c5-967c0c369b4c/strategies/MohsBaseline.py",
+      "source": "/home/mohs/Desktop/fortiesr/user_data/strategies/MohsBaseline.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MohsBaseline_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/cf925b12-5032-434c-a3c5-967c0c369b4c/strategies/MohsBaseline_BaselineMutation1_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MohsBaseline_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/cf925b12-5032-434c-a3c5-967c0c369b4c/strategies/MohsBaseline_BaselineMutation1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MohsBaseline_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/cf925b12-5032-434c-a3c5-967c0c369b4c/strategies/MohsBaseline_BaselineMutation2_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MohsBaseline_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/cf925b12-5032-434c-a3c5-967c0c369b4c/strategies/MohsBaseline_BaselineMutation2.py"
+    }
+  ]
+}

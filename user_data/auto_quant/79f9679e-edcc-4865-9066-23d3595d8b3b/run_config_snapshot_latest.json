@@ -1,0 +1,63 @@
+{
+  "schema_version": "run_config_snapshot_v1",
+  "policy_versions": {
+    "timeframes": "timeframes_v1",
+    "risk_profiles": "risk_profiles_v1",
+    "pair_universe": "pair_universe_v1",
+    "score_weights": "robustness_score_v1",
+    "readiness_labels": "readiness_labels_v2",
+    "thresholds": "intraday:legacy,position:legacy,scalping:legacy,swing:legacy"
+  },
+  "strategy": "AIStrategy",
+  "strategy_source": "existing",
+  "uploaded_strategy_id": null,
+  "generated_by": null,
+  "trading_style": "swing",
+  "risk_profile": "balanced",
+  "analysis_depth": "deep",
+  "timeframe": "5m",
+  "configured_timeframes": [
+    "1h",
+    "4h",
+    "1d"
+  ],
+  "unsupported_timeframes": [],
+  "selected_pairs": [
+    "BTC/USDT",
+    "ETH/USDT",
+    "BNB/USDT",
+    "SOL/USDT",
+    "XRP/USDT"
+  ],
+  "date_ranges": {
+    "in_sample": "20240101-20240601",
+    "out_of_sample": "20240601-20240701"
+  },
+  "optimization": {
+    "hyperopt_loss": "ProfitLockinHyperOptLoss",
+    "hyperopt_spaces": [
+      "stoploss",
+      "roi"
+    ],
+    "hyperopt_epochs": 50,
+    "wfo_enabled": false,
+    "wfo_is_months": 3,
+    "wfo_oos_months": 1,
+    "wfo_recency_weight": 1.0,
+    "planned_wfo_windows": []
+  },
+  "thresholds": {
+    "min_profit_factor": 1.0,
+    "max_drawdown": 0.3,
+    "min_trades": 100,
+    "min_expectancy": 0.0008,
+    "min_win_rate": 0.4,
+    "min_pair_pass_rate": 0.6,
+    "min_oos_retention": 0.5,
+    "min_sharpe": 0.5,
+    "min_oos_profit": 0.01,
+    "monte_carlo_threshold": 0.35
+  },
+  "exchange": "binance",
+  "advanced_overrides": {}
+}

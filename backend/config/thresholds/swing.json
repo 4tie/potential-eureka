@@ -2,16 +2,16 @@
   "style": "swing",
   "description": "Thresholds for swing strategies (1h-4h timeframes)",
   "discovery": {
-    "min_profit_factor": 1.1,
+    "min_profit_factor": 0.6,
     "max_drawdown": 40.0,
-    "min_trades": 100,
+    "min_trades": 30,
     "min_expectancy": 0.0005,
     "min_win_rate": 45.0
   },
   "validation": {
     "min_profit_factor": 1.3,
     "max_drawdown": 30.0,
-    "min_trades": 100,
+    "min_trades": 30,
     "min_expectancy": 0.0008,
     "min_win_rate": 48.0,
     "min_pair_pass_rate": 0.6,
@@ -20,7 +20,7 @@
   "elite_validation": {
     "min_profit_factor": 1.5,
     "max_drawdown": 25.0,
-    "min_trades": 100,
+    "min_trades": 30,
     "min_expectancy": 0.001,
     "min_win_rate": 52.0,
     "min_pair_pass_rate": 0.7,

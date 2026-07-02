@@ -1,0 +1,32 @@
+{
+  "original_strategy": "ScalpingStrategy",
+  "original_strategy_hash": "114d55db85e5f96ba82282eae083fdf57902e39ecd84f328b972c33abf5a9402",
+  "variants": [
+    {
+      "role": "working",
+      "strategy_name": "ScalpingStrategy",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/ab1159b4-b9bf-4b66-8360-743180090378/strategies/ScalpingStrategy.py",
+      "source": "/home/mohs/Desktop/fortiesr/user_data/strategies/ScalpingStrategy.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "ScalpingStrategy_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/ab1159b4-b9bf-4b66-8360-743180090378/strategies/ScalpingStrategy_BaselineMutation1_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "ScalpingStrategy_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/ab1159b4-b9bf-4b66-8360-743180090378/strategies/ScalpingStrategy_BaselineMutation1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "ScalpingStrategy_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/ab1159b4-b9bf-4b66-8360-743180090378/strategies/ScalpingStrategy_BaselineMutation2_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "ScalpingStrategy_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/ab1159b4-b9bf-4b66-8360-743180090378/strategies/ScalpingStrategy_BaselineMutation2.py"
+    }
+  ]
+}

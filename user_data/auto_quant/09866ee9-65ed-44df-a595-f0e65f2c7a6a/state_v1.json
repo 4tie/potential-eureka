@@ -1,0 +1,547 @@
+{
+  "run_id": "09866ee9-65ed-44df-a595-f0e65f2c7a6a",
+  "strategy": "MultiMa_v3_BaselineMutation2",
+  "original_strategy": "MultiMa_v3",
+  "original_strategy_hash": "88bdc542b6f5465587260207de6ef4cff6b1d3271ac74371ac120b11fb93e9e3",
+  "timeframe": "5m",
+  "in_sample_range": "20240101-20240601",
+  "out_sample_range": "20240601-20240701",
+  "exchange": "binance",
+  "config_file": "/home/mohs/Desktop/fortiesr/user_data/config.json",
+  "freqtrade_path": "freqtrade",
+  "user_data_dir": "/home/mohs/Desktop/fortiesr/user_data",
+  "status": "failed",
+  "current_stage": 1,
+  "stages": [
+    {
+      "index": 1,
+      "name": "Pre-Flight Filtering",
+      "status": "failed",
+      "message": "Strategy failed to find 3 viable trading pairs after 3 self-healing attempts. Only 0 pairs passed baseline filtering.",
+      "data": {
+        "profit_total": -0.33621121359999995,
+        "profit_total_abs": -33.62112136,
+        "profit_mean_pct": -0.3036083243457761,
+        "max_drawdown_account": 0.3701267735213176,
+        "total_trades": 402,
+        "wins": 106,
+        "losses": 296,
+        "draws": 0,
+        "win_rate": 0.0,
+        "profit_factor": 0.5828058246216128,
+        "sharpe_ratio": 0.0,
+        "calmar_ratio": 0.0,
+        "sortino_ratio": 0.0,
+        "stake_currency": "USDT",
+        "per_pair": [
+          {
+            "key": "DOGE/USDT",
+            "profit_total": 0.019031853699999993,
+            "profit_mean_pct": 0.15094548529828428,
+            "trades": 50,
+            "wins": 17,
+            "losses": 33,
+            "profit_factor": 1.1797233613902054
+          },
+          {
+            "key": "LINK/USDT",
+            "profit_total": -0.0261935481,
+            "profit_mean_pct": -0.3196123372474623,
+            "trades": 38,
+            "wins": 7,
+            "losses": 31,
+            "profit_factor": 0.6708568156304903
+          },
+          {
+            "key": "BTC/USDT",
+            "profit_total": -0.0286055266,
+            "profit_mean_pct": -0.22303807473863704,
+            "trades": 41,
+            "wins": 11,
+            "losses": 30,
+            "profit_factor": 0.4737805040312564
+          },
+          {
+            "key": "XRP/USDT",
+            "profit_total": -0.0322528515,
+            "profit_mean_pct": -0.32764134155509417,
+            "trades": 35,
+            "wins": 10,
+            "losses": 25,
+            "profit_factor": 0.5249882997288586
+          },
+          {
+            "key": "ETH/USDT",
+            "profit_total": -0.0326689171,
+            "profit_mean_pct": -0.2979243360823891,
+            "trades": 43,
+            "wins": 12,
+            "losses": 31,
+            "profit_factor": 0.4867363274601945
+          },
+          {
+            "key": "ADA/USDT",
+            "profit_total": -0.032994386099999995,
+            "profit_mean_pct": -0.3167241453619632,
+            "trades": 34,
+            "wins": 6,
+            "losses": 28,
+            "profit_factor": 0.506431887347372
+          },
+          {
+            "key": "BNB/USDT",
+            "profit_total": -0.03469442999999999,
+            "profit_mean_pct": -0.29439320441064054,
+            "trades": 44,
+            "wins": 13,
+            "losses": 31,
+            "profit_factor": 0.5309925663499949
+          },
+          {
+            "key": "SOL/USDT",
+            "profit_total": -0.0426321756,
+            "profit_mean_pct": -0.41708938440269544,
+            "trades": 40,
+            "wins": 11,
+            "losses": 29,
+            "profit_factor": 0.6217035247648418
+          },
+          {
+            "key": "DOT/USDT",
+            "profit_total": -0.06040010129999999,
+            "profit_mean_pct": -0.5882182581836495,
+            "trades": 37,
+            "wins": 9,
+            "losses": 28,
+            "profit_factor": 0.2618460549043605
+          },
+          {
+            "key": "AVAX/USDT",
+            "profit_total": -0.064801131,
+            "profit_mean_pct": -0.5465056125244926,
+            "trades": 40,
+            "wins": 10,
+            "losses": 30,
+            "profit_factor": 0.34648330195650706
+          }
+        ],
+        "passing_pairs": [],
+        "filtered_pairs": [
+          {
+            "key": "DOGE/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 50,
+            "profit_factor": 1.1797233613902054
+          },
+          {
+            "key": "LINK/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 38,
+            "profit_factor": 0.6708568156304903
+          },
+          {
+            "key": "BTC/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 41,
+            "profit_factor": 0.4737805040312564
+          },
+          {
+            "key": "XRP/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 35,
+            "profit_factor": 0.5249882997288586
+          },
+          {
+            "key": "ETH/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 43,
+            "profit_factor": 0.4867363274601945
+          },
+          {
+            "key": "ADA/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 34,
+            "profit_factor": 0.506431887347372
+          },
+          {
+            "key": "BNB/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 44,
+            "profit_factor": 0.5309925663499949
+          },
+          {
+            "key": "SOL/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 40,
+            "profit_factor": 0.6217035247648418
+          },
+          {
+            "key": "DOT/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 37,
+            "profit_factor": 0.2618460549043605
+          },
+          {
+            "key": "AVAX/USDT",
+            "reason": "insufficient_trades",
+            "total_trades": 40,
+            "profit_factor": 0.34648330195650706
+          }
+        ],
+        "baseline_attempts": 3,
+        "healing_exhausted": true,
+        "errors": [
+          {
+            "schema_version": "auto_quant_error_v1",
+            "code": "strategy_failed_to_find_3_viable_trading_pairs_after_3_self_healing_attempts_onl",
+            "kind": "controlled_validation",
+            "severity": "error",
+            "controlled": true,
+            "recoverable": true,
+            "message": "Strategy failed to find 3 viable trading pairs after 3 self-healing attempts. Only 0 pairs passed baseline filtering.",
+            "stage": {
+              "index": 1,
+              "name": "Pre-Flight Filtering"
+            },
+            "details": {
+              "baseline_attempts": 3,
+              "healing_exhausted": true
+            },
+            "suggestions": [],
+            "ts": "2026-07-02T02:16:04.669255+00:00"
+          }
+        ],
+        "failure_type": "controlled_validation",
+        "controlled_failure": true,
+        "schema_version": "stage_payload_v1",
+        "status_kind": "controlled_validation",
+        "input_summary": {
+          "strategy": "MultiMa_v3_BaselineMutation2",
+          "strategy_source": "existing",
+          "timeframe": "5m",
+          "in_sample_range": "20240101-20240601",
+          "pair_universe_count": 10,
+          "trading_style": "swing",
+          "risk_profile": "balanced"
+        },
+        "output_summary": {
+          "pairs_tested": 10,
+          "pairs_passed": 0,
+          "pairs_filtered": 10,
+          "baseline_attempts": 3
+        },
+        "metrics": {
+          "profit_total": -0.33621121359999995,
+          "profit_total_abs": -33.62112136,
+          "profit_mean_pct": -0.3036083243457761,
+          "max_drawdown_account": 0.3701267735213176,
+          "total_trades": 402,
+          "wins": 106,
+          "losses": 296,
+          "draws": 0,
+          "win_rate": 0.0,
+          "profit_factor": 0.5828058246216128,
+          "sharpe_ratio": 0.0,
+          "calmar_ratio": 0.0,
+          "sortino_ratio": 0.0,
+          "baseline_attempts": 3
+        },
+        "warnings": [
+          "10 pair(s) were filtered out before validation.",
+          "Auto-fix attempts were exhausted before a robust candidate was found."
+        ],
+        "retry_attempts": [
+          {
+            "attempt": 1,
+            "stage": 1,
+            "type": "baseline_auto_fix",
+            "status": "applied"
+          },
+          {
+            "attempt": 2,
+            "stage": 1,
+            "type": "baseline_auto_fix",
+            "status": "applied"
+          },
+          {
+            "attempt": 3,
+            "stage": 1,
+            "type": "baseline_auto_fix",
+            "status": "latest"
+          }
+        ],
+        "suggestions": [],
+        "auto_fix": {
+          "hooks": [
+            {
+              "name": "baseline_hard_mutation",
+              "enabled": true,
+              "attempts": 2,
+              "description": "Force available Boolean indicator switches and rerun pair filtering."
+            }
+          ],
+          "last_action": null
+        },
+        "stage_progress": {
+          "percent": 100,
+          "global_percent": 0,
+          "is_current": true,
+          "current_stage": 1
+        }
+      },
+      "started_at": "2026-07-02T02:15:23.972137+00:00",
+      "duration_s": 40.7
+    },
+    {
+      "index": 2,
+      "name": "Portfolio Baseline Backtest",
+      "status": "pending",
+      "message": "",
+      "data": {},
+      "started_at": null,
+      "duration_s": null
+    },
+    {
+      "index": 3,
+      "name": "WFA Hyperopt",
+      "status": "pending",
+      "message": "",
+      "data": {},
+      "started_at": null,
+      "duration_s": null
+    },
+    {
+      "index": 4,
+      "name": "Robustness & Feature Injection",
+      "status": "pending",
+      "message": "",
+      "data": {},
+      "started_at": null,
+      "duration_s": null
+    },
+    {
+      "index": 5,
+      "name": "Portfolio Competition",
+      "status": "pending",
+      "message": "",
+      "data": {},
+      "started_at": null,
+      "duration_s": null
+    },
+    {
+      "index": 6,
+      "name": "Delivery",
+      "status": "pending",
+      "message": "",
+      "data": {},
+      "started_at": null,
+      "duration_s": null
+    }
+  ],
+  "error": "Strategy failed to find 3 viable trading pairs after 3 self-healing attempts. Only 0 pairs passed baseline filtering.",
+  "created_at": "2026-07-02T02:15:23.969057+00:00",
+  "completed_at": "2026-07-02T02:16:04.669311+00:00",
+  "report": null,
+  "max_drawdown_threshold": 0.3,
+  "min_win_rate": 0.4,
+  "min_profit_factor": 1.0,
+  "min_sharpe": 0.5,
+  "monte_carlo_threshold": 0.35,
+  "hyperopt_loss": "ProfitLockinHyperOptLoss",
+  "hyperopt_spaces": [
+    "stoploss",
+    "roi"
+  ],
+  "hyperopt_epochs": 50,
+  "hyperopt_workers": 4,
+  "min_oos_profit": 0.01,
+  "retry_count": 0,
+  "max_retries": 3,
+  "retry_history": [],
+  "generalization_failure": null,
+  "sensitivity": null,
+  "wfo_enabled": false,
+  "wfo_is_months": 3,
+  "wfo_oos_months": 1,
+  "wfo_recency_weight": 1.0,
+  "wfo_windows": [],
+  "wfo_skip_reason": null,
+  "ensemble_enabled": false,
+  "pair_universe": [
+    "BTC/USDT",
+    "ETH/USDT",
+    "BNB/USDT",
+    "SOL/USDT",
+    "XRP/USDT",
+    "ADA/USDT",
+    "DOGE/USDT",
+    "AVAX/USDT",
+    "DOT/USDT",
+    "LINK/USDT"
+  ],
+  "winning_pairs": [],
+  "selected_pairs": [],
+  "excluded_time_windows": {},
+  "ai_enabled": true,
+  "ai_suggestions": {},
+  "ai_interactions": [],
+  "ollama_available": false,
+  "data_healing_warmup_candles": 200,
+  "data_healing_timeout": 300,
+  "phase1_heal_attempts": 2,
+  "stability_scores": {},
+  "portfolio_weights": {},
+  "baseline_trade_counts": {},
+  "max_open_trades": 5,
+  "strategy_source": "existing",
+  "trading_style": "swing",
+  "risk_profile": "balanced",
+  "analysis_depth": "deep",
+  "uploaded_strategy_id": null,
+  "advanced_overrides": {},
+  "auto_discovery_enabled": false,
+  "discovery_results": {},
+  "validation_notes": [
+    "validation: OOS CONTAMINATION DETECTED - IS and OOS ranges overlap by 1 days. IS=20240101-20240601, OOS=20240601-20240701. This may lead to overfitting. Results should be interpreted with caution."
+  ],
+  "run_config_snapshot": {
+    "schema_version": "run_config_snapshot_v1",
+    "policy_versions": {
+      "timeframes": "timeframes_v1",
+      "risk_profiles": "risk_profiles_v1",
+      "pair_universe": "pair_universe_v1",
+      "score_weights": "robustness_score_v1",
+      "readiness_labels": "readiness_labels_v2",
+      "thresholds": "intraday:legacy,position:legacy,scalping:legacy,swing:legacy"
+    },
+    "strategy": "MultiMa_v3",
+    "strategy_source": "existing",
+    "uploaded_strategy_id": null,
+    "generated_by": null,
+    "trading_style": "swing",
+    "risk_profile": "balanced",
+    "analysis_depth": "deep",
+    "timeframe": "5m",
+    "configured_timeframes": [
+      "1h",
+      "4h",
+      "1d"
+    ],
+    "unsupported_timeframes": [],
+    "selected_pairs": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "BNB/USDT",
+      "SOL/USDT",
+      "XRP/USDT",
+      "ADA/USDT",
+      "DOGE/USDT",
+      "AVAX/USDT",
+      "DOT/USDT",
+      "LINK/USDT"
+    ],
+    "date_ranges": {
+      "in_sample": "20240101-20240601",
+      "out_of_sample": "20240601-20240701"
+    },
+    "optimization": {
+      "hyperopt_loss": "ProfitLockinHyperOptLoss",
+      "hyperopt_spaces": [
+        "stoploss",
+        "roi"
+      ],
+      "hyperopt_epochs": 50,
+      "wfo_enabled": false,
+      "wfo_is_months": 3,
+      "wfo_oos_months": 1,
+      "wfo_recency_weight": 1.0,
+      "planned_wfo_windows": []
+    },
+    "thresholds": {
+      "min_profit_factor": 1.0,
+      "max_drawdown": 0.3,
+      "min_trades": 100,
+      "min_expectancy": 0.0008,
+      "min_win_rate": 0.4,
+      "min_pair_pass_rate": 0.6,
+      "min_oos_retention": 0.5,
+      "min_sharpe": 0.5,
+      "min_oos_profit": 0.01,
+      "monte_carlo_threshold": 0.35
+    },
+    "exchange": "binance",
+    "advanced_overrides": {}
+  },
+  "policy_versions": {
+    "timeframes": "timeframes_v1",
+    "risk_profiles": "risk_profiles_v1",
+    "pair_universe": "pair_universe_v1",
+    "score_weights": "robustness_score_v1",
+    "readiness_labels": "readiness_labels_v2",
+    "thresholds": "intraday:legacy,position:legacy,scalping:legacy,swing:legacy"
+  },
+  "selected_timeframe": "5m",
+  "selected_pair_universe": [
+    "BTC/USDT",
+    "ETH/USDT",
+    "BNB/USDT",
+    "SOL/USDT",
+    "XRP/USDT",
+    "ADA/USDT",
+    "DOGE/USDT",
+    "AVAX/USDT",
+    "DOT/USDT",
+    "LINK/USDT"
+  ],
+  "score": {},
+  "validation_status": "Rejected",
+  "readiness_label": "Rejected",
+  "score_explanation": [],
+  "progress_percent": 0,
+  "eta_seconds": null,
+  "progress_counters": {
+    "strategies_generated": 0,
+    "strategies_tested": 0,
+    "strategies_rejected": 0,
+    "strategies_surviving": 0
+  },
+  "strategy_runtime_dir": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies",
+  "strategy_variants": [
+    {
+      "role": "working",
+      "strategy_name": "MultiMa_v3",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3.py",
+      "source": "/home/mohs/Desktop/fortiesr/user_data/strategies/MultiMa_v3.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MultiMa_v3_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3_BaselineMutation1_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MultiMa_v3_BaselineMutation1",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3_BaselineMutation1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MultiMa_v3_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3_BaselineMutation2_mutation_v1.py"
+    },
+    {
+      "role": "mutation",
+      "strategy_name": "MultiMa_v3_BaselineMutation2",
+      "path": "/home/mohs/Desktop/fortiesr/user_data/auto_quant/09866ee9-65ed-44df-a595-f0e65f2c7a6a/strategies/MultiMa_v3_BaselineMutation2.py"
+    }
+  ],
+  "artifact_versions": {
+    "run_config_snapshot_v1": "run_config_snapshot_v1.json",
+    "run_config_snapshot_latest": "run_config_snapshot_latest.json",
+    "run_config_snapshot": "run_config_snapshot.json",
+    "state_v1": "state_v1.json",
+    "state_latest": "state_latest.json",
+    "state": "state.json"
+  },
+  "user_approved_pairs": [],
+  "portfolio_baseline_result": {}
+}
